@@ -1,0 +1,95 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+
+\title{Proof draft}
+\author{Haitham Khedr }
+\date{September 2019}
+
+\usepackage{natbib}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{amsmath}
+
+
+\begin{document}
+
+\maketitle
+
+\paragraph{Notation}\noindent
+
+1)$y_j =W_jx + b_j$, where $W_j$ is the $j$th row of the Weight matrix $W$
+
+2)$z_j = max(0,y_j)$, is the value of the neuron after activation
+
+3)$\delta_j\in{\{0,1\}}$ is the neuron phase assignment
+
+4)x is the input to the network
+
+\paragraph{Neural network slacked linear constraints\\} \noindent
+
+\underline{\textbf{Input constraint}}
+
+$x\in X$, where X is the input set(Polyhedron)\\
+
+\underline{\textbf{Active neuron} (\emph{$\delta_j = 1$}):}
+
+$y_j + s_j \geq 0$, where $ s_j$ is a slack variable
+
+$z_j = y_j + s_j $
+
+$s_j \geq 0$\\
+
+\underline{\textbf{Inactive neuron} (\emph{$\delta_j = 0$}):}
+
+$y_j - s_j \leq 0$
+
+$z_j = y_j + s_j $
+
+$s_j \geq 0$\\
+
+The constraints of the active and inactive neurons can be combined into the following constraints
+$(1-2\delta_j)y_j - s_j \leq 0$
+$s_j \geq 0$
+$z_j = \delta_j(y_j +s_j)$
+\newpage
+\paragraph{Problem\\} 
+
+The verification problem can be modeled as the following minimization problem
+
+$$\min\limits_{s_j,j\in{0\dots n}}\displaystyle\sum_{i=0}^{n}s_i\text{\quad s.t}$$
+
+
+\begin{equation}\label{constraint:1}
+x \in X,
+\end{equation}
+\begin{equation}\label{constraint:2}
+(1-2\delta_j)y_j - s_j \leq 0,
+\end{equation}
+\begin{equation}\label{constraint:3}
+z_j = \delta_j(y_j +s_j)
+\end{equation}
+\begin{equation}\label{constraint:4}
+s_j \geq 0
+\end{equation}
+
+
+\paragraph{Claim 1.} if \forall $x \in X$, $\delta_j$ is assigned correctly then $s_j = 0$
+
+\noindent
+\textbf{Proof.}
+Suppose towards a contradiction that \forall $x \in X, \delta_j$ is assigned correctly, but $s_j > 0$.
+
+\noindent
+if $\delta_j$ is correctly assigned then $(1-2\delta_j)y_j \leq 0$, therefore $\forall  s > 0$ that satisfies constraint (\ref{constraint:2}),$\exists s^* < s$, such that $s^*$ also satisfies constraint (\ref{constraint:2}). Since the objective is convex then the minimizer will find the global minimum $s^*$ satisfying constraint (\ref{constraint:4}) and set $s_j = s^* = 0$ hence proving the claim with contradiction.
+
+
+\paragraph{Claim 2.} if \exists $x \in X$, s.t $\delta_j$ is incorrectly assigned  then $s_j > 0$
+
+\noindent
+\textbf{Proof.}
+Suppose towards a contradiction that \exists $x \in X$, and $\delta_j$ is incorrectly assigned, but $s_j = 0$.
+
+\noindent
+if $\delta_j$ is incorrectly assigned then $(1-2\delta_j)y_j > 0$. If $s_j = 0$, then constraint (\ref{constraint:2}) will be violated. Therefore $s_j > 0$ hence proving the claim with contradiction.
+
+\end{document}
