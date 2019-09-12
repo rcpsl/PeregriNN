@@ -2,3 +2,4 @@
 *.gz
 *.pdf
 *.log
+*.pyc
