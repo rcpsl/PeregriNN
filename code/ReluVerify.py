@@ -2,8 +2,8 @@ from solver import *
 from time import time
 from random import random, seed
 import numpy as np
+from keras.models import load_model
 
-eps = 10e-10
 
 def load_regions(dir = "./regions/"):
     filename = dir + 'abst_reg_H_rep.txt'
@@ -17,6 +17,7 @@ def load_regions(dir = "./regions/"):
     return abst_reg_H_rep, lidar_config_dict
 
 def add_initial_state_constraints(solver, start_region):
+
     state_vars = [solver.state_vars[0],solver.state_vars[1]]
     region  = abst_reg_H_rep[start_region]
     A, b = region['A'], region['b']
@@ -26,6 +27,14 @@ def add_initial_state_constraints(solver, start_region):
     A = [[1.0, 0.0],[0.0,1.0],[-1.0,0.0],[0.0,-1.0]]
     b = [u_bound] * 4
     solver.add_linear_constraints(A, state_vars, b)
+
+    # A = [[1.0, 0.0], [-1.0,0], [0,1.0],[0,-1.0]]
+    # b = [6, 0, 6, 0.0]
+    # solver.add_linear_constraints(A, [solver.state_vars[0],solver.state_vars[1]], b)
+    
+    # A = [[1.0, 0.0,0.0,0.0], [0,1,0,0], [0,0,1,0],[0,0,0,1]]
+    # b = [0.9838070389814675, 2.425289113074541, 0.10965773928910494, 0.29743393510580063]
+    # solver.add_linear_constraints(A, solver.state_vars, b,sense = 0)
 
 def add_final_state_constraints(solver, end_region):
     state_vars = [solver.next_state_vars[0],solver.next_state_vars[1]]
@@ -38,6 +47,10 @@ def add_final_state_constraints(solver, end_region):
     b = [u_bound] * 4
     solver.add_linear_constraints(A, state_vars, b)
 
+    # A = [[1.0, 0.0,0.0,0.0], [0,1,0,0], [0,0,1,0],[0,0,0,1]]
+    # b = [1.03863590862602, 2.5740060806274414, 0.13783891778439283, 0.26302529126405716]
+    # solver.add_linear_constraints(A, solver.next_state_vars, b,sense = 0)
+
 def add_lidar_constraints(start_region):
     """
     For a certain laser i, if it intersects a vertical obstacle:
@@ -47,6 +60,13 @@ def add_lidar_constraints(start_region):
         x_i = x_car + (y_obstacle - y_car) cot(laser_angle)
         y_i = y_obstacle
     """
+
+
+    # A = np.eye(16)
+    # b = [1.959213450551033, 0.24507476051007138, -0.2450747605100717, -0.8972459780052304, -0.8972459780052304, -0.1927344335540081, 0.19273443355400754, 1.540786549448966, 1.959213450551033, 1.959213450551033, 1.959213450551033, 0.8972459780052309, -0.8972459780052302, -1.540786549448967, -1.540786549448967, -1.540786549448967]
+    # solver.add_linear_constraints(A, solver.im_vars, b, sense=0)  #EQ constraint
+    
+
     lidar_config = lidar_config_dict[start_region]
     #print lidar_config
 
@@ -74,6 +94,7 @@ def add_lidar_constraints(start_region):
             b = [obst_y * cot_angle, obst_y]
 
         solver.add_linear_constraints(A, rVars, b, sense=0)  #EQ constraint
+
 
 def add_dynamics_constraints(solver):
 
@@ -108,7 +129,8 @@ def in_region(regions,x):
     for idx,region in enumerate(regions):
         H = np.array(region['A'])
         b = np.array(region['b'])
-        if ( (H.dot(x)-b) <= eps).all():
+        diff = H.dot(x) -b
+        if  (diff<=eps).all():
             print(idx)
             if(ret != -1):
               return -2
@@ -118,35 +140,40 @@ def in_region(regions,x):
 
 if __name__ == "__main__":
 
+    
     abst_reg_H_rep, lidar_config_dict = load_regions()
-    start_region = 38
-    end_region = 56
-    # in_region(abst_reg_H_rep,np.array([3.572086, 3.750767]))
+    start_region = 2
+    end_region = 4
+    in_region(abst_reg_H_rep,np.array([1.03863590862602, 2.5740060806274414]))
     num_lasers = 8
     workspace = Workspace(8,num_lasers,'obstacles.json')
     obstacles    = workspace.lines
     laser_angles     = workspace.laser_angles        
     num_integrators = 2
     Ts = 0.5
-    u_bound = 2
+    u_bound = 0.5
 
     
     input_size = 16
     output_dim = 2
-    hidden_units = 200
-    solver = Solver(input_size,hidden_units,output_dim)
+    hidden_units = 600
+    model = load_model('my_model.h5')
+    solver = Solver(input_size,hidden_units,output_dim, hidden_units, network = model)
     
     
     add_initial_state_constraints(solver, start_region)
     add_lidar_constraints(start_region)
-    s = time()
     print('Preprocessing Network')
-    solver.solve()
+    s = time()
+    vars,counter_examples = solver.solve()
+    e = time()  
+    print('time preprocessing', e-s)
     print('Done Preprocessing')
     
     print('Solving with Output and Dynamics constraints')
+    s = time()
     add_final_state_constraints(solver,end_region)
     add_dynamics_constraints(solver)
-    solver.solve()
+    vars,counter_examples = solver.solve()
     e = time()  
     print('time', e-s)
