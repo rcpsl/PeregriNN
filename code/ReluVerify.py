@@ -3,7 +3,10 @@ from time import time
 from random import random, seed
 import numpy as np
 from keras.models import load_model
-
+from StateSpacePartitioner import StateSpacePartitioner
+import pandas as pd
+from Queue import Queue
+import sys
 
 def load_regions(dir = "./regions/"):
     filename = dir + 'abst_reg_H_rep.txt'
@@ -16,11 +19,13 @@ def load_regions(dir = "./regions/"):
         lidar_config_dict = pickle.load(inputFile)
     return abst_reg_H_rep, lidar_config_dict
 
-def add_initial_state_constraints(solver, start_region):
+def add_initial_state_constraints(solver, regions, start_region):
 
     state_vars = [solver.state_vars[0],solver.state_vars[1]]
-    region  = abst_reg_H_rep[start_region]
-    A, b = region['A'], region['b']
+    # region  = abst_reg_H_rep[start_region]
+    # region_H = partitioner.symbolic_states[start_region]['PolygonH']
+    region_H = regions[start_region]
+    A, b = region_H['A'], region_H['b']
     solver.add_linear_constraints(A, state_vars, b)
 
     state_vars = [solver.state_vars[2],solver.state_vars[3]]
@@ -38,20 +43,23 @@ def add_initial_state_constraints(solver, start_region):
 
 def add_final_state_constraints(solver, end_region):
     state_vars = [solver.next_state_vars[0],solver.next_state_vars[1]]
-    region  = abst_reg_H_rep[end_region]
-    A, b = region['A'], region['b']
+    # region  = abst_reg_H_rep[end_region]
+    region_H = partitioner.symbolic_states[end_region]['PolygonH']
+    A, b = region_H['A'], region_H['b']
     solver.add_linear_constraints(A, state_vars, b)
 
     state_vars = [solver.next_state_vars[2],solver.next_state_vars[3]]
     A = [[1.0, 0.0],[0.0,1.0],[-1.0,0.0],[0.0,-1.0]]
-    b = [u_bound] * 4
+    # v_upper_bound = partitioner.symbolic_states[end_region]['HyperCube']['max']
+    # v_lower_bound = partitioner.symbolic_states[end_region]['HyperCube']['min']
+    # b = [v_upper_bound[0],v_upper_bound[1], -1*v_lower_bound[0], -1*v_lower_bound[1]]
     solver.add_linear_constraints(A, state_vars, b)
 
     # A = [[1.0, 0.0,0.0,0.0], [0,1,0,0], [0,0,1,0],[0,0,0,1]]
     # b = [1.03863590862602, 2.5740060806274414, 0.13783891778439283, 0.26302529126405716]
     # solver.add_linear_constraints(A, solver.next_state_vars, b,sense = 0)
 
-def add_lidar_constraints(start_region):
+def add_lidar_constraints(solver, start_region):
     """
     For a certain laser i, if it intersects a vertical obstacle:
         x_i = x_obstacle
@@ -66,7 +74,6 @@ def add_lidar_constraints(start_region):
     # b = [1.959213450551033, 0.24507476051007138, -0.2450747605100717, -0.8972459780052304, -0.8972459780052304, -0.1927344335540081, 0.19273443355400754, 1.540786549448966, 1.959213450551033, 1.959213450551033, 1.959213450551033, 0.8972459780052309, -0.8972459780052302, -1.540786549448967, -1.540786549448967, -1.540786549448967]
     # solver.add_linear_constraints(A, solver.im_vars, b, sense=0)  #EQ constraint
     
-
     lidar_config = lidar_config_dict[start_region]
     #print lidar_config
 
@@ -138,13 +145,91 @@ def in_region(regions,x):
                 ret = idx
     return ret
 
+def preprocess_regions(regions_H_rep, regions):
+    bool_model = [False] * hidden_units
+    for start_region in regions:
+        solver = Solver(input_size,hidden_units,output_dim, network = model)
+        print('Preprocessing Network, Region %d'%start_region)
+        s = time()
+        add_initial_state_constraints(solver, regions_H_rep, start_region)
+        add_lidar_constraints(solver, start_region)
+        counter_example, bool_model = solver.solve()
+        e = time()  
+        print('time preprocessing', e-s)
+        filename = 'Region_' + str(start_region)
+        with open('counterexamples/'+filename,'wb') as f:
+            pickle.dump({'counter_example':counter_example, 'bool_model': bool_model}, f)
+def add_initial_partition_constraints(solver, partition):
+
+    state_vars = [solver.state_vars[0],solver.state_vars[1]]
+    A, b = partition['PolygonH']['A'], partition['PolygonH']['b']
+    solver.add_linear_constraints(A, state_vars, b)
+
+    state_vars = [solver.state_vars[2],solver.state_vars[3]]        
+    A = [[1.0, 0.0],[0.0,1.0],[-1.0,0.0],[0.0,-1.0]]
+    v_upper_bound = partition['HyperCube']['max']
+    v_lower_bound = partition['HyperCube']['min']
+    b = [v_upper_bound[0],v_upper_bound[1], -1*v_lower_bound[0], -1*v_lower_bound[1]]
+    solver.add_linear_constraints(A, state_vars, b)
+
+
+
+def add_final_partition_constraints(solver, partition):
+
+    state_vars = [solver.next_state_vars[0],solver.next_state_vars[1]]
+    A, b = partition['PolygonH']['A'], partition['PolygonH']['b']
+    solver.add_linear_constraints(A, state_vars, b)
+
+    state_vars = [solver.state_vars[2],solver.state_vars[3]]        
+    A = [[1.0, 0.0],[0.0,1.0],[-1.0,0.0],[0.0,-1.0]]
+    v_upper_bound = partition['HyperCube']['max']
+    v_lower_bound = partition['HyperCube']['min']
+    b = [v_upper_bound[0],v_upper_bound[1], -1*v_lower_bound[0], -1*v_lower_bound[1]]
+    solver.add_linear_constraints(A, state_vars, b)
+
+def preprocess_partitions(partitions):
+    additional_ce = 0
+    for partition in partitions:
+        if(partition['isObstacle']):
+            continue
+        state_idx = partition['SymbolicStateIndex']
+        solver = Solver(input_size,hidden_units,output_dim, network = model)
+        print('Preprocessing Network, state %d'%state_idx)
+        region_idx = partition['RegionIndex']
+
+        #Load Region counter examples
+        filename = 'Region_' + str(region_idx)
+        s = time()
+        with open('counterexamples/'+filename,'rb') as f:
+            dict = pickle.load(f)
+            counter_example, bool_model = dict['counter_example'], dict['bool_model']
+            #Add Region counter examples
+            solver.add_counter_example(counter_example,bool_model, AND = True)
+
+        #continue preprocessing region
+        add_initial_partition_constraints(solver, partition)
+        add_lidar_constraints(solver, region_idx)
+        pre_counter_example, bool_model = solver.solve(bool_model)
+        diffLenCE = len(pre_counter_example) - len(counter_example)
+        if(diffLenCE):
+            additional_ce += 1
+        e = time()  
+        print('time preprocessing', e-s)
+        filename = 'state_' + str(state_idx)
+        with open('counterexamples_grid_0.5/'+filename,'wb') as f:
+            pickle.dump({'counter_example':pre_counter_example, 'bool_model': bool_model, 'diff':diffLenCE}, f)
+    print('Number of states with additional CE: %d'%additional_ce)
+
+        
+
+
 if __name__ == "__main__":
 
     
     abst_reg_H_rep, lidar_config_dict = load_regions()
-    start_region = 2
+    start_partition = 2
     end_region = 4
-    in_region(abst_reg_H_rep,np.array([1.03863590862602, 2.5740060806274414]))
+    # in_region(abst_reg_H_rep,np.array([1.03863590862602, 2.5740060806274414]))
     num_lasers = 8
     workspace = Workspace(8,num_lasers,'obstacles.json')
     obstacles    = workspace.lines
@@ -153,27 +238,76 @@ if __name__ == "__main__":
     Ts = 0.5
     u_bound = 0.5
 
-    
+    StateSpacePartioner_DEBUG = False # local debug flag
+    higher_deriv_bound = 1.0
+    grid_size = [1.0,0.5]
+    neighborhood_radius = 0.1
+
+
     input_size = 16
     output_dim = 2
     hidden_units = 600
     model = load_model('my_model.h5')
-    solver = Solver(input_size,hidden_units,output_dim, hidden_units, network = model)
+    preprocessRegions = False
+    preprocessPartitions = True
+    if(preprocessRegions):
+        preprocess_regions(abst_reg_H_rep, range(55))
+
+    partitioner = StateSpacePartitioner(workspace, num_integrators, higher_deriv_bound, grid_size, neighborhood_radius)
+    partitioner.partition()
+    if(preprocessPartitions):
+        preprocess_partitions(partitioner.symbolic_states)
+        sys.exit()
     
+
+
+
+    f_result_name = 'results.txt' 
+    partition_Q = Queue()
+    result_dict = {}
+    for obstacle_state_index in partitioner.obstacle_symbolic_states:
+        partition_Q.put(obstacle_state_index)
+    while(not partition_Q.empty()):
+        try:
+            end_partition = partition_Q.get()
+            result_dict[end_partition] = []
+            adjacents = set(partitioner.symbolic_states[end_partition]['Adjacents'])
+            # print(end_partition, len(adjacents))
+            for i,start_partition in enumerate(adjacents):
+                if(partitioner.symbolic_states[start_partition]['isObstacle']):
+                    continue
+                end_region = partitioner.symbolic_states[end_partition]['RegionIndex']
+                f_result_handle= open('results.txt','a')
+                start_region = partitioner.symbolic_states[start_partition]['RegionIndex']
+                solver = Solver(input_size,hidden_units,output_dim, network = model)
+                solver.preprocessing = False
+                #load counter examples
+                print('Start state:',start_partition,'End state:', end_partition)
+                filename = 'state_' + str(start_partition)
+                with open('counterexamples/'+filename,'rb') as f:
+                    data = pickle.load(f)
+                    counter_example, bool_model = data['counter_example'], data['bool_model']
+                solver.add_counter_example(counter_example,bool_model,AND=True)
+                # print('Solving with Output and Dynamics constraints')
+                f_result_handle.write(str(start_partition)+'-->'+str(end_partition)+':')
+                s = time()
+                add_initial_partition_constraints(solver, partitioner.symbolic_states[start_partition])
+                add_lidar_constraints(solver, start_region)
+                add_final_partition_constraints(solver,partitioner.symbolic_states[end_partition])
+                add_dynamics_constraints(solver)
+                vars,counter_examples,status = solver.solve()
+                e = time()  
+                if(status == 'SolFound'):
+                    if(start_partition not in partition_Q.queue):
+                        partition_Q.put(start_partition)
+                    result_dict[end_partition].append(start_partition)
+                f_result_handle.write(status +'\n')
+                f_result_handle.close()
+                print('time', e-s)
+        except Exception as e:
+            with open('exit_state','wb') as f:
+                pickle.dump({'transitions':result_dict, 'Queue': partition_Q}, f)
+                sys.exit()
     
-    add_initial_state_constraints(solver, start_region)
-    add_lidar_constraints(start_region)
-    print('Preprocessing Network')
-    s = time()
-    vars,counter_examples = solver.solve()
-    e = time()  
-    print('time preprocessing', e-s)
-    print('Done Preprocessing')
-    
-    print('Solving with Output and Dynamics constraints')
-    s = time()
-    add_final_state_constraints(solver,end_region)
-    add_dynamics_constraints(solver)
-    vars,counter_examples = solver.solve()
-    e = time()  
-    print('time', e-s)
+    with open('exit_state','wb') as f:
+        pickle.dump({'transitions':result_dict, 'Queue': partition_Q}, f)

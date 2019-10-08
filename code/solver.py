@@ -6,10 +6,11 @@ import z3 as z3
 import pickle
 from Workspace import Workspace
 import math
+from gurobipy import * 
 eps = 1E-3
 class Solver():
 
-    def __init__(self,input_size,hidden_units,output_dim, num_bool_vars, network = None, maxIter = 100000):
+    def __init__(self,input_size,hidden_units,output_dim, network = None, maxIter = 100000):
 
         self.maxNumberOfIterations = maxIter
         self.network        = network
@@ -49,7 +50,7 @@ class Solver():
         self.curr_problem = []
         self.preprocessing = True # set to False after first call to solve
         self.preprocess_counter_examples = []
-
+        self.backend = 'Gurobi'
 
     def add_variables(self, name, num, lowB = None, uppB = None):
         return LpVariable.dicts(name, [i for i in range( num)],lowB, uppB)
@@ -91,16 +92,24 @@ class Solver():
         convIFModel             = [z3.is_true(z3Model[bConv])   for bConv   in self.convIFClauses]
         return convIFModel
 
-    def solve(self):
+    def solve(self, bool_model = None):
         
+        status = 'None'
         AND_bool_constraints = True
+        if(bool_model is None):
+            bool_model = [False] *600
         if(self.preprocessing):
             counter_example, convIFModel = self.preprocess()
-            self.preprocessing = False
-            self.__add_counter_example(counter_example, convIFModel, AND_bool_constraints)
-            self.preprocess_counter_examples = counter_example
-            return None, None
+            for idx, neuron_idx in enumerate(counter_example):
+                bool_model[neuron_idx] = convIFModel[idx]
 
+            self.preprocessing = False
+            # self.__add_counter_example(counter_example, convIFModel, AND_bool_constraints)
+            self.preprocess_counter_examples += counter_example
+            return self.preprocess_counter_examples, bool_model
+
+        if(self.preprocessing is False):
+            AND_bool_constraints = False
         solutionFound = False
         iterationsCounter = 0
         counter_examples = []
@@ -113,66 +122,133 @@ class Solver():
             SATcheck    = self.SATsolver.check()
             if  SATcheck == z3.unsat:
                 print '==========  Problem is UNSAT =========='
+                status = 'UNSAT'
                 break
             else: #Generate new boolean model
                 convIFModel         = self.__extractSATModel()
+                # convIFModel = [False, False, True, True, False, False, False, False, True, True, False, True, False, False, True, False, True, False, False, True, False, True, False, False, True, True, False, True, False, True, True, False, True, True, True, True, True, True, False, False, True, False, True, False, True, True, False, False, True, False, True, True, False, True, True, False, True, False, True, False, False, False, True, False, True, False, False, False, False, False, True, False, False, False, True, True, True, True, False, False, True, False, False, False, True, False, False, False, True, False, True, True, True, False, False, True, False, True, False, True, False, True, True, True, False, True, False, False, True, True, False, False, True, False, False, False, False, False, False, False, True, False, True, False, False, True, False, True, True, False, True, True, True, True, True, False, False, False, True, False, False, False, False, True, False, True, False, False, False, False, False, False, False, False, False, True, True, False, False, False, False, False, False, False, False, False, False, True, True, False, False, False, False, False, True, True, True, True, True, False, False, False, False, False, True, True, False, False, False, False, True, False, False, False, True, False, False, False, False, False, False, False, False, True, False, False, True, True, False, True, False, False, False, False, True, True, True, False, False, False, False, False, False, True, False, False, False, True, False, False, True, False, False, False, False, False, False, False, False, True, False, False, False, False, True, False, True, False, False, False, False, False, True, True, True, True, True, False, True, False, False, False, False, True, False, False, True, True, True, True, True, False, False, True, True, False, False, False, False, False, False, True, False, True, True, False, True, False, False, False, True, False, False, True, True, False, False, True, False, False, False, False, True, False, False, False, False, False, True, False, False, False, False, True, False, False, True, False, True, True, False, False, False, True, True, True, True, False, False, False, False, True, False, True, False, False, False, False, False, False, True, False, True, False, False, False, True, False, False, False, False, False, False, True, True, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, True, True, True, True, False, False, False, False, False, True, True, False, True, False, False, False, False, False, False, False, False, False, False, False, True, False, False, True, False, False, False, False, False, True, True, False, False, False, False, False, True, False, True, False, True, False, True, True, False, True, False, False, False, True, False, True, True, False, True, True, False, False, False, False, False, True, False, False, False, True, False, True, True, False, True, False, False, True, True, False, True, False, False, False, False, False, True, True, True, False, True, False, False, True, False, True, True, False, True, False, False, False, False, True, False, False, False, False, False, True, False, False, True, False, True, True, True, False, True, True, False, True, False, False, True, True, True, False, True, False, False, False, True, False, False, True, False, False, False, True, False, False, True, True, False, False, False, True, True, True, True, False, False, True, False, False, True, False, False, False, False, False, False, True, False, False, True, True, False, False, True, False, False, False, False, True, False, True, False, True, True, False, True, True, True, True, False, False, False, False, True, False, False, False, False, False, False, True, True, True, False, False, False, True, False, True, False, False, False, False, True, True, True, True, False, False, True, True, True, True, True, False, True, False, True, True, True, True, False]
                 # print 'ConvIfModel = ', [i for i, x in enumerate(convIFModel) if x == True], '\n'
             #prepare problem
-            if(self.preprocessing is False):
-                AND_bool_constraints = False
-            problem = self.__prepare_problem(convIFModel)
-            self.curr_problem = problem #for debug
-            #Solve
-            problem.solve()
-            solver_status = problem.status
-            if(solver_status == LpStatusOptimal):
-                counter_example = self.__generate_counter_example()
-                print(counter_example)
-                if(len(counter_example) == 0):
-                    solutionFound = True
-                    print('Solution found')
-                    print('x',[self.state_vars[i].varValue for i in range(len(self.state_vars))])
-                    print('w',[self.next_state_vars[i].varValue for i in range(len(self.next_state_vars))])
-                    print('u',[self.out_vars[i].varValue for i in range(len(self.out_vars))])
-                    print('i',[self.im_vars[i].varValue for i in range(len(self.im_vars))])
-                    # print('slack',[self.slack_vars[i].varValue for i in range(len(self.slack_vars))])
-                    print('Relu',[i for i, x in enumerate(convIFModel) if x == True])
-                else:
-                    counter_examples.append(counter_example)
-                    self.__add_counter_example(counter_example, convIFModel, AND_bool_constraints)
-                    print('length of counter examples' ,len(counter_example))
-                    if(self.preprocessing):
-                        self.preprocess_counter_examples = counter_example
-            elif(solver_status == LpStatusInfeasible):
-                print("Problem is infeasible")
-                break
-            else:
-                print("Solver error, ERR_CODE:",solver_status)
-                break
-            # print('x',[x.varValue for _,x in self.in_vars.items()])
-            # print('slack',[slack.varValue for _,slack in self.slack_vars.items()])
-            # print(problem.status)
-            # print(self.problem)
-        self.preprocessing = False
-        return problem.variables,counter_examples
 
-    def __prepare_problem(self, relu_assignment, out_constraints = False):
+            if(self.backend == 'Gurobi'):
+                problem = self.__prepare_problem(convIFModel, feasibility = False)
+                # problem.writeLP('problem.lp')
+                problem.solve()
+                
+                solver_status = problem.status
+                print('Problem status', solver_status)
+                # model.optimize()
+                counter_example = []
+                if(solver_status == LpStatusOptimal):
+                    counter_example = self.__generate_counter_example()
+                    if(len(counter_example)):
+                        IIS_slack = []
+                        # print('Model status',model.status)
+                        problem = self.__prepare_problem(convIFModel, feasibility = True)
+                        problem.writeLP('problem.lp')
+                        model = read('problem.lp')
+                        try:
+                            # problem.writeLP('problem.lp')
+                            # model = read('problem.lp')
+                            model.computeIIS() 
+                            model.write("result.ilp")
+                            with open('result.ilp','rb') as f:
+                                contents = f.readlines()
+                        
+                            for i in range(len(contents)):
+                                idx = len(contents) - 1 -i
+                                line = contents[idx]
+                                if(line == 'Bounds\n'):
+                                    break
+                                if('s_' in line):
+                                    words = line.split(' ')[1]
+                                    words = words.split('_')
+                                    IIS_slack.append(int(words[1]))
+
+                            if(len(IIS_slack) != 0):
+                                self.__add_counter_example(IIS_slack, convIFModel, AND = False)
+                                print(IIS_slack)
+                                print(counter_example)
+                        except Exception as e:
+                            print(e)
+                            print('Switching to Trivial')
+                            self.__add_counter_example(counter_example, convIFModel)
+                        
+                    else:
+                            solutionFound = True
+                            print('Solution found')
+                            print('x',[self.state_vars[i].varValue for i in range(len(self.state_vars))])
+                            print('w',[self.next_state_vars[i].varValue for i in range(len(self.next_state_vars))])
+                            print('u',[self.out_vars[i].varValue for i in range(len(self.out_vars))])
+                            print('i',[self.im_vars[i].varValue for i in range(len(self.im_vars))])
+                            # print('slack',[self.slack_vars[i].varValue for i in range(len(self.slack_vars))])
+                            print('Relu',[i for i, x in enumerate(convIFModel) if x == True])
+                            status = 'SolFound'         
+                else:
+                    print("Problem is infeasible")
+                    status = 'Infeasible'   
+                    break    
+            else:
+                problem = self.__prepare_problem(convIFModel)
+                self.curr_problem = problem #for debug
+                #Solve
+                problem.solve()
+                solver_status = problem.status
+                if(solver_status == LpStatusOptimal):
+                    counter_example = self.__generate_counter_example()
+                    print(counter_example)
+                    if(len(counter_example) == 0):
+                        solutionFound = True
+                        print('Solution found')
+                        print('x',[self.state_vars[i].varValue for i in range(len(self.state_vars))])
+                        print('w',[self.next_state_vars[i].varValue for i in range(len(self.next_state_vars))])
+                        print('u',[self.out_vars[i].varValue for i in range(len(self.out_vars))])
+                        print('i',[self.im_vars[i].varValue for i in range(len(self.im_vars))])
+                        # print('slack',[self.slack_vars[i].varValue for i in range(len(self.slack_vars))])
+                        print('Relu',[i for i, x in enumerate(convIFModel) if x == True])
+                        status = 'SolFound'
+                    else:
+                        counter_examples.append(counter_example)
+                        self.__add_counter_example(counter_example, convIFModel, AND_bool_constraints)
+                        print('length of counter examples' ,len(counter_example))
+                        if(self.preprocessing):
+                            self.preprocess_counter_examples = counter_example
+                elif(solver_status == LpStatusInfeasible):
+                    print("Problem is infeasible")
+                    status = 'Infeasible'
+                    break
+                else:
+                    print("Solver error, ERR_CODE:",solver_status)
+                    break
+                # print('x',[x.varValue for _,x in self.in_vars.items()])
+                # print('slack',[slack.varValue for _,slack in self.slack_vars.items()])
+                # print(problem.status)
+                # print(self.problem)
+        self.preprocessing = False
+        return problem.variables,counter_examples,status
+
+    def __prepare_problem(self, relu_assignment, feasibility = False):
         problem        = LpProblem("ReluVerify", LpMinimize) 
         #Add external convex constraints
         for constraint in self.linear_constraints:
             problem += constraint
-        self.__add_NN_constraints(problem, relu_assignment)
-        self.__add_objective_fn(problem)
+        #Add NN constrainst for unpreprocessed neurons
+        neurons_idx = [idx for idx in range(self.__hidden_units) if idx not in self.preprocess_counter_examples]
+        self.__add_NN_constraints(problem, relu_assignment,neurons_idx)
+        if(feasibility):
+            for i in range(self.__hidden_units):
+                problem += (self.slack_vars[i] == 0)
+        else:
+            self.__add_objective_fn(problem)
         return problem
 
     def preprocess(self):
         #Solve the problem for each neuron on its own
         counter_example =[]
         relu_assignment = [0] * self.__hidden_units
-        false_assignment = [False] * self.__hidden_units
-        for neuron_idx in range(self.__hidden_units):
-            if((neuron_idx+1) %200 == 0):
-                print('200 Neurons preprocessed')
+        false_assignment = []
+        unprocessed_neurons = [idx for idx in range(self.__hidden_units) if idx not in self.preprocess_counter_examples]
+        for neuron_idx in unprocessed_neurons:
             for binary_assignment in range(2):
                 problem        = LpProblem("ReluVerify", LpMinimize) 
                 #Add external convex constraints
@@ -184,9 +260,9 @@ class Solver():
                 problem.solve()
                 if(self.slack_vars[neuron_idx].varValue > eps):
                     counter_example.append(neuron_idx)
-                    false_assignment[neuron_idx] = bool(relu_assignment[neuron_idx])
+                    false_assignment.append(bool(relu_assignment[neuron_idx]))
                     break
-        a = [i for i in counter_example if false_assignment[i] is False]
+        a = [i for idx,i in enumerate(counter_example) if false_assignment[idx] is False]
         print(a)
         return counter_example, false_assignment
 
@@ -200,6 +276,10 @@ class Solver():
             if(v.varValue > eps):
                 counter_example.append(idx)
         return counter_example
+
+    def add_counter_example(self,counter_example, convIFClause, AND = False):
+        self.__add_counter_example(counter_example,convIFClause, AND)
+        self.preprocess_counter_examples += counter_example
 
     def __add_counter_example(self, counter_example, convIFClause,AND = False):
         if(AND): 
