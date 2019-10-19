@@ -97,7 +97,7 @@ class Solver():
         status = 'None'
         AND_bool_constraints = True
         if(bool_model is None):
-            bool_model = [False] *600
+            bool_model = [False] *self.__hidden_units
         if(self.preprocessing):
             counter_example, convIFModel = self.preprocess()
             for idx, neuron_idx in enumerate(counter_example):
@@ -131,63 +131,57 @@ class Solver():
             #prepare problem
 
             if(self.backend == 'Gurobi'):
-                problem = self.__prepare_problem(convIFModel, feasibility = False)
-                # problem.writeLP('problem.lp')
-                problem.solve()
-                
-                solver_status = problem.status
-                print('Problem status', solver_status)
-                # model.optimize()
-                counter_example = []
-                if(solver_status == LpStatusOptimal):
-                    counter_example = self.__generate_counter_example()
-                    if(len(counter_example)):
-                        IIS_slack = []
-                        # print('Model status',model.status)
-                        problem = self.__prepare_problem(convIFModel, feasibility = True)
-                        problem.writeLP('problem.lp')
-                        model = read('problem.lp')
-                        try:
-                            # problem.writeLP('problem.lp')
-                            # model = read('problem.lp')
-                            model.computeIIS() 
-                            model.write("result.ilp")
-                            with open('result.ilp','rb') as f:
-                                contents = f.readlines()
-                        
-                            for i in range(len(contents)):
-                                idx = len(contents) - 1 -i
-                                line = contents[idx]
-                                if(line == 'Bounds\n'):
-                                    break
-                                if('s_' in line):
-                                    words = line.split(' ')[1]
-                                    words = words.split('_')
-                                    IIS_slack.append(int(words[1]))
+                problem = self.__prepare_problem(convIFModel, feasibility = True)
+                problem.writeLP('problem.lp')
+                model = read('problem.lp')
+                # model.params.IISMethod = 1
+                model.params.FeasibilityTol = 1E-2
+                model.optimize()
+                if(model.Status == 3): #Infeasible
+                    IIS_slack = []
+                    try:
+                        model.computeIIS() 
+                        model.write("result.ilp")
+                        with open('result.ilp','rb') as f:
+                            contents = f.readlines()
+                        for i in range(len(contents)):
+                            idx = len(contents) - 1 -i
+                            line = contents[idx]
+                            if(line == 'Bounds\n'):
+                                break
+                            if('s_' in line):
+                                words = line.split(' ')[1]
+                                words = words.split('_')
+                                IIS_slack.append(int(words[1]))
 
-                            if(len(IIS_slack) != 0):
-                                self.__add_counter_example(IIS_slack, convIFModel, AND = False)
-                                print(IIS_slack)
-                                print(counter_example)
-                        except Exception as e:
-                            print(e)
-                            print('Switching to Trivial')
-                            self.__add_counter_example(counter_example, convIFModel)
+                        if(len(IIS_slack) != 0):
+                            self.__add_counter_example(IIS_slack, convIFModel, AND = False)
+                            print(IIS_slack)
+                        else:
+                            status = "Infeasible"
+                            break
+                            
+                    except Exception as e:
+                        print(e)
+                        # print('Switching to Trivial')
+                        # self.__add_counter_example(counter_example, convIFModel)
                         
-                    else:
-                            solutionFound = True
-                            print('Solution found')
-                            print('x',[self.state_vars[i].varValue for i in range(len(self.state_vars))])
-                            print('w',[self.next_state_vars[i].varValue for i in range(len(self.next_state_vars))])
-                            print('u',[self.out_vars[i].varValue for i in range(len(self.out_vars))])
-                            print('i',[self.im_vars[i].varValue for i in range(len(self.im_vars))])
-                            # print('slack',[self.slack_vars[i].varValue for i in range(len(self.slack_vars))])
-                            print('Relu',[i for i, x in enumerate(convIFModel) if x == True])
-                            status = 'SolFound'         
+   
                 else:
-                    print("Problem is infeasible")
-                    status = 'Infeasible'   
-                    break    
+                    solutionFound = True
+                    print('Solution found')
+                    problem = self.__prepare_problem(convIFModel, feasibility = True)
+                    problem.solve()
+                    if(problem.status != LpStatusOptimal):
+                        print("Something went wrong :)")
+                    print('x',[self.state_vars[i].varValue for i in range(len(self.state_vars))])
+                    print('x-',[self.prev_state_vars[i].varValue for i in range(len(self.prev_state_vars))])
+                    print('w',[self.next_state_vars[i].varValue for i in range(len(self.next_state_vars))])
+                    print('u',[self.out_vars[i].varValue for i in range(len(self.out_vars))])
+                    print('i',[self.im_vars[i].varValue for i in range(len(self.im_vars))])
+                    # print('slack',[self.slack_vars[i].varValue for i in range(len(self.slack_vars))])
+                    print('Relu',[i for i, x in enumerate(convIFModel) if x == True])
+                    status = 'SolFound'      
             else:
                 problem = self.__prepare_problem(convIFModel)
                 self.curr_problem = problem #for debug

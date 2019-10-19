@@ -249,7 +249,7 @@ if __name__ == "__main__":
     hidden_units = 600
     model = load_model('my_model.h5')
     preprocessRegions = False
-    preprocessPartitions = True
+    preprocessPartitions = False
     if(preprocessRegions):
         preprocess_regions(abst_reg_H_rep, range(55))
 
