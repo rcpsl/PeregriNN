@@ -107,28 +107,28 @@ def add_dynamics_constraints(solver):
 
     # x integrators
     # x+ = x- + vx*Ts
-    rVars = [solver.next_state_vars[0], solver.state_vars[0],solver.state_vars[2]]
+    rVars = [solver.next_state_vars[0], solver.state_vars[0],solver.out_vars[0]]
     #print 'chainX', rVars
     solver.add_linear_constraints([[1.0, -1.0, -1*Ts]], rVars, [0.0], sense= 0) #EQ constraint
 
     # y integrators
-    rVars = [solver.next_state_vars[1], solver.state_vars[1],solver.state_vars[3]]
+    rVars = [solver.next_state_vars[1], solver.state_vars[1],solver.out_vars[1]]
 
     #print 'chainY', rVars
     solver.add_linear_constraints([[1.0, -1.0, -1*Ts]], rVars, [0.0], sense= 0) #EQ constraint
 
 
-    # x last state, such as vx(t+1) = vx(t) + Ts * ux(t)
-    rVars = [solver.next_state_vars[2],solver.state_vars[2], solver.out_vars[0]]
+    # # x last state, such as vx(t+1) = vx(t) + Ts * ux(t)
+    # rVars = [solver.next_state_vars[2],solver.state_vars[2], solver.out_vars[0]]
 
-    #print 'chainX last', rVars          
-    solver.add_linear_constraints([[1.0, -1.0, -1*Ts]], rVars, [0.0], sense= 0)
+    # #print 'chainX last', rVars          
+    # solver.add_linear_constraints([[1.0, -1.0, -1*Ts]], rVars, [0.0], sense= 0)
 
-    # y last state, such as vy(t+1) = vy(t) + Ts * uy(t)
-    rVars = [solver.next_state_vars[3],solver.state_vars[3], solver.out_vars[1]]
+    # # y last state, such as vy(t+1) = vy(t) + Ts * uy(t)
+    # rVars = [solver.next_state_vars[3],solver.state_vars[3], solver.out_vars[1]]
 
-    #print 'chainY last', rVars          
-    solver.add_linear_constraints([[1.0, -1.0, -1*Ts]], rVars, [0.0], sense= 0)
+    # #print 'chainY last', rVars          
+    # solver.add_linear_constraints([[1.0, -1.0, -1*Ts]], rVars, [0.0], sense= 0)
 
 def in_region(regions,x):
     
@@ -240,7 +240,7 @@ if __name__ == "__main__":
 
     StateSpacePartioner_DEBUG = False # local debug flag
     higher_deriv_bound = 1.0
-    grid_size = [1.0,0.5]
+    grid_size = [1.0,1.0]
     neighborhood_radius = 0.1
 
 
