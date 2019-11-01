@@ -166,39 +166,50 @@ def add_final_partition_constraints(solver, partition):
     # b = [v_upper_bound[0],v_upper_bound[1], -1*v_lower_bound[0], -1*v_lower_bound[1]]
     # solver.add_linear_constraints(A, state_vars, b)
 
-def preprocess_partitions(partitions):
-    additional_ce = 0
+
+
+def add_preprocessing_tasks(partitions, task_Q):
     for partition in partitions:
         if(partition['isObstacle']):
             continue
+        task_Q.put(partition)
+    
+
+        
+
+def preprocess_partition(args):
+    task_Q, print_lock, file_lock,additional_ce,process_num = args
+    while(not task_Q.empty()):
+        partition = task_Q.get()
         state_idx = partition['SymbolicStateIndex']
         solver = Solver(input_size,hidden_units,output_dim, network = weights)
-        print('Preprocessing Network, state %d'%state_idx)
+        print_lock.acquire()
+        print('Preprocessing Network, state %d'%state_idx,'process:', process_num)
+        print_lock.release()
         region_idx = partition['RegionIndex']
 
         #Load Region counter examples
         filename = 'Region_' + str(region_idx)
         s = time()
-        with open('counterexamples/'+filename,'rb') as f:
-            dict = pickle.load(f)
-            counter_example, bool_model = dict['counter_example'], dict['bool_model']
-            #Add Region counter examples
-            solver.add_counter_example(counter_example,bool_model, AND = True)
-
+        f =  open('counterexamples/'+filename,'rb')
+        dict = pickle.load(f)
+        counter_example, bool_model = dict['counter_example'], dict['bool_model']
+        #Add Region counter examples
+        solver.add_counter_example(counter_example,bool_model, AND = True)
         #continue preprocessing region
         add_initial_partition_constraints(solver, partition)
         add_lidar_constraints(solver, region_idx)
         pre_counter_example, bool_model = solver.solve(bool_model)
         diffLenCE = len(pre_counter_example) - len(counter_example)
         if(diffLenCE):
-            additional_ce += 1
+            additional_ce.value += 1
         e = time()  
+        print_lock.acquire()
         print('time preprocessing', e-s)
+        print_lock.release()
         filename = 'state_' + str(state_idx)
         with open('counterexamples/'+filename,'wb') as f:
             pickle.dump({'counter_example':pre_counter_example, 'bool_model': bool_model, 'diff':diffLenCE}, f)
-    print('Number of states with additional CE: %d'%additional_ce)
-
 
 def  solveLP(args):
     try:
@@ -297,7 +308,7 @@ if __name__ == "__main__":
     with open(weights_file,'rb') as f:
         weights = pickle.load(f)
     preprocessRegions = False
-    preprocessPartitions = False
+    preprocessPartitions = True
     if(preprocessRegions):
         preprocess_regions(abst_reg_H_rep, len(abst_reg_H_rep) - num_obstacles)
         sys.exit()
@@ -306,14 +317,32 @@ if __name__ == "__main__":
     partitioner.partition()
     
     if(preprocessPartitions):
-        preprocess_partitions(partitioner.symbolic_states)
+        m = Manager()
+        task_Q = m.Queue()
+        print_lock = m.Lock()
+        file_lock = m.Lock()
+        additional_ce = m.Value('i',0)
+        num_workers = 7
+        process_num = 0
+        pool = Pool(num_workers)
+        add_preprocessing_tasks(partitioner.symbolic_states, task_Q)
+        for i in range(num_workers):
+            args=[task_Q, print_lock, file_lock,additional_ce,process_num]
+            pool.apply_async(preprocess_partition,(args,))
+            process_num +=1
+        try:
+            pool.close()
+            pool.join()
+            print('Number of states with additional CE: %d'%additional_ce.value)
+        except Exception as e:
+            print(e)
         sys.exit()
     PARALLEL = True
 
-    with open('safe_points','rb') as f:
-        start_points = pickle.load(f)
-        partitioner.plotWorkspacePartitions([12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 149, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 299, 300, 301, 302, 304, 305, 307, 308, 309, 312, 313, 314, 315, 316, 353, 354, 355, 450, 451, 452, 453, 454, 455, 456, 457, 458, 459, 460, 461, 462, 463, 466, 467, 468, 469, 470])
-        # partitioner.no_partition()
+    # with open('safe_points','rb') as f:
+    #     start_points = pickle.load(f)
+    #     partitioner.plotWorkspacePartitions([12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 149, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 299, 300, 301, 302, 304, 305, 307, 308, 309, 312, 313, 314, 315, 316, 353, 354, 355, 450, 451, 452, 453, 454, 455, 456, 457, 458, 459, 460, 461, 462, 463, 466, 467, 468, 469, 470])
+    #     # partitioner.no_partition()
 
 
     f_result_name = 'results.txt' 
