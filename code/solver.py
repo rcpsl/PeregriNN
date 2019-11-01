@@ -7,11 +7,12 @@ import pickle
 from Workspace import Workspace
 import math
 from gurobipy import * 
+import sys
+import os
 eps = 1E-3
 class Solver():
 
-    def __init__(self,input_size,hidden_units,output_dim, network = None, maxIter = 100000):
-
+    def __init__(self,input_size=16,hidden_units=600,output_dim =2, network = None, maxIter = 100000, process_num = 0, print_lock = None):
         self.maxNumberOfIterations = maxIter
         self.network        = network
 
@@ -35,8 +36,8 @@ class Solver():
 
         #network weights
         seed(12)
-        hidden_weights= network.layers[0].get_weights()
-        output_weights= network.layers[-1].get_weights()
+        hidden_weights= network[0]
+        output_weights= network[1]
         self.W = hidden_weights[0].T
         self.b = hidden_weights[1] 
         self.W_out = output_weights[0].T
@@ -51,6 +52,9 @@ class Solver():
         self.preprocessing = True # set to False after first call to solve
         self.preprocess_counter_examples = []
         self.backend = 'Gurobi'
+
+        self.process_num = process_num
+        self.print_lock = print_lock
 
     def add_variables(self, name, num, lowB = None, uppB = None):
         return LpVariable.dicts(name, [i for i in range( num)],lowB, uppB)
@@ -94,7 +98,7 @@ class Solver():
 
     def solve(self, bool_model = None):
         
-        status = 'None'
+        status = 'TLE'
         AND_bool_constraints = True
         if(bool_model is None):
             bool_model = [False] *self.__hidden_units
@@ -111,17 +115,21 @@ class Solver():
         if(self.preprocessing is False):
             AND_bool_constraints = False
         solutionFound = False
-        iterationsCounter = 0
+        iterationsCounter = -1
         counter_examples = []
         while solutionFound == False and iterationsCounter < self.maxNumberOfIterations:
             iterationsCounter               = iterationsCounter + 1
 
-            if iterationsCounter % 1 == 0:
-                print '******** Solver , iteration = ', iterationsCounter, '********'
+            if iterationsCounter % 100 == 0:
+                self.print_lock.acquire()
+                print('******** Solver , iteration = ', iterationsCounter, ', process',self.process_num,'********')
+                self.print_lock.release()
 
             SATcheck    = self.SATsolver.check()
             if  SATcheck == z3.unsat:
-                print '==========  Problem is UNSAT =========='
+                self.print_lock.acquire()
+                print('==========  Problem is UNSAT ==========', ', process',self.process_num)
+                self.print_lock.release()
                 status = 'UNSAT'
                 break
             else: #Generate new boolean model
@@ -132,18 +140,25 @@ class Solver():
 
             if(self.backend == 'Gurobi'):
                 problem = self.__prepare_problem(convIFModel, feasibility = True)
-                problem.writeLP('problem.lp')
-                model = read('problem.lp')
+                fname = str(self.process_num)+'_problem.lp'
+                problem.writeLP(fname)
+                sys.stdout = open(os.devnull, "w")
+                model = read(fname)
+                os.remove(fname)
+                sys.stdout = sys.__stdout__
                 # model.params.IISMethod = 1
-                model.params.FeasibilityTol = 1E-2
+                # model.params.FeasibilityTol = 1E-2
+                model.params.OutputFlag = 0
                 model.optimize()
                 if(model.Status == 3): #Infeasible
                     IIS_slack = []
                     try:
                         model.computeIIS() 
-                        model.write("result.ilp")
-                        with open('result.ilp','rb') as f:
+                        fname = str(self.process_num)+'_result.ilp'
+                        model.write(fname)
+                        with open(fname,'rb') as f:
                             contents = f.readlines()
+                        os.remove(fname)
                         for i in range(len(contents)):
                             idx = len(contents) - 1 -i
                             line = contents[idx]
@@ -156,32 +171,53 @@ class Solver():
 
                         if(len(IIS_slack) != 0):
                             self.__add_counter_example(IIS_slack, convIFModel, AND = False)
-                            print(IIS_slack)
+                            # print(IIS_slack)
                         else:
                             status = "Infeasible"
                             break
                             
                     except Exception as e:
-                        print(e)
+                        self.print_lock.acquire()
+                        print(e,self.process_num)
+                        self.print_lock.release()
+                        problem = self.__prepare_problem(convIFModel, feasibility = False)
+                        problem.solve()
+                        solver_status = problem.status
                         # print('Switching to Trivial')
                         # self.__add_counter_example(counter_example, convIFModel)
-                        
-   
+                        if(solver_status == LpStatusOptimal):
+                            counter_example = self.__generate_counter_example()
+                            if(len(counter_example) == 0):
+                                solutionFound = True
+                                status = 'solFound'
+                                break
+                            else:
+                                self.__add_counter_example(counter_example, convIFModel, AND = False)
+                                self.print_lock.acquire()
+                                print('Switching to Trivial CE',self.process_num)
+                                self.print_lock.release()
+                                # status = 'EXCEPTION'
                 else:
                     solutionFound = True
-                    print('Solution found')
+                    status = 'SolFound'      
                     problem = self.__prepare_problem(convIFModel, feasibility = True)
                     problem.solve()
                     if(problem.status != LpStatusOptimal):
+                        self.print_lock.acquire()
                         print("Something went wrong :)")
+                        self.print_lock.release()
+
+                        status = 'EXCEPTION'
+                        break
+                    self.print_lock.acquire()
+                    print('Solution found')
                     print('x',[self.state_vars[i].varValue for i in range(len(self.state_vars))])
-                    print('x-',[self.prev_state_vars[i].varValue for i in range(len(self.prev_state_vars))])
                     print('w',[self.next_state_vars[i].varValue for i in range(len(self.next_state_vars))])
                     print('u',[self.out_vars[i].varValue for i in range(len(self.out_vars))])
                     print('i',[self.im_vars[i].varValue for i in range(len(self.im_vars))])
                     # print('slack',[self.slack_vars[i].varValue for i in range(len(self.slack_vars))])
                     print('Relu',[i for i, x in enumerate(convIFModel) if x == True])
-                    status = 'SolFound'      
+                    self.print_lock.release()
             else:
                 problem = self.__prepare_problem(convIFModel)
                 self.curr_problem = problem #for debug
@@ -227,13 +263,15 @@ class Solver():
         for constraint in self.linear_constraints:
             problem += constraint
         #Add NN constrainst for unpreprocessed neurons
-        neurons_idx = [idx for idx in range(self.__hidden_units) if idx not in self.preprocess_counter_examples]
-        self.__add_NN_constraints(problem, relu_assignment,neurons_idx)
+        # neurons_idx = [idx for idx in range(self.__hidden_units) if idx not in self.preprocess_counter_examples]
+        self.__add_NN_constraints(problem, relu_assignment)
         if(feasibility):
             for i in range(self.__hidden_units):
-                problem += (self.slack_vars[i] == 0)
+                problem += (self.slack_vars[i] <= eps)
+                problem += (self.slack_vars[i] >= -1*eps)
         else:
-            self.__add_objective_fn(problem)
+            self.__add_objective_fn(problem)   
+
         return problem
 
     def preprocess(self):
@@ -257,7 +295,7 @@ class Solver():
                     false_assignment.append(bool(relu_assignment[neuron_idx]))
                     break
         a = [i for idx,i in enumerate(counter_example) if false_assignment[idx] is False]
-        print(a)
+        # print(a)
         return counter_example, false_assignment
 
 

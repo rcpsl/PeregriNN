@@ -28,8 +28,8 @@ class Workspace(object):
         self.laser_angles = self.principal_angles + refined_angles
         self.laser_angles.sort()
         self.obstacles = []
-        print 'laser_angles = ', self.laser_angles
-        print 'Number of lasers = ', len(self.laser_angles)
+        # print 'laser_angles = ', self.laser_angles
+        # print 'Number of lasers = ', len(self.laser_angles)
 
         data = self.__parse_json(file)
         lines_json = data['Lines']

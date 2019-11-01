@@ -63,16 +63,29 @@ class StateSpacePartitioner(object):
     ################################################################################################
     def partition(self):
         self.__partition_wrokspace()
-        # self.__plotWorkspaceRegions()
-        # self.__plotWorkspacePartitions()
+
 
         self.__partition_higher_order_derivatives()
 
 
         self.__partition_statespace()
 
+        # self.__plotWorkspaceRegions()
+        # self.plotWorkspacePartitions()
         x = 0
 
+
+    def no_partition(self):
+        self.__partition_wrokspace()
+        self.obstacle_symbolic_states = []
+        for region_idx,region in enumerate(self.regions):
+            region['SymbolicStateIndex'] = region_idx
+            region['RegionIndex'] = region_idx
+           
+            if(region['isObstacle']):
+                self.obstacle_symbolic_states.append(region_idx)
+        self.symbolic_states = self.regions
+        
 
 
     ################################################################################################
@@ -94,14 +107,37 @@ class StateSpacePartitioner(object):
         # TBD: re-implement the workspace partitioning here using Shapely package
         #      for now, we will import the regions from files
 
-        num_obstacles = 2
+        num_obstacles = 3
         filename = './regions/abst_reg_H_rep.txt'
         with open(filename, 'rb') as inputFile:
             abst_reg_H_rep = pickle.load(inputFile)
-
+            A = [[0.0, -1.00000000e+00],
+                [-1.00000000e+00, -0.00000000e+00],
+                [ 0.0,  1.00000000e+00],
+                [ 1.00000000e+00, -0.00000000e+00]]
+            b = [[0.0],
+                [-2.50000000e+00],
+                [2.5],
+                [ 6.00000000e+00]]
+            abst_reg_H_rep[56]['A'] = A
+            abst_reg_H_rep[56]['b'] = b
+            A = [[0.0, -1.00000000e+00],
+                [-1.00000000e+00, -0.00000000e+00],
+                [ 0.0,  1.00000000e+00],
+                [ 1.00000000e+00, -0.00000000e+00]]
+            b = [[-2.5],
+                [-5.50000000e+00],
+                [6.0],
+                [ 6.00000000e+00]]
+            abst_reg_H_rep.append({'A':A, 'b':b})
         filename = './regions/abst_reg_V_rep.txt'
         with open(filename, 'rb') as inputFile:
             abst_reg_V_rep = pickle.load(inputFile)
+            v = [(2.5, 0), (2.5, 2.5), (5.5, 2.5), (5.5, 0)]
+            abst_reg_V_rep[56] = v
+            v = [(5.5, 2.5), (5.5, 6.0), (6.0, 6.0), (6.0, 2.5)]
+            abst_reg_V_rep.append(v)
+
 
 
         numberOfWorkspaceRegions = len(abst_reg_H_rep) - num_obstacles
@@ -125,7 +161,7 @@ class StateSpacePartitioner(object):
 
 
         # TBD: the loaded files (above) do not include workspace obstacles, add them manually for now
-        obstacles_idx = [55,56]
+        obstacles_idx = [55,56,57]
         # obstacle = Polygon([(2.5,0), (5.5, 0), (5.5, 2.5), (2.5, 2.5)])
         for obs_idx in obstacles_idx:
             obstacle = Polygon(abst_reg_V_rep[obs_idx])
@@ -261,7 +297,7 @@ class StateSpacePartitioner(object):
         y_min = region['Polygon'].bounds[1]
         x_max = region['Polygon'].bounds[2]
         y_max = region['Polygon'].bounds[3]
-
+        
         number_of_partitions_x = int(math.ceil((x_max - x_min) / self.position_grid_size))
         number_of_partitions_y = int(math.ceil((y_max - y_min) / self.position_grid_size))
 
@@ -396,30 +432,60 @@ class StateSpacePartitioner(object):
     #
     ################################################################################################
     def __partition_statespace(self):
-        for cube_index in range(len(self.cubes)):
+        if(self.num_integrators >1):
+            for cube_index in range(len(self.cubes)):
+                for region_index in range(len(self.regions)):
+                    partitions = self.regions[region_index]['Partitions']
+                    for partition_index in range(len(partitions)):
+                        adjacents = []
+                        for partition_adjacent in partitions[partition_index]['Adjacents']:
+                            for cube_adjacent in self.cubes[cube_index]['Adjacents']:
+                                adjacents.append(self.toSymbolicStateIndex(
+                                    partition_adjacent['RegionIndex'],
+                                    partition_adjacent['PartitionIndex'],
+                                    cube_adjacent
+                                ))
+
+                        self.symbolic_states.append({
+                            'Polygon': partitions[partition_index]['Polygon'],
+                            'PolygonH': partitions[partition_index]['PolygonH'],
+                            'HyperCube': self.cubes[cube_index]['HyperCube'],
+                            'RegionIndex': region_index,
+                            'PartitionIndex': partition_index,
+                            'HyperCubeIndex': cube_index,
+                            'SymbolicStateIndex' : len(self.symbolic_states),
+                            'Adjacents': adjacents,
+                            'isObstacle': partitions[partition_index]['isObstacle'],
+                        })
+        
+        else:
             for region_index in range(len(self.regions)):
                 partitions = self.regions[region_index]['Partitions']
                 for partition_index in range(len(partitions)):
                     adjacents = []
                     for partition_adjacent in partitions[partition_index]['Adjacents']:
-                        for cube_adjacent in self.cubes[cube_index]['Adjacents']:
                             adjacents.append(self.toSymbolicStateIndex(
                                 partition_adjacent['RegionIndex'],
                                 partition_adjacent['PartitionIndex'],
-                                cube_adjacent
+                                0
                             ))
 
                     self.symbolic_states.append({
                         'Polygon': partitions[partition_index]['Polygon'],
                         'PolygonH': partitions[partition_index]['PolygonH'],
-                        'HyperCube': self.cubes[cube_index]['HyperCube'],
+                        # 'HyperCube': self.cubes[cube_index]['HyperCube'],
                         'RegionIndex': region_index,
                         'PartitionIndex': partition_index,
-                        'HyperCubeIndex': cube_index,
+                        # 'HyperCubeIndex': 0,
                         'SymbolicStateIndex' : len(self.symbolic_states),
                         'Adjacents': adjacents,
                         'isObstacle': partitions[partition_index]['isObstacle'],
                     })
+
+                    # if obstacle state, add its index to the obstacle_symbolic_states list
+                    if partitions[partition_index]['isObstacle'] == True:
+                        self.obstacle_symbolic_states.append(len(self.symbolic_states)-1)
+
 
                     # if obstacle state, add its index to the obstacle_symbolic_states list
                     if partitions[partition_index]['isObstacle'] == True:
@@ -517,25 +583,38 @@ class StateSpacePartitioner(object):
 
 
 
-    def __plotWorkspacePartitions(self):
+    def plotWorkspacePartitions(self, unsafe = [], pts=[]):
         fig = plt.figure(1, figsize=(5, 5), dpi=90)
         axis = fig.add_subplot(111)
 
-        for region_index in range(len(self.regions)):
-            partitions = self.regions[region_index]['Partitions']
-            for partition_index in range(len(partitions)):
-                polygon = partitions[partition_index]['Polygon']
-                self.__plotWorkspacePolygon(polygon, str(region_index)+":"+str(partition_index), axis)
+        # for region_index in range(len(self.regions)):
+        #     partitions = self.regions[region_index]['Partitions']
+        #     for partition_index in range(len(partitions)):
+        #         polygon = partitions[partition_index]['Polygon']
+                # self.__plotWorkspacePolygon(polygon, str(region_index)+":"+str(partition_index), axis)
+        for partition_idx, partition in enumerate(self.symbolic_states):
+                polygon = partition['Polygon']
+                self.__plotWorkspacePolygon(polygon, str(partition_idx), axis,color = 'black',alpha = 0.1)
 
+        for partition_idx in unsafe:
+            polygon = self.symbolic_states[partition_idx]['Polygon']
+            color = 'g'
+            fill = 'none'
+            self.__plotWorkspacePolygon(polygon, str(partition_idx), axis, color,fill)
+
+        if(len(pts)):
+            x = [p[0] for p in pts]
+            y = [p[1] for p in pts]
+            axis.scatter(x,y)                
         plt.show()
 
 
-    def __plotWorkspacePolygon(self, polygon, text, axis):
+    def __plotWorkspacePolygon(self, polygon, text, axis, color = None, fill = 'full', alpha = 1):
         x, y = polygon.exterior.xy
-        axis.plot(x, y)
+        axis.plot(x, y, color = color, fillstyle = fill, alpha = alpha)
 
         center = polygon.centroid.coords[:][0]  # region center
-        axis.text(center[0], center[1], text)
+        axis.text(center[0], center[1], text,color =color)
 
 
 
