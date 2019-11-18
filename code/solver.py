@@ -75,12 +75,10 @@ class Solver():
 
         if(neurons_indices is None):
             neurons_indices = range(self.__hidden_units)
-
         for neuron_idx in neurons_indices:
             #add net constraints
             net_expr = LpAffineExpression([(self.im_vars[input_idx],self.W[neuron_idx][input_idx]) for input_idx in range(self.__input_dim)])
             problem += self.net_vars[neuron_idx] == (net_expr + self.b[neuron_idx])
-            
             #add relu inequality constraint
             problem += (1-2*relu_assignment[neuron_idx]) * self.net_vars[neuron_idx] - self.slack_vars[neuron_idx] <=0
            

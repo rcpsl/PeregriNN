@@ -26,14 +26,7 @@ StateSpacePartioner_DEBUG = False
 # Partition = subset of the statespace
 
 class StateSpacePartitioner(object):
-    regions    = []         # data structure that holds the information for all workspace partitions
-    cubes      = []         # data structure that holds the information for hyper cubes in the higher-order dimensions
-
-    symbolic_states = []   # data structure that holds the information for all symbolic states (state space partitions)
-    obstacle_symbolic_states = [] #indecies of all obstacle symbolic states
-
-    __RegionPartitionIndexShift = []
-    __NumberOfRegionPartitions = 0
+   
     ################################################################################################
     #
     #       Constructor
@@ -55,6 +48,14 @@ class StateSpacePartitioner(object):
                                                         # i.e., two partitions X_1 and X_2 are said to be adjacent
                                                         # if there exists x_1 \in X_1 and x_2 in X_2 such that
                                                         # distance(x_1,x_2) < neighborhood_radius
+        self.regions    = []         # data structure that holds the information for all workspace partitions
+        self.cubes      = []         # data structure that holds the information for hyper cubes in the higher-order dimensions
+
+        self.symbolic_states = []   # data structure that holds the information for all symbolic states (state space partitions)
+        self.obstacle_symbolic_states = [] #indecies of all obstacle symbolic states
+
+        self.__RegionPartitionIndexShift = []
+        self.__NumberOfRegionPartitions = 0
 
     ################################################################################################
     #
@@ -154,6 +155,9 @@ class StateSpacePartitioner(object):
 
             # re-partition the region using the gird_size parameter
             region_partitions = self.__partition_region(index)
+            # for idx,partition in enumerate(region_partitions):
+            #     if(partition['Polygon'].area < 1E-10):
+            #         region_partitions.pop(idx)
             self.regions[index]['Partitions'] = region_partitions
 
             self.__NumberOfRegionPartitions = self.__NumberOfRegionPartitions + len(region_partitions)
@@ -203,6 +207,7 @@ class StateSpacePartitioner(object):
         #   STEP 2: Check for Adjacent Workspace Regions
         # ----------------------------------------------------------------------------
         for index1 in range(len(self.regions)):
+            self.regions[index1]['Adjacents'].append(index1)
             for index2 in range(index1+1, len(self.regions)):
                 polygon1 = self.regions[index1]['Polygon']
                 polygon2 = self.regions[index2]['Polygon']
@@ -225,6 +230,8 @@ class StateSpacePartitioner(object):
                 #     dist, other_region_index = heap.heappop(adjacent_regions) #this will return a pair of distance
                 #                                                               # and region index
                     for other_partition in self.regions[other_region_index]['Partitions']:
+                        if(partition['PartitionIndex'] == other_partition['PartitionIndex'] and region_index == other_region_index):
+                            continue
                         polygon2 = other_partition['Polygon']
 
                         distance = polygon1.distance(polygon2)
@@ -316,6 +323,8 @@ class StateSpacePartitioner(object):
 
                 # check if the intersection is not just a point or a line, but a polygon
                 if partition_polygon.geom_type == 'Polygon':
+                    if(partition_polygon.area < 1E-10):
+                        continue
                     A, b = self.__computeHRepresentation(partition_polygon)
 
                     # Add the partition to the dictionary, do not worry about the hypercubes and the adjacents for now
@@ -457,6 +466,8 @@ class StateSpacePartitioner(object):
                             'Adjacents': adjacents,
                             'isObstacle': partitions[partition_index]['isObstacle'],
                         })
+                        if partitions[partition_index]['isObstacle'] == True:
+                            self.obstacle_symbolic_states.append(len(self.symbolic_states)-1)
         
         else:
             for region_index in range(len(self.regions)):
@@ -486,10 +497,6 @@ class StateSpacePartitioner(object):
                     if partitions[partition_index]['isObstacle'] == True:
                         self.obstacle_symbolic_states.append(len(self.symbolic_states)-1)
 
-
-                    # if obstacle state, add its index to the obstacle_symbolic_states list
-                    if partitions[partition_index]['isObstacle'] == True:
-                        self.obstacle_symbolic_states.append(len(self.symbolic_states)-1)
 
         # # ----------------------------------------------------------------------------
         # #   STEP 1: Repartition the workspace regions based on the grid_size
@@ -583,7 +590,7 @@ class StateSpacePartitioner(object):
 
 
 
-    def plotWorkspacePartitions(self, unsafe = [], pts=[]):
+    def plotWorkspacePartitions(self, safe = [], pts=[], show  = False, traj = [], save_file = ''):
         fig = plt.figure(1, figsize=(5, 5), dpi=90)
         axis = fig.add_subplot(111)
 
@@ -594,27 +601,36 @@ class StateSpacePartitioner(object):
                 # self.__plotWorkspacePolygon(polygon, str(region_index)+":"+str(partition_index), axis)
         for partition_idx, partition in enumerate(self.symbolic_states):
                 polygon = partition['Polygon']
-                self.__plotWorkspacePolygon(polygon, str(partition_idx), axis,color = 'black',alpha = 0.1)
+                self.__plotWorkspacePolygon(polygon, str(partition_idx), axis,color = 'r',alpha = 0.1)
 
-        for partition_idx in unsafe:
+        for partition_idx in safe:
             polygon = self.symbolic_states[partition_idx]['Polygon']
             color = 'g'
+            fill = 'none'
+            self.__plotWorkspacePolygon(polygon, str(partition_idx), axis, color,fill)
+        
+        for partition_idx in traj:
+            polygon = self.symbolic_states[partition_idx]['Polygon']
+            color = 'Y'
             fill = 'none'
             self.__plotWorkspacePolygon(polygon, str(partition_idx), axis, color,fill)
 
         if(len(pts)):
             x = [p[0] for p in pts]
             y = [p[1] for p in pts]
-            axis.scatter(x,y)                
-        plt.show()
+            axis.scatter(x,y)     
+        if(show):
+            plt.show()
+        else:
+            plt.savefig(save_file)
 
 
-    def __plotWorkspacePolygon(self, polygon, text, axis, color = None, fill = 'full', alpha = 1):
+    def __plotWorkspacePolygon(self, polygon, text, axis, color = 'r', fill = 'full', alpha = 1):
         x, y = polygon.exterior.xy
-        axis.plot(x, y, color = color, fillstyle = fill, alpha = alpha)
+        axis.fill(x, y, color = color,edgecolor = 'black')
 
         center = polygon.centroid.coords[:][0]  # region center
-        axis.text(center[0], center[1], text,color =color)
+        # axis.text(center[0], center[1], text,color =color)
 
 
 
