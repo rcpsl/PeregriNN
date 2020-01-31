@@ -2,116 +2,105 @@ from pulp import *
 from random import random,seed
 from time import time
 sys.path.append('./z3/z3-4.4.1-x64-osx-10.11/bin/')
-import z3 as z3
 import pickle
 from Workspace import Workspace
 import math
 from gurobipy import * 
 import sys
 import os
-eps = 1E-3
+from NeuralNetwork import *
+from copy import copy
+eps = 1E-5
+
 class Solver():
 
-    def __init__(self,input_size=16,hidden_units=600,output_dim =2, network = None, maxIter = 100000, process_num = 0, print_lock = None):
+    def __init__(self, network = None, maxIter = 100000):
         self.maxNumberOfIterations = maxIter
-        self.network        = network
+        self.nn        = network
 
         #TODO: self.__parse_network() #compute the dims of input and hidden nodes
-        self.__input_dim    = input_size
-        self.__hidden_units = hidden_units
-        self.__output_dim   = output_dim
+        self.__input_dim    = self.nn.image_size
+        self.__hidden_units = self.nn.num_hidden_neurons
+        self.__output_dim   = self.nn.output_size
+        self.num_layers     = self.nn.num_layers #including the input/output layers
 
-        self.SATsolver      = z3.Solver()
-        self.convIFClauses  = z3.BoolVector('bConv', self.__hidden_units)
-        self.SATsolver.reset()
-
+        self.model = Model()
+        self.model.params.OutputFlag = 0
+        self.model.params.DualReductions = 0
         #Add variables
-        self.state_vars         = LpVariable.dicts("x", [i for i in range(4)])
-        self.im_vars            = LpVariable.dicts("i", [i for i in range(self.__input_dim)])
-        self.net_vars           = LpVariable.dicts("y", [i for i in range(self.__hidden_units)])
-        self.relu_vars          = LpVariable.dicts("z", [i for i in range(self.__hidden_units)])
-        self.slack_vars         = LpVariable.dicts("s", [i for i in range(self.__hidden_units)], lowBound = 0)
-        self.out_vars           = LpVariable.dicts("u", [i for i in range( self.__output_dim)])
-        self.next_state_vars    = LpVariable.dicts("w", [i for i in range(4)])
-
-        #network weights
-        seed(12)
-        hidden_weights= network[0]
-        output_weights= network[1]
-        self.W = hidden_weights[0].T
-        self.b = hidden_weights[1] 
-        self.W_out = output_weights[0].T
-        self.b_out = output_weights[1] 
-        # self.W  = [[2*(random()-0.5)  for i in range(input_size)] for j in range(hidden_units)]
-        # self.W_out = [[2*(random() -0.5 )  for i in range(hidden_units)] for j in range(output_dim)]
-        # self.b = [2*(random()-0.5)]* hidden_units
-        # self.b_out  = [2*(random()-0.5)]* output_dim
-
+        self.state_vars         = self.model.addVars(self.__input_dim,name = "x", lb  = -1*GRB.INFINITY)  
+        self.relu_vars           = self.model.addVars(self.__input_dim,name = "y", lb = -1*GRB.INFINITY)      
+        self.relu_vars.update(self.model.addVars([self.__input_dim + i for i in range(self.__hidden_units)],name = "y", lb = 0))
+        self.net_vars        = self.model.addVars(self.__input_dim,name = "n",lb = -1* GRB.INFINITY)      
+        self.net_vars.update(self.model.addVars([self.__input_dim + i for i in range(self.__hidden_units)],name = "n", lb = -1* GRB.INFINITY) )
+        self.slack_vars         = self.model.addVars(self.__input_dim + self.__hidden_units,name = "s",lb = 0)
+        self.out_vars           = self.model.addVars(self.__output_dim,name = "u", lb = -1* GRB.INFINITY)
+        #Layer index 
+        self.model.update()
+        self.layer_start_idx = [0] * len(self.nn.layers)
+        for layer_idx, _ in self.nn.layers.items():
+            if(layer_idx == 0):
+                continue
+            self.layer_start_idx[layer_idx] = self.layer_start_idx[layer_idx-1] + self.nn.layers[layer_idx-1]['num_nodes']
         self.linear_constraints = []
-        self.curr_problem = []
-        self.preprocessing = True # set to False after first call to solve
-        self.preprocess_counter_examples = []
-        self.backend = 'Gurobi'
 
-        self.process_num = process_num
-        self.print_lock = print_lock
-
-    def add_variables(self, name, num, lowB = None, uppB = None):
-        return LpVariable.dicts(name, [i for i in range( num)],lowB, uppB)
-
-    def add_linear_constraints(self, A, x, b, sense = LpConstraintLE):
+    def add_linear_constraints(self, A, x, b, sense = GRB.LESS_EQUAL):
+        #Senses are GRB.LESS_EQUAL, GRB.EQUAL, or GRB.GREATER_EQUAL
         for row in range(len(b)):
-            linear_expression = LpAffineExpression([(x[col],A[row][col]) for col in range(len(x))])
-            constraint =  LpConstraint(linear_expression, sense = sense, rhs = b[row])
+            linear_expression = LinExpr(A[row],x)
+            constraint = {'expr' : linear_expression, 'sense': sense,'rhs': b[row]} 
             self.linear_constraints.append(constraint)
 
-    def __add_objective_fn(self, problem):
-        slack_idx = [i for i in range(self.__hidden_units) if i not in self.preprocess_counter_examples]
-        for i in self.preprocess_counter_examples:
-            problem += (self.slack_vars[i] == 0)
-        problem +=lpSum([(self.slack_vars[i],1) for i in slack_idx])
+    def __add_NN_constraints(self):
 
-    def __add_NN_constraints(self, problem, relu_assignment,neurons_indices = None):
+        fixed_relus = 0
+        #First layer of network is assumed to be the input to the network
+        layer_idx = 0
+        num_neurons = self.nn.layers[layer_idx]['num_nodes']
+        layer_start_idx = self.layer_start_idx[layer_idx]
+        for neuron_idx in range(num_neurons):
+            neuron_abs_idx = layer_start_idx + neuron_idx
+            self.model.addConstr(self.relu_vars[neuron_abs_idx] == self.state_vars[neuron_abs_idx])
+            self.model.addConstr(self.net_vars[neuron_abs_idx] == self.state_vars[neuron_abs_idx])
+        for layer_idx in range(1,self.num_layers): #exclude input
+            num_neurons = self.nn.layers[layer_idx]['num_nodes']
+            layer_start_idx = self.layer_start_idx[layer_idx]
+            prev_layer_start_idx = self.layer_start_idx[layer_idx - 1]
+            W = self.nn.layers[layer_idx]['weights']
+            b = self.nn.layers[layer_idx]['bias']
+            ub = self.nn.layers[layer_idx]['Relu_sym_ub']
+            lb = self.nn.layers[layer_idx]['Relu_sym_lb']
+            prev_layer_size = self.nn.layers_sizes[layer_idx -1]
+            for neuron_idx in range(num_neurons):
+                #add - constraints
+                neuron_abs_idx = layer_start_idx + neuron_idx
+                net_expr = LinExpr(W[neuron_idx], [self.relu_vars[prev_layer_start_idx + input_idx] for input_idx in range(prev_layer_size)])
+                if(self.nn.layers[layer_idx]['type'] != 'output'):
+                    self.model.addConstr(self.net_vars[neuron_abs_idx] == (net_expr + b[neuron_idx]))
+                    self.model.addConstr(self.slack_vars[neuron_abs_idx] == self.relu_vars[neuron_abs_idx] - self.net_vars[neuron_abs_idx])
+                    
+                    if(ub[neuron_idx] <= 0):
+                        self.model.addConstr(self.relu_vars[neuron_abs_idx] == 0)
+                        fixed_relus +=1
 
-        if(neurons_indices is None):
-            neurons_indices = range(self.__hidden_units)
-        for neuron_idx in neurons_indices:
-            #add net constraints
-            net_expr = LpAffineExpression([(self.im_vars[input_idx],self.W[neuron_idx][input_idx]) for input_idx in range(self.__input_dim)])
-            problem += self.net_vars[neuron_idx] == (net_expr + self.b[neuron_idx])
-            #add relu inequality constraint
-            problem += (1-2*relu_assignment[neuron_idx]) * self.net_vars[neuron_idx] - self.slack_vars[neuron_idx] <=0
-           
-            problem += self.relu_vars[neuron_idx] == relu_assignment[neuron_idx] * (self.net_vars[neuron_idx] + self.slack_vars[neuron_idx])
-        
-        if(not self.preprocessing):
-            for neuron_idx in range(self.__output_dim):
-                net_expr = LpAffineExpression([(self.relu_vars[input_idx],self.W_out[neuron_idx][input_idx]) for input_idx in range(self.__hidden_units)])
-                problem += ( self.out_vars[neuron_idx] == (net_expr + self.b_out[neuron_idx]) )
+                    elif(lb[neuron_idx] >= 0):
+                        self.model.addConstr(self.slack_vars[neuron_abs_idx] == 0)
+                        fixed_relus +=1
+                    
+                    else:
+                        factor = (ub[neuron_idx]/ (ub[neuron_idx]-lb[neuron_idx]))[0]
+                        self.model.addConstr(self.relu_vars[neuron_abs_idx] <= factor * (self.net_vars[neuron_abs_idx]- lb[neuron_idx]))
+
+                else:
+                    self.model.addConstr(self.out_vars[neuron_idx] == (net_expr + b[neuron_idx]))
+                    self.model.addConstr(self.out_vars[neuron_idx] >= lb[neuron_idx])
+                    self.model.addConstr(self.out_vars[neuron_idx] <= ub[neuron_idx])
+
+        print('Number of fixed Relus:', fixed_relus)
     
-    def __extractSATModel(self):
-        z3Model                 = self.SATsolver.model()
-        convIFModel             = [z3.is_true(z3Model[bConv])   for bConv   in self.convIFClauses]
-        return convIFModel
-
-    def solve(self, bool_model = None):
+    def solve(self):
         
         status = 'TLE'
-        AND_bool_constraints = True
-        if(bool_model is None):
-            bool_model = [False] *self.__hidden_units
-        if(self.preprocessing):
-            counter_example, convIFModel = self.preprocess()
-            for idx, neuron_idx in enumerate(counter_example):
-                bool_model[neuron_idx] = convIFModel[idx]
-
-            self.preprocessing = False
-            # self.__add_counter_example(counter_example, convIFModel, AND_bool_constraints)
-            self.preprocess_counter_examples += counter_example
-            return self.preprocess_counter_examples, bool_model
-
-        if(self.preprocessing is False):
-            AND_bool_constraints = False
         solutionFound = False
         iterationsCounter = -1
         counter_examples = []
@@ -119,202 +108,191 @@ class Solver():
             iterationsCounter               = iterationsCounter + 1
 
             if iterationsCounter % 100 == 0:
-                self.print_lock.acquire()
-                print('******** Solver , iteration = ', iterationsCounter, ', process',self.process_num,'********')
-                self.print_lock.release()
+                # self.print_lock.acquire()
+                print('******** Solver , iteration = ', iterationsCounter ,'********')
+                # self.print_lock.release()
 
-            SATcheck    = self.SATsolver.check()
-            if  SATcheck == z3.unsat:
-                self.print_lock.acquire()
-                print('==========  Problem is UNSAT ==========', ', process',self.process_num)
-                self.print_lock.release()
+            self.__prepare_problem()
+            self.model.write('model.lp')
+            self.model.optimize()
+            if(self.model.Status == 3): #Infeasible
+                IIS_slack = []
+                try:
+                    self.model.computeIIS() 
+                    fname = 'result.ilp'
+                    self.model.write(fname)
+                except Exception as e:
+                    print(e)
                 status = 'UNSAT'
-                break
-            else: #Generate new boolean model
-                convIFModel         = self.__extractSATModel()
-                # convIFModel = [False, False, True, True, False, False, False, False, True, True, False, True, False, False, True, False, True, False, False, True, False, True, False, False, True, True, False, True, False, True, True, False, True, True, True, True, True, True, False, False, True, False, True, False, True, True, False, False, True, False, True, True, False, True, True, False, True, False, True, False, False, False, True, False, True, False, False, False, False, False, True, False, False, False, True, True, True, True, False, False, True, False, False, False, True, False, False, False, True, False, True, True, True, False, False, True, False, True, False, True, False, True, True, True, False, True, False, False, True, True, False, False, True, False, False, False, False, False, False, False, True, False, True, False, False, True, False, True, True, False, True, True, True, True, True, False, False, False, True, False, False, False, False, True, False, True, False, False, False, False, False, False, False, False, False, True, True, False, False, False, False, False, False, False, False, False, False, True, True, False, False, False, False, False, True, True, True, True, True, False, False, False, False, False, True, True, False, False, False, False, True, False, False, False, True, False, False, False, False, False, False, False, False, True, False, False, True, True, False, True, False, False, False, False, True, True, True, False, False, False, False, False, False, True, False, False, False, True, False, False, True, False, False, False, False, False, False, False, False, True, False, False, False, False, True, False, True, False, False, False, False, False, True, True, True, True, True, False, True, False, False, False, False, True, False, False, True, True, True, True, True, False, False, True, True, False, False, False, False, False, False, True, False, True, True, False, True, False, False, False, True, False, False, True, True, False, False, True, False, False, False, False, True, False, False, False, False, False, True, False, False, False, False, True, False, False, True, False, True, True, False, False, False, True, True, True, True, False, False, False, False, True, False, True, False, False, False, False, False, False, True, False, True, False, False, False, True, False, False, False, False, False, False, True, True, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, True, True, True, True, False, False, False, False, False, True, True, False, True, False, False, False, False, False, False, False, False, False, False, False, True, False, False, True, False, False, False, False, False, True, True, False, False, False, False, False, True, False, True, False, True, False, True, True, False, True, False, False, False, True, False, True, True, False, True, True, False, False, False, False, False, True, False, False, False, True, False, True, True, False, True, False, False, True, True, False, True, False, False, False, False, False, True, True, True, False, True, False, False, True, False, True, True, False, True, False, False, False, False, True, False, False, False, False, False, True, False, False, True, False, True, True, True, False, True, True, False, True, False, False, True, True, True, False, True, False, False, False, True, False, False, True, False, False, False, True, False, False, True, True, False, False, False, True, True, True, True, False, False, True, False, False, True, False, False, False, False, False, False, True, False, False, True, True, False, False, True, False, False, False, False, True, False, True, False, True, True, False, True, True, True, True, False, False, False, False, True, False, False, False, False, False, False, True, True, True, False, False, False, True, False, True, False, False, False, False, True, True, True, True, False, False, True, True, True, True, True, False, True, False, True, True, True, True, False]
-                # print 'ConvIfModel = ', [i for i, x in enumerate(convIFModel) if x == True], '\n'
-            #prepare problem
-
-            if(self.backend == 'Gurobi'):
-                problem = self.__prepare_problem(convIFModel, feasibility = True)
-                fname = str(self.process_num)+'_problem.lp'
-                problem.writeLP(fname)
-                sys.stdout = open(os.devnull, "w")
-                model = read(fname)
-                os.remove(fname)
-                sys.stdout = sys.__stdout__
-                # model.params.IISMethod = 1
-                # model.params.FeasibilityTol = 1E-2
-                model.params.OutputFlag = 0
-                model.optimize()
-                if(model.Status == 3): #Infeasible
-                    IIS_slack = []
-                    try:
-                        model.computeIIS() 
-                        fname = str(self.process_num)+'_result.ilp'
-                        model.write(fname)
-                        with open(fname,'rb') as f:
-                            contents = f.readlines()
-                        os.remove(fname)
-                        for i in range(len(contents)):
-                            idx = len(contents) - 1 -i
-                            line = contents[idx]
-                            if(line == 'Bounds\n'):
-                                break
-                            if('s_' in line):
-                                words = line.split(' ')[1]
-                                words = words.split('_')
-                                IIS_slack.append(int(words[1]))
-
-                        if(len(IIS_slack) != 0):
-                            self.__add_counter_example(IIS_slack, convIFModel, AND = False)
-                            # print(IIS_slack)
-                        else:
-                            status = "Infeasible"
-                            break
-                            
-                    except Exception as e:
-                        self.print_lock.acquire()
-                        print(e,self.process_num)
-                        self.print_lock.release()
-                        problem = self.__prepare_problem(convIFModel, feasibility = False)
-                        problem.solve()
-                        solver_status = problem.status
-                        # print('Switching to Trivial')
-                        # self.__add_counter_example(counter_example, convIFModel)
-                        if(solver_status == LpStatusOptimal):
-                            counter_example = self.__generate_counter_example()
-                            if(len(counter_example) == 0):
-                                solutionFound = True
-                                status = 'solFound'
-                                break
-                            else:
-                                self.__add_counter_example(counter_example, convIFModel, AND = False)
-                                self.print_lock.acquire()
-                                print('Switching to Trivial CE',self.process_num)
-                                self.print_lock.release()
-                                # status = 'EXCEPTION'
-                else:
-                    solutionFound = True
-                    status = 'SolFound'      
-                    problem = self.__prepare_problem(convIFModel, feasibility = True)
-                    problem.solve()
-                    if(problem.status != LpStatusOptimal):
-                        self.print_lock.acquire()
-                        print("Something went wrong :)")
-                        self.print_lock.release()
-
-                        status = 'EXCEPTION'
-                        break
-                    self.print_lock.acquire()
+                return None,None,status
+            else:   
+                status = 'UNKNOWN'
+                SAT,infeasible_relus = self.check_SAT() 
+                solutionFound = True
+                if(SAT):
                     print('Solution found')
-                    print('x',[self.state_vars[i].varValue for i in range(len(self.state_vars))])
-                    print('w',[self.next_state_vars[i].varValue for i in range(len(self.next_state_vars))])
-                    print('u',[self.out_vars[i].varValue for i in range(len(self.out_vars))])
-                    print('i',[self.im_vars[i].varValue for i in range(len(self.im_vars))])
-                    # print('slack',[self.slack_vars[i].varValue for i in range(len(self.slack_vars))])
-                    print('Relu',[i for i, x in enumerate(convIFModel) if x == True])
-                    self.print_lock.release()
-            else:
-                problem = self.__prepare_problem(convIFModel)
-                self.curr_problem = problem #for debug
-                #Solve
-                problem.solve()
-                solver_status = problem.status
-                if(solver_status == LpStatusOptimal):
-                    counter_example = self.__generate_counter_example()
-                    print(counter_example)
-                    if(len(counter_example) == 0):
-                        solutionFound = True
-                        print('Solution found')
-                        print('x',[self.state_vars[i].varValue for i in range(len(self.state_vars))])
-                        print('w',[self.next_state_vars[i].varValue for i in range(len(self.next_state_vars))])
-                        print('u',[self.out_vars[i].varValue for i in range(len(self.out_vars))])
-                        print('i',[self.im_vars[i].varValue for i in range(len(self.im_vars))])
-                        # print('slack',[self.slack_vars[i].varValue for i in range(len(self.slack_vars))])
-                        print('Relu',[i for i, x in enumerate(convIFModel) if x == True])
-                        status = 'SolFound'
-                    else:
-                        counter_examples.append(counter_example)
-                        self.__add_counter_example(counter_example, convIFModel, AND_bool_constraints)
-                        print('length of counter examples' ,len(counter_example))
-                        if(self.preprocessing):
-                            self.preprocess_counter_examples = counter_example
-                elif(solver_status == LpStatusInfeasible):
-                    print("Problem is infeasible")
-                    status = 'Infeasible'
-                    break
+                    x = [self.model.getVarByName('x[%d]'%i).X for i in range(len(self.state_vars))]
+                    u = [self.model.getVarByName('u[%d]'%i).X for i in range(len(self.out_vars))]
+                    print('x',x)
+                    print('u',u)
+                    status = 'SolFound'  
+                    return x,u,status
                 else:
-                    print("Solver error, ERR_CODE:",solver_status)
-                    break
-                # print('x',[x.varValue for _,x in self.in_vars.items()])
-                # print('slack',[slack.varValue for _,slack in self.slack_vars.items()])
-                # print(problem.status)
-                # print(self.problem)
-        self.preprocessing = False
-        return problem.variables,counter_examples,status
+                    status = 'UNKNOWN'
+                    status = self.dfs(infeasible_relus,[])
+                    print(status)
 
-    def __prepare_problem(self, relu_assignment, feasibility = False):
-        problem        = LpProblem("ReluVerify", LpMinimize) 
+        
+        return self.model.getVars(),counter_examples,status
+    def fix_relu(self, relu_idx, phase, fixed_relus):
+
+        if(phase == 1):
+            self.model.addConstr(self.slack_vars[relu_idx] == 0,name="active_"+str(relu_idx))
+        else:
+            self.model.addConstr(self.relu_vars[relu_idx] == 0,name="inactive_"+str(relu_idx))
+            self.add_objective(fixed_relus)
+
+
+
+    def dfs(self, infeasible_relus,fixed_relus):
+        #node to be handled
+        status = 'UNKNOWN'
+        relu_idx,phase =  infeasible_relus[0]
+        # print(relu_idx,'Active')
+        #set this relu to active
+        fixed_relus.append(relu_idx)
+        self.fix_relu(relu_idx,phase,fixed_relus)
+        self.model.optimize()
+        if(self.model.Status == 2): #Feasible solution
+            SAT,infeasible_set = self.check_SAT()
+            if(SAT):
+                print('Solution found')
+                status = 'SolFound'  
+            else:
+                status = self.dfs(infeasible_set,copy(fixed_relus))
+
+        if(status != 'SolFound'):
+            #infeasible solution
+            #set the neuron to other phase
+            if(phase == 1):
+                self.model.remove(self.model.getConstrByName("active_"+str(relu_idx)))
+                phase = 0
+            else:
+                self.model.remove(self.model.getConstrByName("inactive_"+str(relu_idx)))
+                phase  = 1
+
+            self.fix_relu(relu_idx, phase,fixed_relus)
+            self.model.optimize()
+            if(self.model.Status == 2): #Feasible solution
+                SAT,infeasible_set = self.check_SAT()
+                if(SAT):
+                    print('Solution found')
+                    status = 'SolFound'  
+                else:
+                    status = self.dfs(infeasible_set,copy(fixed_relus))
+            if(status != 'SolFound'):
+                status = 'UNSAT'
+
+            #clear constraints of this neuron
+            if(phase == 1):
+                self.model.remove(self.model.getConstrByName("active_"+str(relu_idx)))
+            else:
+                self.model.remove(self.model.getConstrByName("inactive_"+str(relu_idx)))
+
+        
+        return status
+            
+
+
+
+    def check_SAT(self):   
+        for layer_idx in range(1,self.num_layers-1): #exclude input
+            num_neurons = self.nn.layers[layer_idx]['num_nodes']
+            layer_start_idx = self.layer_start_idx[layer_idx]
+            y = np.array([self.model.getVarByName('y[%d]'%idx).X for idx in range(layer_start_idx, layer_start_idx + num_neurons)])
+            net = np.array([self.model.getVarByName('n[%d]'%idx).X for idx in range(layer_start_idx, layer_start_idx + num_neurons)])
+            active_feas = ((y-net) > eps) * (net > eps) #if y>net in net>0 domain
+            inactive_feas =  ((y > eps) * (net < eps))    #if y > 0 in net<0 domain
+            layer_sat = not (np.any(active_feas) or np.any(inactive_feas))
+            if(layer_sat == False):
+                active = list(np.where(active_feas == True)[0]+ layer_start_idx)
+                inactive = list(np.where(inactive_feas == True)[0] + layer_start_idx)
+                infeas_relus =  [(n_idx,1) for n_idx in active]
+                infeas_relus += [(n_idx,0) for n_idx in inactive]
+                return False,infeas_relus
+        return True,[]
+    
+    def __prepare_problem(self):
+        #clear all constraints
+        self.model.remove(self.model.getConstrs())
         #Add external convex constraints
         for constraint in self.linear_constraints:
-            problem += constraint
-        #Add NN constrainst for unpreprocessed neurons
-        # neurons_idx = [idx for idx in range(self.__hidden_units) if idx not in self.preprocess_counter_examples]
-        self.__add_NN_constraints(problem, relu_assignment)
-        if(feasibility):
-            for i in range(self.__hidden_units):
-                problem += (self.slack_vars[i] <= eps)
-                problem += (self.slack_vars[i] >= -1*eps)
-        else:
-            self.__add_objective_fn(problem)   
+            self.model.addConstr(constraint['expr'], sense = constraint['sense'], rhs = constraint['rhs'])
 
-        return problem
+        self.__add_NN_constraints()
+        self.add_objective()
 
-    def preprocess(self):
-        #Solve the problem for each neuron on its own
-        counter_example =[]
-        relu_assignment = [0] * self.__hidden_units
-        false_assignment = []
-        unprocessed_neurons = [idx for idx in range(self.__hidden_units) if idx not in self.preprocess_counter_examples]
-        for neuron_idx in unprocessed_neurons:
-            for binary_assignment in range(2):
-                problem        = LpProblem("ReluVerify", LpMinimize) 
-                #Add external convex constraints
-                for constraint in self.linear_constraints:
-                    problem += constraint
-                relu_assignment[neuron_idx] = binary_assignment
-                self.__add_NN_constraints(problem,relu_assignment, [neuron_idx])
-                self.__add_objective_fn(problem)
-                problem.solve()
-                if(self.slack_vars[neuron_idx].varValue > eps):
-                    counter_example.append(neuron_idx)
-                    false_assignment.append(bool(relu_assignment[neuron_idx]))
-                    break
-        a = [i for idx,i in enumerate(counter_example) if false_assignment[idx] is False]
-        # print(a)
-        return counter_example, false_assignment
+    
+
+    def add_objective(self, fixed_relus = None):
+        slacks = self.slack_vars.values()[self.__input_dim:]
+        relus  = self.relu_vars.values()[self.__input_dim:]
+        slack_strt_idx = 0
+        init_weight = 1E10
+        weights = []
+        for layer_idx,_ in enumerate(self.nn.layers_sizes[1:-1]):
+            ub = np.maximum(0,self.nn.layers[layer_idx+1]['ub'])
+            ub[ub > 0] = 1
+            weights += list(init_weight * ub)
+            # weights += [1] * layer_size
+            init_weight /= 100
+
+        obj = LinExpr()
+        if(fixed_relus):
+            for idx in fixed_relus:
+                weights[idx - self.__input_dim] = 0
+
+        obj.addTerms(weights,slacks)
+        self.model.setObjective(obj)
+        self.model.update()
 
 
+        
+    
+# layers_sizes = [2,3,1]
+# image_size = layers_sizes[0]
+# x = np.zeros((2,1))
+# bounds = np.concatenate((x,x),axis = 1)
+# nn = NeuralNetworkStruct(layers_sizes,input_bounds = bounds)
+# solver = Solver(network = nn)
+# A = np.eye(2)
+# b = np.zeros(2)
+# state_vars = [solver.state_vars[0],solver.state_vars[1]]
+# solver.add_linear_constraints(A,state_vars,b,LpConstraintEQ)
+# A = [[1, 0], [-1, 0], [0, 1], [0, -1]]
+# b = [1,-0.1,1,-0.1]
+# state_vars = [solver.state_vars[0],solver.state_vars[1]]
+# solver.add_linear_constraints(A,state_vars,b)
+# state_vars = [solver.out_vars[0]]
+# A, b = [[-1]],[-0.1]
+# solver.add_linear_constraints(A, state_vars, b)
+# solver.solve()
 
-    def __generate_counter_example(self):
-        counter_example = []
-        for idx,v in self.slack_vars.items():
-            if(idx in self.preprocess_counter_examples):
-                continue
-            if(v.varValue > eps):
-                counter_example.append(idx)
-        return counter_example
-
-    def add_counter_example(self,counter_example, convIFClause, AND = False):
-        self.__add_counter_example(counter_example,convIFClause, AND)
-        self.preprocess_counter_examples += counter_example
-
-    def __add_counter_example(self, counter_example, convIFClause,AND = False):
-        if(AND): 
-            constraint  = z3.And([ self.convIFClauses[idx] !=  convIFClause[idx] for idx in counter_example ])
-        else:
-            constraint  = z3.Or([ self.convIFClauses[idx] !=  convIFClause[idx] for idx in counter_example ])
-
-        self.SATsolver.add(constraint)
+# e = 0.1
+# layers_sizes = [1,2,1]
+# image_size = layers_sizes[0]
+# bounds = np.zeros((1,2))
+# bounds[:,1] = 1
+# nn = NeuralNetworkStruct(layers_sizes,input_bounds = bounds)
+# Weights= [np.concatenate((np.array([-1]),np.array([1])),axis = 0).reshape((2,1))]
+# Weights.append(np.concatenate((np.array([[1],[1]])),axis = 0).reshape((1,2)))
+# biases = [np.array([e,e-1]),np.zeros(2)]
+# nn.set_weights(Weights,biases)
+# solver = Solver(network = nn)
+# state_vars = [solver.state_vars[0]]
+# A, b = [[1],[-1]],[1,0]
+# solver.add_linear_constraints(A, state_vars, b)
+# state_vars = [solver.out_vars[0]]
+# A, b = [[1],[-1]],[e,-e/2]
+# solver.add_linear_constraints(A, state_vars, b)
+# solver.solve()

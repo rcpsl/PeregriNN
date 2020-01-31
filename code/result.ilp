@@ -1,0 +1,36 @@
+\ Model _copy
+\ LP format - for model browsing. Use MPS format to capture full model detail.
+Minimize
+ 
+Subject To
+ R10: x[0] = -0.1
+ R11: x[1] = -0.025285
+ R13: x[3] = -0.009691
+ R14: x[4] = -0.1
+ R20: - x[0] + y[0] = 0
+ R22: - x[1] + y[1] = 0
+ R26: - x[3] + y[3] = 0
+ R28: - x[4] + y[4] = 0
+ R114: - 0.0834021 y[0] - 2.01281 y[1] - 0.35531 y[2] - 0.0360065 y[3]
+   + 0.0996482 y[4] + n[33] = -0.141913
+ R115: - y[33] + n[33] + s[33] = 0
+ R116: s[33] = 0
+ R147: - 0.0283388 y[0] + 0.0230824 y[1] + 0.0763311 y[2] + 0.77161 y[3]
+   - 0.499034 y[4] + n[44] = -0.0772968
+ R148: - y[44] + n[44] + s[44] = 0
+ R149: s[44] = 0
+Bounds
+ x[0] free
+ x[1] free
+ x[3] free
+ x[4] free
+ y[0] free
+ y[1] free
+ y[2] free
+ y[3] free
+ y[4] free
+ n[33] free
+ n[44] free
+ s[33] free
+ s[44] free
+End
