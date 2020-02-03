@@ -68,8 +68,8 @@ class Solver():
             prev_layer_start_idx = self.layer_start_idx[layer_idx - 1]
             W = self.nn.layers[layer_idx]['weights']
             b = self.nn.layers[layer_idx]['bias']
-            ub = self.nn.layers[layer_idx]['Relu_sym_ub']
-            lb = self.nn.layers[layer_idx]['Relu_sym_lb']
+            ub = self.nn.layers[layer_idx]['sym_ub']
+            lb = self.nn.layers[layer_idx]['sym_lb']
             prev_layer_size = self.nn.layers_sizes[layer_idx -1]
             for neuron_idx in range(num_neurons):
                 #add - constraints

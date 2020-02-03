@@ -65,22 +65,18 @@ class NeuralNetworkStruct(object):
         input_bounds = np.hstack((self.layers[0]['lb'],self.layers[0]['ub']))
         input_bounds = np.vstack((input_bounds,np.ones(2)))
         input_sym = SymbolicInterval(np.hstack((W,b)),np.hstack((W,b)),input_bounds)
-        self.layers[1]['Relu_sym_lb'] = input_sym.concrete_Mlower_bound(input_sym.lower,input_sym.interval)
-        self.layers[1]['Relu_sym_ub'] = input_sym.concrete_Mupper_bound(input_sym.upper,input_sym.interval)
+        self.layers[1]['sym_lb'] = input_sym.concrete_Mlower_bound(input_sym.lower,input_sym.interval)
+        self.layers[1]['sym_ub'] = input_sym.concrete_Mupper_bound(input_sym.upper,input_sym.interval)
         input_sym = input_sym.forward_relu(input_sym)
         for layer_idx,layer in self.layers.items():
             if(layer_idx < 2):
                 continue
             weights = (layer['weights'],layer['bias'])
             input_sym = input_sym.forward_linear(weights)
+            layer['sym_lb'] = input_sym.concrete_Mlower_bound(input_sym.lower,input_sym.interval)
+            layer['sym_ub'] = input_sym.concrete_Mupper_bound(input_sym.upper,input_sym.interval)
             if(layer['type'] == 'hidden'):
-                layer['Relu_sym_lb'] = input_sym.concrete_Mlower_bound(input_sym.lower,input_sym.interval)
-                layer['Relu_sym_ub'] = input_sym.concrete_Mupper_bound(input_sym.upper,input_sym.interval)
                 input_sym = input_sym.forward_relu(input_sym)
-            else:
-                layer['Relu_sym_lb'] = input_sym.concrete_Mlower_bound(input_sym.lower,input_sym.interval)
-                layer['Relu_sym_ub'] = input_sym.concrete_Mupper_bound(input_sym.upper,input_sym.interval)
-
 
 
     def __compute_IA_bounds(self):

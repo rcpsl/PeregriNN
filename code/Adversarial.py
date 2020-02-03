@@ -32,7 +32,7 @@ if __name__ == "__main__":
         label = pair['out']
         other_ouputs = [i for i in range(nn.output_size) if i != label]
         # other_ouputs = [1]
-        for delta in [0.1]:
+        for delta in [0.025]:
             #Solve the problem for each other output
             s = time()
             for out_idx in other_ouputs:
@@ -60,7 +60,7 @@ if __name__ == "__main__":
                 A = -1 * np.eye(nn.output_size)
                 A[:,out_idx] = 1
                 A[out_idx,out_idx] = 0
-                b = [0] * nn.output_size
+                b = [-eps] * nn.output_size
                 b[out_idx] = 0
                 output_vars = [solver.out_vars[i] for i in range(len(solver.out_vars))]
                 solver.add_linear_constraints(A,output_vars,b,GRB.LESS_EQUAL)
@@ -73,8 +73,10 @@ if __name__ == "__main__":
                     nn_in = np.array([solver.state_vars[idx].X for idx in range(nn.image_size)]).reshape((-1,1))
                     nn_out = np.array([solver.out_vars[idx].X for idx in range(nn.output_size)]).reshape((-1,1))
                     err = np.sum(np.fabs(nn.evaluate(nn_in) - nn_out))
+                    print nn_in
+                    print nn_out
                     e = time()
-                    print('Adversarial example found with label %d ,delta %f in time %f'%(np.argmin(nn_out),delta,e-s))
+                    print('Adversarial example found with label %d ,delta %f in time %f'%(out_idx,delta,e-s))
                     print('Error',err)
                     sys.exit()
 
