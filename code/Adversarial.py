@@ -7,7 +7,7 @@ import sys,os
 import glob
 from NeuralNetwork import *
 
-eps = 1E-3
+eps = 1E-5
 
 
 
@@ -32,7 +32,7 @@ if __name__ == "__main__":
         label = pair['out']
         other_ouputs = [i for i in range(nn.output_size) if i != label]
         # other_ouputs = [1]
-        for delta in [0.025]:
+        for delta in [0.1]:
             #Solve the problem for each other output
             s = time()
             for out_idx in other_ouputs:
@@ -48,22 +48,24 @@ if __name__ == "__main__":
                 upper_bound = input_bounds[:,1]
                 solver.add_linear_constraints(A,input_vars,lower_bound,GRB.GREATER_EQUAL)
                 solver.add_linear_constraints(A,input_vars,upper_bound,GRB.LESS_EQUAL)
-                # A = np.eye(len(solver.state_vars))
-                # b = [-0.277091,0.173774,0.515735,0.978737,0.684880]
-                # b = [-0.258785, 0.143822, 0.148294,0.50000,0.477025]
-                # b = [-0.100000,-0.025285,0.011807,-0.009691,-0.100000]
-                # solver.add_linear_constraints(A,input_vars,b,GRB.EQUAL)
-                # A = np.eye(len(solver.out_vars))
-                # b = [0.11796237, 0.10716809, 0.11847462, 0.11796235, 0.11445197]
-                # solver.add_linear_constraints(A,solver.out_vars,b,LpConstraintEQ)
 
-                A = -1 * np.eye(nn.output_size)
-                A[:,out_idx] = 1
-                A[out_idx,out_idx] = 0
-                b = [-eps] * nn.output_size
-                b[out_idx] = 0
+                A = np.eye(len(solver.state_vars))
+                b = [-0.277091,0.173774,0.515735,0.978737,0.684880]
+                b = [-0.258785, 0.143822, 0.148294,0.50000,0.477025]
+                b = [-0.100000,-0.025285,0.011807,-0.009691,-0.100000]
+                solver.add_linear_constraints(A,input_vars,b,GRB.EQUAL)
+
+                # output_vars = [solver.out_vars[i] for i in range(len(solver.out_vars))]
+                # A = np.eye(len(solver.out_vars))
+                # b = [-0.0162349481, -0.0180076580, -0.0178982665, -0.0178564177, -0.0174600866]
+                # solver.add_linear_constraints(A,output_vars,b,GRB.EQUAL)
+
                 output_vars = [solver.out_vars[i] for i in range(len(solver.out_vars))]
-                solver.add_linear_constraints(A,output_vars,b,GRB.LESS_EQUAL)
+                A = np.zeros(nn.output_size)
+                A[out_idx] = 1
+                A[label] = -1
+                b = [-eps] 
+                solver.add_linear_constraints([A],output_vars,b,GRB.LESS_EQUAL)
 
 
             

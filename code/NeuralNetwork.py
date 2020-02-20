@@ -23,6 +23,7 @@ class NeuralNetworkStruct(object):
         self.input_range = np.zeros(self.image_size)
         self.out_mean = 0
         self.out_range = 0
+        self.fixed_relus = 0
         input_bound = input_bounds
         if(input_bounds is None):
             input_bound = np.ones((self.layers_sizes[0]+1,2))
@@ -65,19 +66,26 @@ class NeuralNetworkStruct(object):
         input_bounds = np.hstack((self.layers[0]['lb'],self.layers[0]['ub']))
         input_bounds = np.vstack((input_bounds,np.ones(2)))
         input_sym = SymbolicInterval(np.hstack((W,b)),np.hstack((W,b)),input_bounds)
-        self.layers[1]['sym_lb'] = input_sym.concrete_Mlower_bound(input_sym.lower,input_sym.interval)
-        self.layers[1]['sym_ub'] = input_sym.concrete_Mupper_bound(input_sym.upper,input_sym.interval)
+        self.layers[1]['in_lb'] = input_sym.concrete_Mlower_bound(input_sym.lower,input_sym.interval)
+        self.layers[1]['in_ub'] = input_sym.concrete_Mupper_bound(input_sym.upper,input_sym.interval)
+        self.layers[1]['Relu_sym'] = input_sym
         input_sym = input_sym.forward_relu(input_sym)
+        self.layers[1]['conc_lb'] = input_sym.concrete_Mlower_bound(input_sym.lower,input_sym.interval)
+        self.layers[1]['conc_ub'] = input_sym.concrete_Mupper_bound(input_sym.upper,input_sym.interval)
+        self.layers[1]['Relu_sym'] = input_sym
         for layer_idx,layer in self.layers.items():
             if(layer_idx < 2):
                 continue
             weights = (layer['weights'],layer['bias'])
             input_sym = input_sym.forward_linear(weights)
-            layer['sym_lb'] = input_sym.concrete_Mlower_bound(input_sym.lower,input_sym.interval)
-            layer['sym_ub'] = input_sym.concrete_Mupper_bound(input_sym.upper,input_sym.interval)
+            layer['in_lb'] = input_sym.concrete_Mlower_bound(input_sym.lower,input_sym.interval)
+            layer['in_ub'] = input_sym.concrete_Mupper_bound(input_sym.upper,input_sym.interval)
             if(layer['type'] == 'hidden'):
                 input_sym = input_sym.forward_relu(input_sym)
-
+            layer['Relu_sym'] = input_sym
+            layer['conc_lb'] = input_sym.concrete_Mlower_bound(input_sym.lower,input_sym.interval)
+            layer['conc_ub'] = input_sym.concrete_Mupper_bound(input_sym.upper,input_sym.interval)
+          
 
     def __compute_IA_bounds(self):
         for index in range(self.num_layers):
@@ -190,7 +198,6 @@ class NeuralNetworkStruct(object):
         # return layers_sizes,W,biases,stats
 
         
-
 class SymbolicInterval(object):
     
     def __init__(self, low, upp, interval = None):
@@ -218,6 +225,7 @@ class SymbolicInterval(object):
             relu_lower_eq = relu_lower_equtions[row]
             relu_upper_eq = relu_upper_equations[row]
             lower_lb = self.concrete_lower_bound(relu_lower_eq, symInterval.interval)
+            lower_ub = self.concrete_upper_bound(relu_lower_eq, symInterval.interval)
             upper_lb = self.concrete_lower_bound(relu_upper_eq, symInterval.interval)
             upper_ub = self.concrete_upper_bound(relu_upper_eq, symInterval.interval)
 
@@ -228,25 +236,28 @@ class SymbolicInterval(object):
                 relu_lower_eq[:]    = 0
                 relu_upper_eq[:]    = 0
             else:
-                relu_lower_eq[:]    = 0
+                relu_lower_eq[:]    =  0
+                if(lower_ub > 0 ):
+                    relu_lower_eq[:]    =  lower_ub * (relu_lower_eq) / (lower_ub - lower_lb)
+                
                 if(upper_lb < 0):
-                    relu_upper_eq[:]   = np.hstack((np.zeros(len(relu_upper_eq) - 1), upper_ub))
+                    relu_upper_eq[:]   = upper_ub * (relu_upper_eq - upper_lb) / (upper_ub - upper_lb)
         
         return SymbolicInterval(relu_lower_equtions,relu_upper_equations, self.interval)
 
 
     def concrete_lower_bound(self, equation, interval):
         #Get indices of coeff >0
-        p_idx = np.where(equation > 0)[0]
-        n_idx = np.where(equation <= 0)[0]
-        lb = equation[p_idx].dot(interval[p_idx,0]) + equation[n_idx].dot(interval[n_idx,1])        
+        p_idx = np.where(equation[:-1] > 0)[0]
+        n_idx = np.where(equation[:-1] <= 0)[0]
+        lb = equation[p_idx].dot(interval[p_idx,0]) + equation[n_idx].dot(interval[n_idx,1]) + equation[-1]     
 
         return lb
 
     def concrete_upper_bound(self, equation, interval):
-        p_idx = np.where(equation > 0)[0]
-        n_idx = np.where(equation <= 0)[0]       
-        ub = equation[p_idx].dot(interval[p_idx,1]) + equation[n_idx].dot(interval[n_idx,0])
+        p_idx = np.where(equation[:-1] > 0)[0]
+        n_idx = np.where(equation[:-1] <= 0)[0]       
+        ub = equation[p_idx].dot(interval[p_idx,1]) + equation[n_idx].dot(interval[n_idx,0]) + equation[-1]
         return ub
 
     def concrete_Mlower_bound(self, equations, interval):

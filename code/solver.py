@@ -58,6 +58,7 @@ class Solver():
         layer_idx = 0
         num_neurons = self.nn.layers[layer_idx]['num_nodes']
         layer_start_idx = self.layer_start_idx[layer_idx]
+        input_vars = [self.state_vars[i] for i in range(len(self.state_vars))]
         for neuron_idx in range(num_neurons):
             neuron_abs_idx = layer_start_idx + neuron_idx
             self.model.addConstr(self.relu_vars[neuron_abs_idx] == self.state_vars[neuron_abs_idx])
@@ -68,8 +69,11 @@ class Solver():
             prev_layer_start_idx = self.layer_start_idx[layer_idx - 1]
             W = self.nn.layers[layer_idx]['weights']
             b = self.nn.layers[layer_idx]['bias']
-            ub = self.nn.layers[layer_idx]['sym_ub']
-            lb = self.nn.layers[layer_idx]['sym_lb']
+            lb = self.nn.layers[layer_idx]['conc_lb']
+            ub = self.nn.layers[layer_idx]['conc_ub']
+            in_lb = self.nn.layers[layer_idx]['in_lb']
+            in_ub = self.nn.layers[layer_idx]['in_ub']
+
             prev_layer_size = self.nn.layers_sizes[layer_idx -1]
             for neuron_idx in range(num_neurons):
                 #add - constraints
@@ -78,24 +82,29 @@ class Solver():
                 if(self.nn.layers[layer_idx]['type'] != 'output'):
                     self.model.addConstr(self.net_vars[neuron_abs_idx] == (net_expr + b[neuron_idx]))
                     self.model.addConstr(self.slack_vars[neuron_abs_idx] == self.relu_vars[neuron_abs_idx] - self.net_vars[neuron_abs_idx])
-                    
+
                     if(ub[neuron_idx] <= 0):
                         self.model.addConstr(self.relu_vars[neuron_abs_idx] == 0)
                         fixed_relus +=1
 
-                    elif(lb[neuron_idx] >= 0):
+                    elif(lb[neuron_idx] > 0):
                         self.model.addConstr(self.slack_vars[neuron_abs_idx] == 0)
                         fixed_relus +=1
                     
                     else:
-                        factor = (ub[neuron_idx]/ (ub[neuron_idx]-lb[neuron_idx]))[0]
-                        self.model.addConstr(self.relu_vars[neuron_abs_idx] <= factor * (self.net_vars[neuron_abs_idx]- lb[neuron_idx]))
-
+                        factor = (in_ub[neuron_idx]/ (in_ub[neuron_idx]-in_lb[neuron_idx]))[0]
+                        self.model.addConstr(self.relu_vars[neuron_abs_idx] <= factor * (self.net_vars[neuron_abs_idx]- in_lb[neuron_idx]))
+                
                 else:
+                    A_low = self.nn.layers[layer_idx]['Relu_sym'].lower[neuron_idx]
+                    A_up = self.nn.layers[layer_idx]['Relu_sym'].upper[neuron_idx]
                     self.model.addConstr(self.out_vars[neuron_idx] == (net_expr + b[neuron_idx]))
-                    self.model.addConstr(self.out_vars[neuron_idx] >= lb[neuron_idx])
-                    self.model.addConstr(self.out_vars[neuron_idx] <= ub[neuron_idx])
+                    self.model.addConstr(LinExpr(A_low[:-1],input_vars) + A_low[-1] <= self.out_vars[neuron_idx])
+                    self.model.addConstr(LinExpr(A_up[:-1],input_vars)  + A_up[-1] >= self.out_vars[neuron_idx])
+                    # self.model.addConstr(self.out_vars[neuron_idx] >= lb[neuron_idx])
+                    # self.model.addConstr(self.out_vars[neuron_idx] <= ub[neuron_idx])
 
+                
         print('Number of fixed Relus:', fixed_relus)
     
     def solve(self):
