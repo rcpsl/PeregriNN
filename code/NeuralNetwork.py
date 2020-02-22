@@ -36,14 +36,14 @@ class NeuralNetworkStruct(object):
 
         #input layer
         in_bound = input_bound[:-1,:]
-        self.layers[0] = {'num_nodes':self.image_size, 'weights': [], 'type':'input','lb':in_bound[:,0].reshape((-1,1)),
+        self.layers[0] = {'idx':0, 'num_nodes':self.image_size, 'weights': [], 'type':'input','lb':in_bound[:,0].reshape((-1,1)),
                         'ub':in_bound[:,1].reshape((-1,1)),
                         'Relu_lb': in_bound[:,0].reshape((-1,1)), 'Relu_ub': in_bound[:,1].reshape((-1,1))}
 
         for index in range(self.num_layers):
             if(index == 0):
                 continue
-            self.layers[index]  = {'num_nodes': layers_sizes[index], 'weights': []}
+            self.layers[index]  = {'idx':index, 'num_nodes': layers_sizes[index], 'weights': []}
             self.layers[index]['type'] = 'hidden'
 
             if load_weights:
@@ -86,6 +86,28 @@ class NeuralNetworkStruct(object):
             layer['conc_lb'] = input_sym.concrete_Mlower_bound(input_sym.lower,input_sym.interval)
             layer['conc_ub'] = input_sym.concrete_Mupper_bound(input_sym.upper,input_sym.interval)
           
+    def update_bounds(self,layer_idx,neuron_idx,bounds,layers_mask):
+        input_sym = self.layers[layer_idx]['Relu_sym']
+        input_sym.lower[neuron_idx] = bounds[0]
+        input_sym.upper[neuron_idx] = bounds[1]
+        self.layers[layer_idx]['conc_lb'][neuron_idx] = input_sym.concrete_lower_bound(input_sym.lower[neuron_idx],input_sym.interval)
+        self.layers[layer_idx]['conc_ub'][neuron_idx] = input_sym.concrete_upper_bound(input_sym.upper[neuron_idx],input_sym.interval)
+
+        for idx,layer in self.layers.items():
+            if(idx < layer_idx + 1):
+                continue
+            mask = layers_mask[idx-1]
+            weights = (layer['weights'],layer['bias'])
+            input_sym = input_sym.forward_linear(weights)
+            layer['in_lb'] = input_sym.concrete_Mlower_bound(input_sym.lower,input_sym.interval)
+            layer['in_ub'] = input_sym.concrete_Mupper_bound(input_sym.upper,input_sym.interval)
+            if(layer['type'] == 'hidden'):
+                input_sym = input_sym.forward_relu(input_sym) * mask
+            layer['Relu_sym'] = input_sym
+            layer['conc_lb'] = input_sym.concrete_Mlower_bound(input_sym.lower,input_sym.interval) 
+            layer['conc_ub'] = input_sym.concrete_Mupper_bound(input_sym.upper,input_sym.interval)
+
+
 
     def __compute_IA_bounds(self):
         for index in range(self.num_layers):
@@ -236,10 +258,9 @@ class SymbolicInterval(object):
                 relu_lower_eq[:]    = 0
                 relu_upper_eq[:]    = 0
             else:
-                relu_lower_eq[:]    =  0
-                if(lower_ub > 0 ):
+                relu_lower_eq[:] = 0
+                if(lower_ub >0):
                     relu_lower_eq[:]    =  lower_ub * (relu_lower_eq) / (lower_ub - lower_lb)
-                
                 if(upper_lb < 0):
                     relu_upper_eq[:]   = upper_ub * (relu_upper_eq - upper_lb) / (upper_ub - upper_lb)
         

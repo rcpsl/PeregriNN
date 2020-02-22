@@ -35,13 +35,21 @@ class Solver():
         self.net_vars.update(self.model.addVars([self.__input_dim + i for i in range(self.__hidden_units)],name = "n", lb = -1* GRB.INFINITY) )
         self.slack_vars         = self.model.addVars(self.__input_dim + self.__hidden_units,name = "s",lb = 0)
         self.out_vars           = self.model.addVars(self.__output_dim,name = "u", lb = -1* GRB.INFINITY)
+        self.abs2d              = []
+        self.orig_bounds        = {}
+
         #Layer index 
         self.model.update()
         self.layer_start_idx = [0] * len(self.nn.layers)
-        for layer_idx, _ in self.nn.layers.items():
+        for layer_idx, layer in self.nn.layers.items():
             if(layer_idx == 0):
                 continue
+            self.orig_bounds[layer_idx] = {}
             self.layer_start_idx[layer_idx] = self.layer_start_idx[layer_idx-1] + self.nn.layers[layer_idx-1]['num_nodes']
+            for neuron_idx in range(layer['num_nodes']):
+                self.abs2d += [[layer_idx,neuron_idx]]
+                bounds = [self.nn.layers[layer_idx]['Relu_sym'].lower[neuron_idx].reshape((-1,1)),self.nn.layers[layer_idx]['Relu_sym'].upper[neuron_idx].reshape((-1,1))]
+                self.orig_bounds[layer_idx][neuron_idx] = bounds
         self.linear_constraints = []
 
     def add_linear_constraints(self, A, x, b, sense = GRB.LESS_EQUAL):
@@ -94,15 +102,21 @@ class Solver():
                     else:
                         factor = (in_ub[neuron_idx]/ (in_ub[neuron_idx]-in_lb[neuron_idx]))[0]
                         self.model.addConstr(self.relu_vars[neuron_abs_idx] <= factor * (self.net_vars[neuron_abs_idx]- in_lb[neuron_idx]))
-                
-                else:
+
                     A_low = self.nn.layers[layer_idx]['Relu_sym'].lower[neuron_idx]
                     A_up = self.nn.layers[layer_idx]['Relu_sym'].upper[neuron_idx]
+                    self.model.addConstr(LinExpr(A_low[:-1],input_vars) + A_low[-1] <= self.relu_vars[neuron_abs_idx])
+                    self.model.addConstr(LinExpr(A_up[:-1],input_vars)  + A_up[-1]  >= self.relu_vars[neuron_abs_idx])
+                
+                else:
                     self.model.addConstr(self.out_vars[neuron_idx] == (net_expr + b[neuron_idx]))
-                    self.model.addConstr(LinExpr(A_low[:-1],input_vars) + A_low[-1] <= self.out_vars[neuron_idx])
-                    self.model.addConstr(LinExpr(A_up[:-1],input_vars)  + A_up[-1] >= self.out_vars[neuron_idx])
                     # self.model.addConstr(self.out_vars[neuron_idx] >= lb[neuron_idx])
                     # self.model.addConstr(self.out_vars[neuron_idx] <= ub[neuron_idx])
+
+                    A_low = self.nn.layers[layer_idx]['Relu_sym'].lower[neuron_idx]
+                    A_up = self.nn.layers[layer_idx]['Relu_sym'].upper[neuron_idx]
+                    self.model.addConstr(LinExpr(A_low[:-1],input_vars) + A_low[-1] <= self.out_vars[neuron_idx])
+                    self.model.addConstr(LinExpr(A_up[:-1],input_vars)  + A_up[-1]  >= self.out_vars[neuron_idx])
 
                 
         print('Number of fixed Relus:', fixed_relus)
@@ -148,7 +162,12 @@ class Solver():
                     return x,u,status
                 else:
                     status = 'UNKNOWN'
-                    status = self.dfs(infeasible_relus,[])
+                    layers_masks = []
+                    for layer_idx,layer in self.nn.layers.items():
+                        if(layer_idx < 1):
+                            continue
+                        layers_masks += [np.ones((layer['num_nodes'],1))]
+                    status = self.dfs(infeasible_relus,[],layers_masks)
                     print(status)
 
         
@@ -161,24 +180,41 @@ class Solver():
             self.model.addConstr(self.relu_vars[relu_idx] == 0,name="inactive_"+str(relu_idx))
             self.add_objective(fixed_relus)
 
+    def check_potential_CE(self):
+        x = np.array([self.model.getVarByName('x[%d]'%i).X for i in range(len(self.state_vars))]).reshape((-1,1))
+        u = self.nn.evaluate(x)
+        if(np.argmin(u) >0):
+            return True
+        return False
+    def set_neuron_bounds(self,layer_idx,neuron_idx,phase,layers_masks):
+        if(phase == 0):
+            layers_masks[layer_idx-1][neuron_idx] = 0
+            self.nn.update_bounds(layer_idx,neuron_idx,[0,0],layers_masks)
+        else:
+            layers_masks[layer_idx-1][neuron_idx] = 1
+            self.nn.update_bounds(layer_idx,neuron_idx,self.orig_bounds[layer_idx][neuron_idx],layers_masks)
 
-
-    def dfs(self, infeasible_relus,fixed_relus):
+    def dfs(self, infeasible_relus,fixed_relus,layers_masks, depth = 0,):
         #node to be handled
         status = 'UNKNOWN'
         relu_idx,phase =  infeasible_relus[0]
+        layer_idx,neuron_idx = self.abs2d[relu_idx]
+        print('DFS:',depth,"Setting neuron %d to %d"%(relu_idx,phase))
         # print(relu_idx,'Active')
         #set this relu to active
         fixed_relus.append(relu_idx)
         self.fix_relu(relu_idx,phase,fixed_relus)
+        layers_masks = copy(layers_masks)
+        self.set_neuron_bounds(layer_idx,neuron_idx,phase,layers_masks)
         self.model.optimize()
         if(self.model.Status == 2): #Feasible solution
             SAT,infeasible_set = self.check_SAT()
-            if(SAT):
+            valid = self.check_potential_CE()
+            if(SAT or valid):
                 print('Solution found')
                 status = 'SolFound'  
             else:
-                status = self.dfs(infeasible_set,copy(fixed_relus))
+                status = self.dfs(infeasible_set,copy(fixed_relus),layers_masks,depth+1)
 
         if(status != 'SolFound'):
             #infeasible solution
@@ -190,15 +226,21 @@ class Solver():
                 self.model.remove(self.model.getConstrByName("inactive_"+str(relu_idx)))
                 phase  = 1
 
+            print('Backtrack, Setting neuron %d to %d'%(relu_idx,phase))
             self.fix_relu(relu_idx, phase,fixed_relus)
+            self.set_neuron_bounds(layer_idx,neuron_idx,phase,layers_masks)
             self.model.optimize()
             if(self.model.Status == 2): #Feasible solution
                 SAT,infeasible_set = self.check_SAT()
-                if(SAT):
+                valid = self.check_potential_CE()
+                if(SAT or valid):
                     print('Solution found')
                     status = 'SolFound'  
                 else:
-                    status = self.dfs(infeasible_set,copy(fixed_relus))
+                    status = self.dfs(infeasible_set,copy(fixed_relus),layers_masks,depth +1)
+            else:
+                status = 'UNSAT'
+
             if(status != 'SolFound'):
                 status = 'UNSAT'
 
@@ -249,7 +291,7 @@ class Solver():
         slack_strt_idx = 0
         init_weight = 1E10
         weights = []
-        for layer_idx,_ in enumerate(self.nn.layers_sizes[1:-1]):
+        for layer_idx,layer_size in enumerate(self.nn.layers_sizes[1:-1]):
             ub = np.maximum(0,self.nn.layers[layer_idx+1]['ub'])
             ub[ub > 0] = 1
             weights += list(init_weight * ub)
@@ -261,7 +303,7 @@ class Solver():
             for idx in fixed_relus:
                 weights[idx - self.__input_dim] = 0
 
-        obj.addTerms(weights,slacks)
+        obj.addTerms(weights,relus)
         self.model.setObjective(obj)
         self.model.update()
 
