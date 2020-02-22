@@ -34,7 +34,6 @@ if __name__ == "__main__":
         # other_ouputs = [1]
         for delta in [deltas[3]]:
             #Solve the problem for each other output
-            s = time()
             for out_idx in other_ouputs:
                 
                 input_bounds = np.concatenate((x-delta,x+delta),axis = 1)
@@ -71,17 +70,21 @@ if __name__ == "__main__":
 
             
                 solver.preprocessing = False
+                s = time()
                 nn_in,nn_out,status = solver.solve()
+                e = time()
                 if(status == 'SolFound'):
                     nn_in = np.array([solver.state_vars[idx].X for idx in range(nn.image_size)]).reshape((-1,1))
                     nn_out = np.array([solver.out_vars[idx].X for idx in range(nn.output_size)]).reshape((-1,1))
                     err = np.sum(np.fabs(nn.evaluate(nn_in) - nn_out))
                     print nn_in
                     print nn_out
-                    e = time()
                     print('Adversarial example found with label %d ,delta %f in time %f'%(out_idx,delta,e-s))
                     print('Error',err)
-                    sys.exit()
+                else:
+                    print("Problem Infeasible,Time:%f"%(e-s))
+
+                sys.exit()
 
             
 

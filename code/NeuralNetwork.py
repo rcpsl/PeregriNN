@@ -27,8 +27,8 @@ class NeuralNetworkStruct(object):
         input_bound = input_bounds
         if(input_bounds is None):
             input_bound = np.ones((self.layers_sizes[0]+1,2))
-            input_bound[:-1,0] = -1E100
-            input_bound[:-1,1] = 1E100
+            input_bound[:-1,0] = -1E10
+            input_bound[:-1,1] = 1E10
         
         self.layers = {}
         if(load_weights):
@@ -102,7 +102,9 @@ class NeuralNetworkStruct(object):
             layer['in_lb'] = input_sym.concrete_Mlower_bound(input_sym.lower,input_sym.interval)
             layer['in_ub'] = input_sym.concrete_Mupper_bound(input_sym.upper,input_sym.interval)
             if(layer['type'] == 'hidden'):
-                input_sym = input_sym.forward_relu(input_sym) * mask
+                input_sym = input_sym.forward_relu(input_sym)
+                input_sym.lower *= mask
+                input_sym.upper *= mask
             layer['Relu_sym'] = input_sym
             layer['conc_lb'] = input_sym.concrete_Mlower_bound(input_sym.lower,input_sym.interval) 
             layer['conc_ub'] = input_sym.concrete_Mupper_bound(input_sym.upper,input_sym.interval)
@@ -259,8 +261,8 @@ class SymbolicInterval(object):
                 relu_upper_eq[:]    = 0
             else:
                 relu_lower_eq[:] = 0
-                if(lower_ub >0):
-                    relu_lower_eq[:]    =  lower_ub * (relu_lower_eq) / (lower_ub - lower_lb)
+                # if(lower_ub >0):
+                #     relu_lower_eq[:]    =  lower_ub * (relu_lower_eq) / (lower_ub - lower_lb)
                 if(upper_lb < 0):
                     relu_upper_eq[:]   = upper_ub * (relu_upper_eq - upper_lb) / (upper_ub - upper_lb)
         
