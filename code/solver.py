@@ -83,10 +83,11 @@ class Solver():
             in_ub = self.nn.layers[layer_idx]['in_ub']
 
             prev_layer_size = self.nn.layers_sizes[layer_idx -1]
+            prev_relus = [self.relu_vars[prev_layer_start_idx + input_idx] for input_idx in range(prev_layer_size)]
             for neuron_idx in range(num_neurons):
                 #add - constraints
                 neuron_abs_idx = layer_start_idx + neuron_idx
-                net_expr = LinExpr(W[neuron_idx], [self.relu_vars[prev_layer_start_idx + input_idx] for input_idx in range(prev_layer_size)])
+                net_expr = LinExpr(W[neuron_idx], prev_relus)
                 if(self.nn.layers[layer_idx]['type'] != 'output'):
                     self.model.addConstr(self.net_vars[neuron_abs_idx] == (net_expr + b[neuron_idx]))
                     self.model.addConstr(self.slack_vars[neuron_abs_idx] == self.relu_vars[neuron_abs_idx] - self.net_vars[neuron_abs_idx])
@@ -185,7 +186,7 @@ class Solver():
     def check_potential_CE(self):
         x = np.array([self.model.getVarByName('x[%d]'%i).X for i in range(len(self.state_vars))]).reshape((-1,1))
         u = self.nn.evaluate(x)
-        if(np.argmin(u) >0):
+        if(u[0] - 3.9911256459 >= eps):
             return True
         return False
     def set_neuron_bounds(self,layer_idx,neuron_idx,phase,layers_masks):
@@ -206,7 +207,9 @@ class Solver():
         
         self.set_neuron_bounds(layer_idx,neuron_idx,phase,layers_masks)
         fixed_relus.append((relu_idx,phase))
+        # s = time()
         self.__prepare_problem()
+        # print('Prep Problem',time() - s)
         self.fix_relu(fixed_relus)
         self.model.optimize()
         if(self.model.Status == 2): #Feasible solution
@@ -298,7 +301,7 @@ class Solver():
             self.model.addConstr(constraint['expr'], sense = constraint['sense'], rhs = constraint['rhs'])
 
         self.__add_NN_constraints()
-        self.add_objective()
+        # self.add_objective()
 
     
 

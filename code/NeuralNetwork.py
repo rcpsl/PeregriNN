@@ -183,38 +183,36 @@ class NeuralNetworkStruct(object):
         in_range = self.input_range[inputIndex]
         return  (val * in_range) + in_mean
         
-    def parse_network(self, model_file, weights_file):
+    def parse_network(self, model_file):
         with open(model_file,'rb') as f:
             model_fmt_file = f.readlines() 
             layers_sizes = list(map(int,model_fmt_file[4][:-2].split(','))) 
             f.close()
         
-        with open(weights_file,'rb') as f:
-            weights_arr = np.load(weights_file)
-            f.close()
-        
-        num_weights = 0
-        for idx in range(len(layers_sizes) - 1):
-            num_weights += (layers_sizes[idx] * layers_sizes[idx+1])
-        weights_strt_idx = 0
-        bias_strt_idx = num_weights
         W = []
-        biases = []
-        for idx in range(len(layers_sizes) - 1):
-            source = layers_sizes[idx]
-            target = layers_sizes[idx + 1]
-            W_layer = weights_arr[weights_strt_idx: weights_strt_idx + (source*target)]
-            b = np.array(weights_arr[bias_strt_idx:bias_strt_idx + target])
-            W.append(np.array(W_layer).reshape((target,source)))
-            biases.append(b)
-            weights_strt_idx += source*target
-            bias_strt_idx   += target
-
+        biases =[]
+        start_idx = 10
+        for idx in range(1, len(layers_sizes)):
+            source = layers_sizes[idx-1]
+            target = layers_sizes[idx]
+            layer_weights = np.zeros((target,source))
+            layer_bias = np.zeros(target)
+            for row in range(target):
+               weights = np.array(map(float,model_fmt_file[start_idx].split(',')[:-1]))
+               layer_weights[row] = weights
+               start_idx +=1
+            for row in range(target):
+                bias = float(model_fmt_file[start_idx].split(',')[0])
+                layer_bias[row] = bias
+                start_idx +=1
+            W.append(layer_weights)
+            biases.append(layer_bias)
+        
         #Read min and max for inputs
-        mins = list(map(float,model_fmt_file[6][:-2].split(','))) 
-        maxs = list(map(float,model_fmt_file[7][:-2].split(','))) 
-        means = list(map(float,model_fmt_file[8][:-2].split(','))) 
-        ranges = list(map(float,model_fmt_file[9][:-2].split(','))) 
+        mins = list(map(float,model_fmt_file[6].split(',')[:-1])) 
+        maxs = list(map(float,model_fmt_file[7].split(',')[:-1])) 
+        means = list(map(float,model_fmt_file[8].split(',')[:-1])) 
+        ranges = list(map(float,model_fmt_file[9].split(',')[:-1])) 
         stats = {'min' :mins, 'max':maxs,'mean':means,'range':ranges}
         self.__init__(layers_sizes)
         self.set_weights(W,biases)
