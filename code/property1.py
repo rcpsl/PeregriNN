@@ -11,7 +11,11 @@ eps = 1E-3
 
 
 
-
+def check_potential_CE(x):
+    u = nn.evaluate(x)
+    if(u[0] - 3.9911256459 >= eps):
+        return True
+    return False
 
 if __name__ == "__main__":
 
@@ -24,12 +28,13 @@ if __name__ == "__main__":
         nn = NeuralNetworkStruct()
         nn.parse_network(network)
         
-        lower_bounds = np.array([0.6,-0.5000000551,-0.5000000551,0.45,-0.5]).reshape((-1,1))
-        upper_bounds = np.array([0.6798577687,0.5000000551,0.5000000551,0.5,-0.45]).reshape((-1,1))
-                    
+        lower_bounds = np.array([0.6,-0.5,-0.5,0.45,-0.5]).reshape((-1,1))
+        upper_bounds = np.array([0.6798577687,0.5,0.5,0.5,-0.45]).reshape((-1,1))
         input_bounds = np.concatenate((lower_bounds,upper_bounds),axis = 1)
+        # nn.layers[7]['bias'][0] -= 3.9911256459
         nn.set_bounds(input_bounds)
-        solver = Solver(network = nn)
+
+        solver = Solver(network = nn,property_check=check_potential_CE)
         #Add Input bounds as constraints in the solver
         #TODO: Make the solver apply the bound directly from the NN object
         input_vars = [solver.state_vars[i] for i in range(len(solver.state_vars))]
@@ -54,6 +59,7 @@ if __name__ == "__main__":
         A = np.zeros(nn.output_size).reshape((1,-1))
         A[0,0] = 1
         b = [3.9911256459]
+        # b = [0]
         solver.add_linear_constraints(A,output_vars,b,GRB.GREATER_EQUAL)
 
 
@@ -74,6 +80,7 @@ if __name__ == "__main__":
         else:
             print("Problem Infeasible,Time:%f"%(e-s))
         print("=========================")
+        sys.exit()
     print(results,time()-start_time)
 
 

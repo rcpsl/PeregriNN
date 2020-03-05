@@ -11,13 +11,18 @@ eps = 1E-3
 
 
 
-
+def check_property(x):
+    u = nn.evaluate(x)
+    if(np.argmin(u) == 1):
+        print("Potential CE succeeded")
+        return True
+    return False
 
 if __name__ == "__main__":
 
     #init Neural network
     nn = NeuralNetworkStruct()
-    nn.parse_network('ACASXU_run2a_1_1_batch_2000.nnet','Weights.npy')
+    nn.parse_network('nnet/ACASXU_run2a_1_1_batch_2000.nnet')
     points = [np.array([0, 0, 0, 0, 0]) , np.array([0.2, -0.1, 0, -0.3, 0.4]),
             np.array([0.45, -0.23, -0.4, 0.12, 0.33]), np.array([-0.2, -0.25, -0.5, -0.3, -0.44 ]), np.array([0.61, 0.36, 0.0, 0.0, -0.24])]
     pairs = []
@@ -32,13 +37,13 @@ if __name__ == "__main__":
         label = pair['out']
         other_ouputs = [i for i in range(nn.output_size) if i != label]
         # other_ouputs = [1]
-        for delta in [deltas[3]]:
+        for delta in [deltas[2]]:
             #Solve the problem for each other output
             for out_idx in other_ouputs:
                 
                 input_bounds = np.concatenate((x-delta,x+delta),axis = 1)
                 nn.set_bounds(input_bounds)
-                solver = Solver(network = nn)
+                solver = Solver(network = nn,property_check=check_property,target = out_idx)
                 #Add Input bounds as constraints in the SAT solver
                 #TODO: Make the solver apply the bound directly from the NN object
                 input_vars = [solver.state_vars[i] for i in range(len(solver.state_vars))]
@@ -59,13 +64,12 @@ if __name__ == "__main__":
                 # b = [-0.0162349481, -0.0180076580, -0.0178982665, -0.0178564177, -0.0174600866]
                 # solver.add_linear_constraints(A,output_vars,b,GRB.EQUAL)
 
-                A = -1 * np.eye(nn.output_size)
-                A[:,out_idx] = 1
-                A[out_idx,out_idx] = 0
-                b = [-eps] * nn.output_size
-                b[out_idx] = 0
                 output_vars = [solver.out_vars[i] for i in range(len(solver.out_vars))]
-                solver.add_linear_constraints(A,output_vars,b,GRB.LESS_EQUAL)
+                A = np.zeros(nn.output_size)
+                A[out_idx] = 1
+                A[label] = -1
+                b = [-eps]
+                solver.add_linear_constraints([A],output_vars,b,GRB.LESS_EQUAL)
 
 
             
@@ -76,9 +80,10 @@ if __name__ == "__main__":
                 if(status == 'SolFound'):
                     nn_in = np.array([solver.state_vars[idx].X for idx in range(nn.image_size)]).reshape((-1,1))
                     nn_out = np.array([solver.out_vars[idx].X for idx in range(nn.output_size)]).reshape((-1,1))
+                    net_out = nn.evaluate(nn_in)
                     err = np.sum(np.fabs(nn.evaluate(nn_in) - nn_out))
                     print nn_in
-                    print nn_out
+                    print net_out
                     print('Adversarial example found with label %d ,delta %f in time %f'%(out_idx,delta,e-s))
                     print('Error',err)
                 else:

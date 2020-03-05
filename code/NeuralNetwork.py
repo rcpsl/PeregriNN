@@ -6,6 +6,7 @@ from Workspace import *
 from keras.models import load_model
 from copy import copy
 np.random.seed(50)
+eps = 1E-5
 class NeuralNetworkStruct(object):
 
     def __init__(self ,layers_sizes=[], load_weights = False, input_bounds = None):
@@ -24,18 +25,18 @@ class NeuralNetworkStruct(object):
         self.out_mean = 0
         self.out_range = 0
         self.fixed_relus = 0
-        input_bound = input_bounds
+        self.input_bound = input_bounds
         if(input_bounds is None):
-            input_bound = np.ones((self.layers_sizes[0]+1,2))
-            input_bound[:-1,0] = -1E10
-            input_bound[:-1,1] = 1E10
+            self.input_bound = np.ones((self.layers_sizes[0]+1,2))
+            self.input_bound[:-1,0] = -1E10
+            self.input_bound[:-1,1] = 1E10
         
         self.layers = {}
         if(load_weights):
             self.model = load_model("model/my_model.h5")
 
         #input layer
-        in_bound = input_bound[:-1,:]
+        in_bound = self.input_bound[:-1,:]
         self.layers[0] = {'idx':0, 'num_nodes':self.image_size, 'weights': [], 'type':'input','lb':in_bound[:,0].reshape((-1,1)),
                         'ub':in_bound[:,1].reshape((-1,1)),
                         'Relu_lb': in_bound[:,0].reshape((-1,1)), 'Relu_ub': in_bound[:,1].reshape((-1,1))}
@@ -68,7 +69,7 @@ class NeuralNetworkStruct(object):
         input_sym = SymbolicInterval(np.hstack((W,b)),np.hstack((W,b)),input_bounds)
         self.layers[1]['in_lb'] = input_sym.concrete_Mlower_bound(input_sym.lower,input_sym.interval)
         self.layers[1]['in_ub'] = input_sym.concrete_Mupper_bound(input_sym.upper,input_sym.interval)
-        self.layers[1]['Relu_sym'] = input_sym
+        # self.layers[1]['Relu_sym'] = input_sym
         input_sym = input_sym.forward_relu(input_sym)
         self.layers[1]['conc_lb'] = input_sym.concrete_Mlower_bound(input_sym.lower,input_sym.interval)
         self.layers[1]['conc_ub'] = input_sym.concrete_Mupper_bound(input_sym.upper,input_sym.interval)
@@ -86,8 +87,10 @@ class NeuralNetworkStruct(object):
             layer['conc_lb'] = input_sym.concrete_Mlower_bound(input_sym.lower,input_sym.interval)
             layer['conc_ub'] = input_sym.concrete_Mupper_bound(input_sym.upper,input_sym.interval)
           
-    def update_bounds(self,layer_idx,neuron_idx,bounds,layers_mask):
+    def update_bounds(self,layer_idx,neuron_idx,bounds,layers_mask = None):
         input_sym = self.layers[layer_idx]['Relu_sym']
+        if(np.all(bounds[0] - input_sym.lower <= eps) and np.all(bounds[1] - input_sym.upper <= eps)):
+            return
         input_sym.lower[neuron_idx] = bounds[0]
         input_sym.upper[neuron_idx] = bounds[1]
         self.layers[layer_idx]['conc_lb'][neuron_idx] = input_sym.concrete_lower_bound(input_sym.lower[neuron_idx],input_sym.interval)
@@ -96,7 +99,10 @@ class NeuralNetworkStruct(object):
         for idx,layer in self.layers.items():
             if(idx < layer_idx + 1):
                 continue
-            mask = layers_mask[idx-1]
+            if(layers_mask is None):
+                mask = 1
+            else:
+                mask = layers_mask[idx-1]
             weights = (layer['weights'],layer['bias'])
             input_sym = input_sym.forward_linear(weights)
             layer['in_lb'] = input_sym.concrete_Mlower_bound(input_sym.lower,input_sym.interval)
@@ -147,6 +153,7 @@ class NeuralNetworkStruct(object):
         self.out_range = stats['range'][-1]
     
     def set_bounds(self,input_bounds):
+        self.input_bound = input_bounds
         self.layers[0]['lb'] = input_bounds[:,0].reshape((-1,1))
         self.layers[0]['ub'] = input_bounds[:,1].reshape((-1,1))
         self.layers[0]['Relu_lb'] = input_bounds[:,0].reshape((-1,1))
@@ -168,16 +175,20 @@ class NeuralNetworkStruct(object):
             else:
                 prev = np.maximum(0,net)
         return prev
-    def normalize_input(self,inputIndex,val):
-        in_min = self.input_min[inputIndex]
-        in_max = self.input_max[inputIndex]
-        in_mean = self.input_mean[inputIndex]
-        in_range = self.input_range[inputIndex]
-        if ( val < in_min ):
-            val = in_min
-        elif ( val > in_max ):
-            val = in_max
-        return ( val - in_mean ) / in_range
+    def normalize_input(self,val):
+        ret = np.zeros_like(val)
+        for inputIndex in range(len(val)):
+            in_min = self.input_min[inputIndex]
+            in_max = self.input_max[inputIndex]
+            in_mean = self.input_mean[inputIndex]
+            in_range = self.input_range[inputIndex]
+            if ( val[inputIndex] < in_min ):
+                ret[inputIndex] = in_min
+            elif ( val[inputIndex] > in_max ):
+                ret[inputIndex] = in_max
+            else:
+                ret[inputIndex] = ( val[inputIndex] - in_mean ) / in_range
+        return ret
     def unnormalize_input(self,inputIndex, val):
         in_mean = self.input_mean[inputIndex]
         in_range = self.input_range[inputIndex]
@@ -258,11 +269,14 @@ class SymbolicInterval(object):
                 relu_lower_eq[:]    = 0
                 relu_upper_eq[:]    = 0
             else:
-                relu_lower_eq[:] = 0
-                # if(lower_ub >0):
-                #     relu_lower_eq[:]    =  lower_ub * (relu_lower_eq) / (lower_ub - lower_lb)
-                if(upper_lb < 0):
-                    relu_upper_eq[:]   = upper_ub * (relu_upper_eq - upper_lb) / (upper_ub - upper_lb)
+                if(lower_ub >eps):
+                    relu_lower_eq[:]    =  lower_ub * (relu_lower_eq) / (lower_ub - lower_lb)
+                else:
+                    relu_lower_eq[:] = 0
+
+                if(upper_lb < eps):
+                    relu_upper_eq[:]   = upper_ub * (relu_upper_eq) / (upper_ub - upper_lb)
+                    relu_upper_eq[-1]  -= upper_ub* upper_lb / (upper_ub - upper_lb)
         
         return SymbolicInterval(relu_lower_equtions,relu_upper_equations, self.interval)
 
