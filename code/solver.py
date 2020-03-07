@@ -235,15 +235,7 @@ class Solver():
         self.__prepare_problem()
         # print('Prep Problem',time() - s)
         self.fix_relu(fixed_relus)
-        # bounds = self.tighten_bounds()
-        # if(bounds is not None):
-        #     self.model.addConstr(self.out_vars[0] <=bounds[1], name ="upper_bound")
-        #     self.model.addConstr(self.out_vars[0] >=bounds[0], name ="lower_bound")
         self.model.optimize()
-        # if(bounds is not None):
-        #     self.model.remove(self.model.getConstrByName("upper_bound"))
-        #     self.model.remove(self.model.getConstrByName("lower_bound"))
-
         if(self.model.Status == 2): #Feasible solution
             SAT,infeasible_set = self.check_SAT()
             valid = self.check_potential_CE(np.array([self.model.getVarByName('x[%d]'%i).X for i in range(len(self.state_vars))]).reshape((-1,1)))
