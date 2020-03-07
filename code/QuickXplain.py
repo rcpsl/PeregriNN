@@ -54,3 +54,4 @@ def check(C):
 # q = QuickXplain(check)
 # U = set([('y_0',1),('y_1',1),('y_3',0),('y_4',0)])
 # q.quickxplain(set(),U)
+

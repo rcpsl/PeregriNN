@@ -37,7 +37,7 @@ if __name__ == "__main__":
         label = pair['out']
         other_ouputs = [i for i in range(nn.output_size) if i != label]
         # other_ouputs = [1]
-        for delta in [deltas[2]]:
+        for delta in [deltas[0]]:
             #Solve the problem for each other output
             for out_idx in other_ouputs:
                 

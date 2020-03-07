@@ -180,13 +180,20 @@ class Solver():
         
         return self.model.getVars(),counter_examples,status
     def fix_relu(self, fixed_relus):
-
+        input_vars = [self.state_vars[i] for i in range(len(self.state_vars))]
         for relu_idx, phase in fixed_relus:
+            layer_idx,neuron_idx = self.abs2d[relu_idx]
+            A_low = self.nn.layers[layer_idx]['in_sym'].lower[neuron_idx]
+            A_up = self.nn.layers[layer_idx]['in_sym'].upper[neuron_idx]
             if(phase == 1):
                 self.model.addConstr(self.slack_vars[relu_idx] == 0,name="active_"+str(relu_idx))
                 # self.model.addConstr(self.net_vars[relu_idx] > 0,name="active_"+str(relu_idx))
+                # self.model.addConstr(LinExpr(A_low[:-1],input_vars) + A_low[-1] >= 0,name ="y%d_active_LB"%relu_idx)
+                # self.model.addConstr(LinExpr(A_up[:-1],input_vars)  + A_up[-1]  >= 0,name ="y%d_active_UB"%relu_idx)
             else:
                 self.model.addConstr(self.relu_vars[relu_idx] == 0,name="inactive_"+str(relu_idx))
+                # self.model.addConstr(LinExpr(A_low[:-1],input_vars) + A_low[-1] <= 0,name ="y%d_inactive_LB"%relu_idx)
+                # self.model.addConstr(LinExpr(A_up[:-1],input_vars)  + A_up[-1]  <= 0,name ="y%d_inactive_UB"%relu_idx)
         
         self.add_objective([idx for idx,_ in fixed_relus])
 
