@@ -73,8 +73,8 @@ if __name__ == "__main__":
             nn_in = np.array([solver.state_vars[idx].X for idx in range(nn.image_size)]).reshape((-1,1))
             nn_out = np.array([solver.out_vars[idx].X for idx in range(nn.output_size)]).reshape((-1,1))
             err = np.sum(np.fabs(nn.evaluate(nn_in) - nn_out))
-            print nn_in
-            print nn_out
+            print(nn_in)
+            print(nn_out)
             print('Adversarial example found with label %d ,delta %f in time %f'%(out_idx,delta,e-s))
             print('Error',err)
         else:

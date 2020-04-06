@@ -14,6 +14,7 @@ eps = 0
 def check_potential_CE(x):
     u = nn.evaluate(x)
     if(np.argmin(u) not in [0,1]):
+        print('Potential CE succeeded')
         return True
     return False
 
@@ -29,10 +30,6 @@ if __name__ == "__main__":
     upper_bounds = np.array([0.6798577687,-0.3749999220,0.0159154943,0.5,0.5]).reshape((-1,1))
                     
     
-
-    # upper_bounds = np.array([60760.000000 ,-2.356194, 0.100000, 1200.000000 ,1200.000000]).reshape((-1,1))
-    # lower_bounds = np.array([0.000000 ,-3.141592 ,-0.100000 ,600.000000, 600.000000 ]).reshape((-1,1))
-
     input_bounds = np.concatenate((lower_bounds,upper_bounds),axis = 1)
     nn.set_bounds(input_bounds)
     start_time = time()
@@ -62,8 +59,8 @@ if __name__ == "__main__":
             nn_in = np.array([solver.state_vars[idx].X for idx in range(nn.image_size)]).reshape((-1,1))
             nn_out = np.array([solver.out_vars[idx].X for idx in range(nn.output_size)]).reshape((-1,1))
             err = np.sum(np.fabs(nn.evaluate(nn_in) - nn_out))
-            print nn_in
-            print nn_out
+            print(nn_in)
+            print (nn_out)
             print('Counter example found with label %d, in time %f'%(out_idx,e-start_time))
             print('Error',err)
             break

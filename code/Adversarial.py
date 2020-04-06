@@ -13,7 +13,7 @@ eps = 1E-3
 
 def check_property(x):
     u = nn.evaluate(x)
-    if(np.argmin(u) == 1):
+    if(np.argmin(u) != 0):
         print("Potential CE succeeded")
         return True
     return False
@@ -40,7 +40,7 @@ if __name__ == "__main__":
         for delta in [deltas[0]]:
             #Solve the problem for each other output
             for out_idx in other_ouputs:
-                
+                # x = [-0.100000,-0.025285,0.011807,-0.009691,-0.100000]
                 input_bounds = np.concatenate((x-delta,x+delta),axis = 1)
                 nn.set_bounds(input_bounds)
                 solver = Solver(network = nn,property_check=check_property,target = out_idx)
@@ -82,8 +82,8 @@ if __name__ == "__main__":
                     nn_out = np.array([solver.out_vars[idx].X for idx in range(nn.output_size)]).reshape((-1,1))
                     net_out = nn.evaluate(nn_in)
                     err = np.sum(np.fabs(nn.evaluate(nn_in) - nn_out))
-                    print nn_in
-                    print net_out
+                    print(nn_in)
+                    print(net_out)
                     print('Adversarial example found with label %d ,delta %f in time %f'%(out_idx,delta,e-s))
                     print('Error',err)
                 else:

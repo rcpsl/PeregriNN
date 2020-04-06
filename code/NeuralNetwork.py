@@ -3,7 +3,6 @@ import constant
 import pickle
 import sys
 from Workspace import *
-from keras.models import load_model
 from copy import copy
 np.random.seed(50)
 eps = 1E-5
@@ -24,8 +23,10 @@ class NeuralNetworkStruct(object):
         self.input_range = np.zeros(self.image_size)
         self.out_mean = 0
         self.out_range = 0
-        self.fixed_relus = 0
         self.input_bound = input_bounds
+        self.nonlin_relus = []
+        self.active_relus = []
+        self.inactive_relus = []
         if(input_bounds is None):
             self.input_bound = np.ones((self.layers_sizes[0]+1,2))
             self.input_bound[:-1,0] = -1E10
@@ -59,9 +60,38 @@ class NeuralNetworkStruct(object):
         # self.__compute_IA_bounds()
         # self.__compute_sym_bounds()
         self.layers[self.num_layers-1]['type'] = 'output'
+    def recompute_bounds(self,layers_mask):
+        self.nonlin_relus = []
+        self.active_relus = []
+        self.inactive_relus = []
+        I = np.zeros((self.image_size ,self.image_size+ 1))
+        np.fill_diagonal(I,1)
+        layer_sym = SymbolicInterval(I,I,self.input_bound)
+        for layer_idx in range(1,len(self.layers)):
+            layer = self.layers[layer_idx]
+
+            weights = (layer['weights'],layer['bias'])
+            layer_sym = layer_sym.forward_linear(weights)
+            layer['in_sym'] = layer_sym
+            layer['in_lb'] = layer_sym.concrete_Mlower_bound(layer_sym.lower,layer_sym.interval)
+            layer['in_ub'] = layer_sym.concrete_Mupper_bound(layer_sym.upper,layer_sym.interval)
+            if(layer['type'] == 'hidden'):
+                layer_mask = layers_mask[layer_idx-1]
+                active_neurons = np.where(layer_mask == 1)[0]
+                self.active_relus += [[layer_idx,idx] for idx in active_neurons]
+                inactive_neurons = np.where(layer_mask == 0)[0]
+                self.inactive_relus += [[layer_idx,idx] for idx in inactive_neurons]
+                layer_sym,error_vec = layer_sym.forward_relu(layer = layer_idx,nonlin_relus = self.nonlin_relus,inact_relus=self.inactive_relus,act_relus= self.active_relus)
+                layer_sym.lower[active_neurons]  = layer_sym.upper[active_neurons] =  layer['in_sym'].upper[active_neurons]
+                layer_sym.upper[inactive_neurons] = layer_sym.lower[inactive_neurons] = 0      
+            layer['Relu_sym'] = layer_sym
+            layer['conc_lb'] = layer_sym.concrete_Mlower_bound(layer_sym.lower,layer_sym.interval)
+            layer['conc_ub'] = layer_sym.concrete_Mupper_bound(layer_sym.upper,layer_sym.interval)
+        sorted(self.nonlin_relus)
 
     def __compute_sym_bounds(self):
         #first layer Symbolic interval
+        self.nonlin_relus = []
         W = self.layers[1]['weights']
         b = self.layers[1]['bias'].reshape((-1,1))
         input_bounds = np.hstack((self.layers[0]['lb'],self.layers[0]['ub']))
@@ -71,8 +101,7 @@ class NeuralNetworkStruct(object):
         self.layers[1]['in_lb'] = input_sym.concrete_Mlower_bound(input_sym.lower,input_sym.interval)
         self.layers[1]['in_ub'] = input_sym.concrete_Mupper_bound(input_sym.upper,input_sym.interval)
         # self.layers[1]['Relu_sym'] = input_sym
-        input_sym = input_sym.forward_relu(input_sym)
-        input_sym1 = input_sym.forward_relu1(input_sym)
+        input_sym,error_vec = input_sym.forward_relu(layer = 1,nonlin_relus = self.nonlin_relus,inact_relus=self.inactive_relus,act_relus= self.active_relus)
         self.layers[1]['conc_lb'] = input_sym.concrete_Mlower_bound(input_sym.lower,input_sym.interval)
         self.layers[1]['conc_ub'] = input_sym.concrete_Mupper_bound(input_sym.upper,input_sym.interval)
         self.layers[1]['Relu_sym'] = input_sym
@@ -85,11 +114,12 @@ class NeuralNetworkStruct(object):
             layer['in_ub'] = input_sym.concrete_Mupper_bound(input_sym.upper,input_sym.interval)
             layer['in_sym'] = input_sym
             if(layer['type'] == 'hidden'):
-                input_sym = input_sym.forward_relu(input_sym)
+                input_sym,error_vec = input_sym.forward_relu(layer = layer_idx,nonlin_relus = self.nonlin_relus, inact_relus=self.inactive_relus,act_relus= self.active_relus)
             layer['Relu_sym'] = input_sym
             layer['conc_lb'] = input_sym.concrete_Mlower_bound(input_sym.lower,input_sym.interval)
             layer['conc_ub'] = input_sym.concrete_Mupper_bound(input_sym.upper,input_sym.interval)
-          
+
+        sorted(self.nonlin_relus) 
     def update_bounds(self,layer_idx,neuron_idx,bounds,layers_mask = None):
         input_sym = self.layers[layer_idx]['Relu_sym']
         if(np.all(bounds[0] - input_sym.lower <= eps) and np.all(bounds[1] - input_sym.upper <= eps)):
@@ -111,7 +141,7 @@ class NeuralNetworkStruct(object):
             layer['in_lb'] = input_sym.concrete_Mlower_bound(input_sym.lower,input_sym.interval)
             layer['in_ub'] = input_sym.concrete_Mupper_bound(input_sym.upper,input_sym.interval)
             if(layer['type'] == 'hidden'):
-                input_sym = input_sym.forward_relu(input_sym)
+                input_sym,error_vec = input_sym.forward_relu(input_sym)
                 input_sym.lower *= mask
                 input_sym.upper *= mask
             layer['Relu_sym'] = input_sym
@@ -197,22 +227,27 @@ class NeuralNetworkStruct(object):
         in_range = self.input_range[inputIndex]
         return  (val * in_range) + in_mean
         
-    def parse_network(self, model_file):
-        with open(model_file,'rb') as f:
+    def parse_network(self, model_file,type = 'Acas'):
+        with open(model_file,'r') as f:
+            start_idx = 4
+            if(type == 'mnist'):
+                start_idx = 2
             model_fmt_file = f.readlines() 
-            layers_sizes = list(map(int,model_fmt_file[4][:-2].split(','))) 
+            layers_sizes = list(map(int,model_fmt_file[start_idx][:-2].split(','))) 
             f.close()
         
         W = []
         biases =[]
         start_idx = 10
+        if(type == 'mnist'):
+            start_idx = 3
         for idx in range(1, len(layers_sizes)):
             source = layers_sizes[idx-1]
             target = layers_sizes[idx]
             layer_weights = np.zeros((target,source))
             layer_bias = np.zeros(target)
             for row in range(target):
-               weights = np.array(map(float,model_fmt_file[start_idx].split(',')[:-1]))
+               weights = np.array(list(map(float,model_fmt_file[start_idx].split(',')[:-1])))
                layer_weights[row] = weights
                start_idx +=1
             for row in range(target):
@@ -254,24 +289,27 @@ class SymbolicInterval(object):
         out_low[:,-1]+= b.flatten()
         return SymbolicInterval(out_low,out_upp,self.interval)
 
-    def forward_relu(self, symInterval):
-        relu_lower_equtions = copy(symInterval.lower)
-        relu_upper_equations = copy(symInterval.upper)
+    def forward_relu(self,layer = -1,nonlin_relus = [],inact_relus = [],act_relus = []):
+        relu_lower_equtions = copy(self.lower)
+        relu_upper_equations = copy(self.upper)
+        error_vec = np.zeros(len(relu_lower_equtions))
         for row in range(relu_lower_equtions.shape[0]):
             relu_lower_eq = relu_lower_equtions[row]
             relu_upper_eq = relu_upper_equations[row]
-            lower_lb = self.concrete_lower_bound(relu_lower_eq, symInterval.interval)
-            lower_ub = self.concrete_upper_bound(relu_lower_eq, symInterval.interval)
-            upper_lb = self.concrete_lower_bound(relu_upper_eq, symInterval.interval)
-            upper_ub = self.concrete_upper_bound(relu_upper_eq, symInterval.interval)
+            lower_lb = self.concrete_lower_bound(relu_lower_eq, self.interval)
+            lower_ub = self.concrete_upper_bound(relu_lower_eq, self.interval)
+            upper_lb = self.concrete_lower_bound(relu_upper_eq, self.interval)
+            upper_ub = self.concrete_upper_bound(relu_upper_eq, self.interval)
 
 
             if(lower_lb >= 0):
-                pass
+                act_relus.append([layer,row])
             elif(upper_ub <= 0):
                 relu_lower_eq[:]    = 0
                 relu_upper_eq[:]    = 0
+                inact_relus.append([layer,row])
             else:
+                nonlin_relus.append([layer,row])
                 if(lower_ub >eps):
                     relu_lower_eq[:]    =  lower_ub * (relu_lower_eq) / (lower_ub - lower_lb)
                 else:
@@ -280,8 +318,9 @@ class SymbolicInterval(object):
                 if(upper_lb < eps):
                     relu_upper_eq[:]   = upper_ub * (relu_upper_eq) / (upper_ub - upper_lb)
                     relu_upper_eq[-1]  -= upper_ub* upper_lb / (upper_ub - upper_lb)
+                    error_vec[row] -= upper_ub* upper_lb / (upper_ub - upper_lb)
         
-        return SymbolicInterval(relu_lower_equtions,relu_upper_equations, self.interval)
+        return SymbolicInterval(relu_lower_equtions,relu_upper_equations, self.interval),np.diagflat(error_vec)
 
 
     def concrete_lower_bound(self, equation, interval):
@@ -316,16 +355,19 @@ class SymbolicInterval(object):
 
 
 if __name__ == "__main__":
-    layers_sizes = [2,2,1]
-    input_bounds = np.array([[1,10],[1,2],[1,1]])
+    layers_sizes = [1,2,1,1]
+    input_bounds = np.array([[0,1],[1,1]])
 
     nn= NeuralNetworkStruct(layers_sizes,input_bounds=input_bounds)
     weights = []
     biases = []
-    weights.append(np.array([[1,2],[2,1]]))
-    biases.append(np.array([0,0]))
-    weights.append(np.array([1,-1]))
+    weights.append(np.array([[2],[-1]]))
+    biases.append(np.array([-1,1]))
+    weights.append(np.array([-3,1]))
+    biases.append(np.array([0]))
+    weights.append(np.array([1]))
     biases.append(np.array([0]))
     nn.set_weights(weights,biases)
+    nn.set_bounds(np.array([0,1]).reshape((1,-1)))
     pass
 

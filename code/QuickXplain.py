@@ -1,5 +1,6 @@
 from copy import copy
 from time import time
+import random
 
 SAT = True
 UNSAT = False
@@ -28,7 +29,7 @@ class QuickXplain(object):
             return []
         
         X = [cstrnt]
-        split_idx = idx/2
+        split_idx = idx//2
         U1 = U[:split_idx+1]
         U2 = U[split_idx+1:idx]
         if(len(U2) != 0):
@@ -41,6 +42,30 @@ class QuickXplain(object):
             X = X + X1
     
         return X
+
+    def quickxplain1(self,U):
+        fixed_relu = [U[-1]]
+        infeas_set = U[:-1]
+        X = []
+        min_len = len(U)
+        for i in range(2**len(infeas_set)):
+            k = random.randint(1,len(infeas_set)-1)
+            random_set = random.sample(infeas_set, k = k)
+            print("Checking:",random_set)
+            sat = self.check(random_set + fixed_relu)
+            if(not sat):
+                if(k < min_len):
+                    min_len = k
+                    X = random_set + fixed_relu
+                # return random_set
+
+
+
+            
+
+
+    
+        return []
 
 
 
