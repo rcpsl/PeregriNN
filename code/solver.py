@@ -1,7 +1,5 @@
-from pulp import *
 from random import random,seed
 from time import time
-sys.path.append('./z3/z3-4.4.1-x64-osx-10.11/bin/')
 import pickle
 from Workspace import Workspace
 import math
@@ -203,7 +201,7 @@ class Solver():
         self.add_objective([idx for idx,_ in fixed_relus])
 
     def update_in_interval(self):
-        H_rep = np.zeros((0,6))
+        H_rep = np.zeros((0,self.nn.image_size +1 ))
         for layer_idx, neuron_idx in self.nn.active_relus:
             eq = self.nn.layers[layer_idx]['in_sym'].upper[neuron_idx]
             b,A = -eq[-1], eq[:-1]
@@ -241,10 +239,10 @@ class Solver():
             layers_masks[layer_idx-1][neuron_idx] = -1
 
         self.nn.recompute_bounds(layers_masks)
-        # bounds = self.update_in_interval()
-        # self.nn.input_bound = bounds
-        # self.nn.recompute_bounds(layers_masks)
-        # self.nn.input_bound = copy(self.orig_net.input_bound)
+        bounds = self.update_in_interval()
+        self.nn.input_bound = bounds
+        self.nn.recompute_bounds(layers_masks)
+        self.nn.input_bound = copy(self.orig_net.input_bound)
 
     def getIIS(self,fname):
         IIS = []

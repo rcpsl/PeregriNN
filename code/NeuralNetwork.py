@@ -184,6 +184,15 @@ class NeuralNetworkStruct(object):
         self.input_range = np.array(stats['range'][:-1])
         self.out_mean = stats['mean'][-1]
         self.out_range = stats['range'][-1]
+
+    def set_target(self,target):
+        last_layer_W = self.layers[self.num_layers-1]['weights']
+        last_layer_b = self.layers[self.num_layers-1]['bias']
+        target_w = copy(last_layer_W[target])
+        target_b = copy(last_layer_b[target])
+        for idx in range(len(last_layer_W)):
+            last_layer_W[idx] -= target_w
+            last_layer_b[idx] -= target_b
     
     def set_bounds(self,input_bounds):
         self.input_bound = input_bounds
