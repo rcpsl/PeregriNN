@@ -1,6 +1,0 @@
-{
-    "git.ignoreLimitWarning": true,
-    "vim.disableExtension": true,
-    "workbench.preferredLightColorTheme": "Default Dark+",
-    "workbench.preferredHighContrastColorTheme": "Default Dark+"
-}
