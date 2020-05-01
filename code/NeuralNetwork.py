@@ -1,8 +1,6 @@
 import numpy as np
-import constant
 import pickle
 import sys
-from Workspace import *
 from copy import copy
 np.random.seed(50)
 eps = 1E-5

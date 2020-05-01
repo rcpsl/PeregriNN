@@ -40,7 +40,7 @@ if __name__ == "__main__":
     
     num_test = 100
     image_files = ['images/image%d'%idx for idx in range(num_test)]
-    deltas = [15.0]
+    deltas = [2.6]
     begin_time = time()
     for image_file in image_files[:num_test]:
         start_time = time()

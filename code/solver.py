@@ -1,14 +1,12 @@
 from random import random,seed
 from time import time
 import pickle
-from Workspace import Workspace
 import math
 from gurobipy import * 
 import sys
 import os
 from NeuralNetwork import *
 from copy import copy,deepcopy
-from QuickXplain import QuickXplain
 import re
 import cdd
 eps = 1E-5
