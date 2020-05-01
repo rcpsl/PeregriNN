@@ -1,2 +1,2 @@
-# MLReluVerify
-Multi Layer Relu NN Verification
+# PeregriNN
+Code for PeregriNN, an efficient NN model checker...README Under construction
