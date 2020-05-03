@@ -13,7 +13,7 @@ eps = 1E-5
 
 class Solver():
 
-    def __init__(self, network = None, target = 0,maxIter = 100000,property_check=None):
+    def __init__(self, network = None, target = -1,maxIter = 100000,property_check=None):
         self.maxNumberOfIterations = maxIter
         self.nn        = deepcopy(network)
         self.orig_net = deepcopy(self.nn)
@@ -54,6 +54,12 @@ class Solver():
                 self._2dabs[layer_idx][neuron_idx] = idx
                 idx+=1
         self.linear_constraints = []
+
+        # if(target != -1):
+        #     outs = self.out_vars.values()
+        #     decision_var = self.model.addVar(name = 'd')
+        #     self.model.addConstr(decision_var == max_(outs[:target] + outs[target+1:]))
+        #     self.model.addConstr(decision_var >= 0)
 
     def add_linear_constraints(self, A, x, b, sense = GRB.LESS_EQUAL):
         #Senses are GRB.LESS_EQUAL, GRB.EQUAL, or GRB.GREATER_EQUAL
@@ -257,7 +263,7 @@ class Solver():
     def split_neuron(self,infeas_relus,max_neuron):
         in_rectangle = self.update_in_interval()
         in_rectangle = self.orig_net.input_bound
-        A = np.eye(5)
+        A = np.eye(self.nn.image_size)
         upper_bound = self.nn.input_bound[:,1].reshape((-1,1))
         lower_bound = self.nn.input_bound[:,0].reshape((-1,1))
         H_rep = np.hstack((upper_bound,-A))

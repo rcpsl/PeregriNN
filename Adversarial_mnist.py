@@ -31,7 +31,7 @@ if __name__ == "__main__":
     adv = non_adv = timed_out = 0
 
     #init Neural network
-    nnet = 'nnet/mnist512.nnet'
+    nnet = 'models/mnist512.nnet'
     nn = NeuralNetworkStruct()
     nn.parse_network(nnet,type = 'mnist')
     print('Loaded network:',nnet)

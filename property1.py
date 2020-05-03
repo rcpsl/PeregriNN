@@ -20,7 +20,7 @@ def check_potential_CE(x):
 if __name__ == "__main__":
 
     #init Neural network
-    networks = sorted(glob.glob("nnet/*.nnet"))
+    networks = sorted(glob.glob("models/*.nnet"))
     results = []
     start_time = time()
     for network in networks:

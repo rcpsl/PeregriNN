@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
     #init Neural network
     nn = NeuralNetworkStruct()
-    nn.parse_network('nnet/ACASXU_run2a_1_1_batch_2000.nnet')
+    nn.parse_network('models/ACASXU_run2a_1_1_batch_2000.nnet')
     points = [np.array([0, 0, 0, 0, 0]) , np.array([0.2, -0.1, 0, -0.3, 0.4]),
             np.array([0.45, -0.23, -0.4, 0.12, 0.33]), np.array([-0.2, -0.25, -0.5, -0.3, -0.44 ]), np.array([0.61, 0.36, 0.0, 0.0, -0.24])]
     pairs = []

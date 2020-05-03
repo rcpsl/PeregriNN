@@ -21,7 +21,7 @@ def check_potential_CE(x):
 if __name__ == "__main__":
 
     #init Neural network
-    network = "nnet/ACASXU_run2a_2_9_batch_2000.nnet"
+    network = "models/ACASXU_run2a_2_9_batch_2000.nnet"
     results = []
     print("Checking property 8 on %s"%network[5:])
     nn = NeuralNetworkStruct()
