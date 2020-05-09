@@ -339,13 +339,6 @@ class Solver():
                     self.set_neuron_bounds(layer_idx,neuron_idx,-1,layers_masks)
                     return status
 
-            # infeasible solution
-            # set the neuron to other phase
-            # qx = QuickXplain(self.quickXplain_predicate)
-            # X1 = qx.quickxplain1(fixed_relus)
-            # if self.model.Status == 3:
-            #     X = qx.quickxplain([],fixed_relus)
-            #     pass
             phase = 1 - phase
             # print('Backtrack, Setting neuron %d to %d'%(relu_idx,phase))
             self.set_neuron_bounds(layer_idx,neuron_idx,phase,layers_masks)

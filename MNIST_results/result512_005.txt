@@ -1,0 +1,2325 @@
+Using TensorFlow backend.
+2020-05-03 23:44:57.050881: I tensorflow/core/platform/cpu_feature_guard.cc:142] Your CPU supports instructions that this TensorFlow binary was not compiled to use: SSE4.1 SSE4.2 AVX AVX2 FMA
+2020-05-03 23:44:57.086695: I tensorflow/core/platform/profile_utils/cpu_utils.cc:94] CPU Frequency: 2194780000 Hz
+2020-05-03 23:44:57.091283: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x55fcc0139df0 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2020-05-03 23:44:57.091359: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+2020-05-03 23:44:57.091567: I tensorflow/core/common_runtime/process_util.cc:147] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+Loaded network: models/mnist-net.h5
+Testing images/mnist_pkl_imgs/im1.pkl
+Output: [[ 2.3925614e-02]
+ [-5.0757304e-03]
+ [-7.1901232e-03]
+ [-4.2776167e-03]
+ [-3.9432012e-03]
+ [-4.8353523e-04]
+ [-1.4022887e-03]
+ [ 9.7336936e-01]
+ [ 2.2936847e-02]
+ [ 9.8301321e-03]] 
+Target--> 7
+Norm: 0.05
+Trying Adversary with label [3]
+Using license file /home/hkhedr/gurobi.lic
+Academic license - for non-commercial use only
+Potential CE succeeded
+[[ 0.03301634]
+ [-0.29415508]
+ [-0.21877777]
+ [-0.12381554]
+ [-0.26371435]
+ [-0.16665876]
+ [-0.2563995 ]
+ [ 0.        ]
+ [ 0.24374559]
+ [-0.17679619]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.101967096328735
+Testing images/mnist_pkl_imgs/im2.pkl
+Output: [[ 0.03246111]
+ [-0.0026097 ]
+ [ 0.9437039 ]
+ [-0.0037596 ]
+ [ 0.0059354 ]
+ [-0.0196347 ]
+ [ 0.03163132]
+ [ 0.00838344]
+ [-0.00646394]
+ [-0.00622509]] 
+Target--> 2
+Norm: 0.05
+Trying Adversary with label [8]
+Potential CE succeeded
+[[-0.05465683]
+ [-0.05984739]
+ [ 0.        ]
+ [-0.08127164]
+ [-0.08775475]
+ [-0.02892834]
+ [-0.02038134]
+ [-0.07961674]
+ [ 0.8716571 ]
+ [-0.08484742]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 6.09585976600647
+Testing images/mnist_pkl_imgs/im3.pkl
+Output: [[-0.00370505]
+ [ 0.9989734 ]
+ [ 0.00872675]
+ [ 0.00248554]
+ [-0.0014885 ]
+ [ 0.00254188]
+ [-0.00161035]
+ [ 0.00225382]
+ [ 0.01421404]
+ [-0.00259344]] 
+Target--> 1
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[ 0.18992472]
+ [ 0.        ]
+ [-0.1066787 ]
+ [-0.14547655]
+ [-0.04802824]
+ [-0.13922592]
+ [-0.18478505]
+ [-0.12101075]
+ [ 0.32972071]
+ [ 0.11366363]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.79878830909729
+Testing images/mnist_pkl_imgs/im4.pkl
+Output: [[ 1.024964  ]
+ [ 0.00579819]
+ [-0.0069885 ]
+ [ 0.02098305]
+ [ 0.01177267]
+ [ 0.01851903]
+ [ 0.0110427 ]
+ [ 0.00143816]
+ [ 0.01832106]
+ [ 0.00691036]] 
+Target--> 0
+Norm: 0.05
+Trying Adversary with label [9]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im5.pkl
+Output: [[ 1.7159160e-02]
+ [ 4.3642521e-04]
+ [ 4.8823357e-03]
+ [ 1.1795387e-03]
+ [ 9.4297379e-01]
+ [-2.8362796e-03]
+ [ 1.4006719e-03]
+ [-1.0590255e-04]
+ [ 2.2777539e-02]
+ [ 2.6364502e-02]] 
+Target--> 4
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[ 0.16230873]
+ [-0.05023834]
+ [-0.03992939]
+ [-0.05405578]
+ [ 0.        ]
+ [-0.02602646]
+ [-0.06861915]
+ [-0.06425064]
+ [ 0.57605334]
+ [-0.18228634]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 6.879945755004883
+Testing images/mnist_pkl_imgs/im6.pkl
+Output: [[-6.3822865e-03]
+ [ 1.0107956e+00]
+ [ 6.9694072e-03]
+ [ 3.4712106e-03]
+ [ 1.1018924e-03]
+ [ 9.4706565e-04]
+ [-1.5790015e-03]
+ [ 1.7925650e-03]
+ [ 1.4483094e-02]
+ [-1.7944053e-03]] 
+Target--> 1
+Norm: 0.05
+Trying Adversary with label [9]
+Potential CE succeeded
+[[-0.19247883]
+ [ 0.        ]
+ [-0.41589106]
+ [-0.38966503]
+ [-0.22720781]
+ [-0.4529178 ]
+ [-0.41810789]
+ [-0.48761903]
+ [-0.41959922]
+ [ 0.16482306]]
+Adversarial example found with label 9 ,delta 0.050000
+Total time: 7.472938060760498
+Testing images/mnist_pkl_imgs/im7.pkl
+Output: [[-2.0117126e-03]
+ [-4.1867048e-04]
+ [ 8.6762011e-04]
+ [-3.4105703e-03]
+ [ 9.9983341e-01]
+ [ 4.4839084e-04]
+ [-5.1401556e-03]
+ [-1.0285497e-02]
+ [ 7.0233345e-03]
+ [ 1.6638555e-02]] 
+Target--> 4
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[ 0.21694429]
+ [ 0.00236221]
+ [ 0.03111816]
+ [ 0.01702787]
+ [ 0.        ]
+ [ 0.00592581]
+ [-0.02686555]
+ [-0.01504733]
+ [ 0.60697806]
+ [-0.14634681]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.405835151672363
+Testing images/mnist_pkl_imgs/im8.pkl
+Output: [[-0.0012782 ]
+ [-0.01084218]
+ [ 0.00624996]
+ [-0.00175223]
+ [ 0.09532616]
+ [ 0.00225455]
+ [ 0.00830255]
+ [ 0.01486461]
+ [ 0.04544628]
+ [ 0.86835074]] 
+Target--> 9
+Norm: 0.05
+Trying Adversary with label [3]
+[[0.36329108]
+ [0.14870901]
+ [0.17746495]
+ [0.16337469]
+ [0.14634681]
+ [0.15227262]
+ [0.11948124]
+ [0.13129949]
+ [0.75332488]
+ [0.        ]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 3.7913589477539062
+Testing images/mnist_pkl_imgs/im9.pkl
+Output: [[-6.2832981e-04]
+ [-4.5640692e-03]
+ [-4.2870492e-03]
+ [-2.2129044e-03]
+ [-3.8517628e-02]
+ [-3.2453090e-03]
+ [ 6.4968541e-03]
+ [-3.7901253e-03]
+ [ 5.4521605e-02]
+ [ 1.0159336e+00]] 
+Target--> 9
+Norm: 0.05
+Trying Adversary with label [0]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im10.pkl
+Output: [[ 1.0332251e+00]
+ [ 1.7113164e-03]
+ [ 1.2142971e-02]
+ [ 1.1009678e-02]
+ [ 6.3164122e-03]
+ [ 5.2500665e-03]
+ [ 4.7104880e-03]
+ [-7.3410571e-04]
+ [ 7.6740682e-03]
+ [-1.0795295e-03]] 
+Target--> 0
+Norm: 0.05
+Trying Adversary with label [9]
+Trying Adversary with label [2]
+Trying Adversary with label [7]
+Trying Adversary with label [4]
+Trying Adversary with label [5]
+Trying Adversary with label [8]
+Trying Adversary with label [6]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im11.pkl
+Output: [[-3.7484244e-04]
+ [ 1.5983135e-03]
+ [-7.1878880e-03]
+ [ 9.6281320e-03]
+ [-4.8076250e-03]
+ [-2.3195468e-02]
+ [ 1.0710610e+00]
+ [-8.0084801e-04]
+ [-2.2076815e-04]
+ [-1.0212883e-03]] 
+Target--> 6
+Norm: 0.05
+Trying Adversary with label [8]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im12.pkl
+Output: [[-1.5676804e-03]
+ [-9.4443560e-03]
+ [ 9.4431639e-04]
+ [-5.9097558e-03]
+ [-1.5964244e-02]
+ [-4.2266846e-03]
+ [ 4.8007891e-03]
+ [ 1.6758293e-03]
+ [ 3.7997451e-02]
+ [ 1.0109532e+00]] 
+Target--> 9
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[0.36329108]
+ [0.14870901]
+ [0.17746495]
+ [0.16337469]
+ [0.14634681]
+ [0.15227262]
+ [0.11948124]
+ [0.13129949]
+ [0.75332488]
+ [0.        ]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 6.706986427307129
+Testing images/mnist_pkl_imgs/im13.pkl
+Output: [[ 1.0483692e+00]
+ [ 3.4866557e-03]
+ [ 1.0016859e-03]
+ [ 1.5831858e-02]
+ [ 4.6581030e-03]
+ [ 3.4922883e-03]
+ [ 5.1501244e-03]
+ [-9.4428658e-05]
+ [ 9.7573623e-03]
+ [-6.2227249e-04]] 
+Target--> 0
+Norm: 0.05
+Trying Adversary with label [9]
+Trying Adversary with label [4]
+Trying Adversary with label [7]
+Trying Adversary with label [3]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im14.pkl
+Output: [[-5.2926354e-03]
+ [ 9.9595898e-01]
+ [ 8.5853189e-03]
+ [ 5.7783648e-03]
+ [ 5.1691756e-03]
+ [ 2.2970363e-03]
+ [ 9.3523413e-04]
+ [ 1.3821572e-03]
+ [ 1.8260408e-02]
+ [ 5.9169531e-04]] 
+Target--> 1
+Norm: 0.05
+Trying Adversary with label [5]
+Potential CE succeeded
+[[-0.3536013 ]
+ [ 0.        ]
+ [-0.4019826 ]
+ [-0.45182287]
+ [-0.4275336 ]
+ [-0.31502522]
+ [-0.28824993]
+ [-0.34572696]
+ [ 0.33838434]
+ [-0.48282053]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.849648952484131
+Testing images/mnist_pkl_imgs/im15.pkl
+Output: [[-0.00647837]
+ [ 0.01512147]
+ [ 0.01400545]
+ [ 0.03304604]
+ [ 0.00092651]
+ [ 0.8843429 ]
+ [ 0.00864904]
+ [ 0.01345153]
+ [ 0.01328084]
+ [ 0.00930955]] 
+Target--> 5
+Norm: 0.05
+Trying Adversary with label [9]
+Potential CE succeeded
+[[-0.46314109]
+ [-0.44661152]
+ [-0.43038214]
+ [-0.49092876]
+ [-0.46323135]
+ [ 0.        ]
+ [-0.45708636]
+ [-0.46693875]
+ [ 0.00380932]
+ [-0.44196577]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 518.7277522087097
+Testing images/mnist_pkl_imgs/im16.pkl
+Output: [[-4.7268718e-04]
+ [-9.4202682e-03]
+ [-1.3805181e-03]
+ [-3.6666840e-03]
+ [-4.0915620e-02]
+ [-3.4390166e-03]
+ [ 5.2806288e-03]
+ [ 9.9236667e-03]
+ [ 4.8859276e-02]
+ [ 1.0205187e+00]] 
+Target--> 9
+Norm: 0.05
+Trying Adversary with label [3]
+[[0.36329108]
+ [0.14870901]
+ [0.17746495]
+ [0.16337469]
+ [0.14634681]
+ [0.15227262]
+ [0.11948124]
+ [0.13129949]
+ [0.75332488]
+ [0.        ]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 3.820240020751953
+Testing images/mnist_pkl_imgs/im17.pkl
+Output: [[ 3.1352565e-02]
+ [-6.9994181e-03]
+ [-1.0339260e-02]
+ [-5.9762597e-03]
+ [-8.7976791e-03]
+ [ 4.5451522e-04]
+ [-1.8333271e-03]
+ [ 9.9208432e-01]
+ [ 2.8651148e-02]
+ [-4.8691332e-03]] 
+Target--> 7
+Norm: 0.05
+Trying Adversary with label [3]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im18.pkl
+Output: [[-0.01429493]
+ [-0.01508961]
+ [-0.04450707]
+ [ 0.63902867]
+ [-0.00459825]
+ [ 0.1605755 ]
+ [-0.01543429]
+ [-0.04730864]
+ [ 0.1305011 ]
+ [ 0.20847136]] 
+Target--> 3
+Norm: 0.05
+Trying Adversary with label [0]
+[[ 0.1999164 ]
+ [-0.01466565]
+ [ 0.01409028]
+ [ 0.        ]
+ [-0.01702787]
+ [-0.01110205]
+ [-0.04389342]
+ [-0.03207519]
+ [ 0.5899502 ]
+ [-0.16337469]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 3.824277400970459
+Testing images/mnist_pkl_imgs/im19.pkl
+Output: [[ 0.01254896]
+ [ 0.00166542]
+ [ 0.00641307]
+ [-0.00133363]
+ [ 0.9620595 ]
+ [-0.00320206]
+ [-0.00122295]
+ [-0.0050838 ]
+ [ 0.0191904 ]
+ [ 0.02711909]] 
+Target--> 4
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[ 0.07356554]
+ [-0.14114148]
+ [-0.18499313]
+ [-0.17166404]
+ [ 0.        ]
+ [-0.14000093]
+ [-0.18216248]
+ [-0.16928995]
+ [ 0.31572797]
+ [-0.31923961]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 6.8106489181518555
+Testing images/mnist_pkl_imgs/im20.pkl
+Output: [[ 2.4957955e-04]
+ [-2.8260052e-05]
+ [-2.0706654e-04]
+ [-2.9539913e-03]
+ [-1.8341783e-02]
+ [-2.9126182e-03]
+ [ 6.9218576e-03]
+ [-3.8461983e-03]
+ [ 4.3784574e-02]
+ [ 9.9698031e-01]] 
+Target--> 9
+Norm: 0.05
+Trying Adversary with label [2]
+[[0.27254919]
+ [0.06608216]
+ [0.05243402]
+ [0.07488571]
+ [0.05131205]
+ [0.04988393]
+ [0.06028078]
+ [0.07515466]
+ [0.61376761]
+ [0.        ]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 4.595923900604248
+Testing images/mnist_pkl_imgs/im21.pkl
+Output: [[ 1.1022128e-03]
+ [ 9.0867952e-03]
+ [-3.9237589e-03]
+ [ 2.0740271e-02]
+ [-4.9971826e-03]
+ [-1.7930306e-02]
+ [ 1.0464537e+00]
+ [ 9.3752965e-03]
+ [ 4.2262673e-04]
+ [ 8.4755868e-03]] 
+Target--> 6
+Norm: 0.05
+Trying Adversary with label [9]
+Potential CE succeeded
+[[ 0.24328427]
+ [ 0.02864929]
+ [ 0.05754605]
+ [ 0.04345048]
+ [ 0.026178  ]
+ [ 0.03255059]
+ [ 0.        ]
+ [ 0.01123929]
+ [ 0.63304626]
+ [-0.11980083]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 6.759439945220947
+Testing images/mnist_pkl_imgs/im22.pkl
+Output: [[ 0.00571861]
+ [ 0.00651867]
+ [-0.0172068 ]
+ [ 0.01988584]
+ [-0.00327972]
+ [-0.0440929 ]
+ [ 1.0948367 ]
+ [ 0.00622533]
+ [ 0.00605483]
+ [ 0.00942089]] 
+Target--> 6
+Norm: 0.05
+Trying Adversary with label [8]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im23.pkl
+Output: [[-0.01882439]
+ [ 0.0127968 ]
+ [ 0.0010854 ]
+ [-0.02758875]
+ [-0.01159633]
+ [ 1.0369997 ]
+ [-0.01148535]
+ [ 0.00183675]
+ [ 0.00951131]
+ [-0.00310261]] 
+Target--> 5
+Norm: 0.05
+Trying Adversary with label [9]
+Potential CE succeeded
+[[ 0.04400231]
+ [-0.04690002]
+ [-0.0931154 ]
+ [ 0.03108043]
+ [-0.07466406]
+ [ 0.        ]
+ [-0.05528334]
+ [-0.02904504]
+ [ 0.46227778]
+ [ 0.47558766]]
+Adversarial example found with label 9 ,delta 0.050000
+Total time: 6.998376846313477
+Testing images/mnist_pkl_imgs/im24.pkl
+Output: [[ 5.3161010e-04]
+ [ 3.3688545e-04]
+ [ 9.7162575e-03]
+ [ 2.1469593e-03]
+ [ 9.5701212e-01]
+ [ 5.3078905e-03]
+ [-2.4964064e-03]
+ [ 8.7139010e-04]
+ [ 1.8182177e-02]
+ [ 2.2967175e-02]] 
+Target--> 4
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[ 0.21694429]
+ [ 0.00236221]
+ [ 0.03111816]
+ [ 0.01702787]
+ [ 0.        ]
+ [ 0.00592581]
+ [-0.02686555]
+ [-0.01504733]
+ [ 0.60697806]
+ [-0.14634681]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.663794994354248
+Testing images/mnist_pkl_imgs/im25.pkl
+Output: [[ 1.0313953 ]
+ [ 0.00737812]
+ [-0.01108809]
+ [ 0.01996468]
+ [ 0.01057774]
+ [ 0.01489267]
+ [ 0.00561643]
+ [ 0.0039009 ]
+ [ 0.01589633]
+ [ 0.00201428]] 
+Target--> 0
+Norm: 0.05
+Trying Adversary with label [9]
+Trying Adversary with label [2]
+Trying Adversary with label [4]
+Trying Adversary with label [8]
+Trying Adversary with label [7]
+Problem is Infeasible, Total time:30.267193
+
+
+Testing images/mnist_pkl_imgs/im26.pkl
+Output: [[ 0.00627222]
+ [-0.01279534]
+ [-0.01668301]
+ [-0.01405778]
+ [-0.00967902]
+ [-0.01201617]
+ [-0.00630213]
+ [ 1.0589609 ]
+ [ 0.01158195]
+ [-0.00322877]] 
+Target--> 7
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[ 0.23199159]
+ [ 0.01740954]
+ [ 0.04616546]
+ [ 0.03207519]
+ [ 0.01504733]
+ [ 0.02097314]
+ [-0.01181823]
+ [ 0.        ]
+ [ 0.62202541]
+ [-0.13129949]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.7720959186553955
+Testing images/mnist_pkl_imgs/im27.pkl
+Output: [[ 2.1666298e-02]
+ [ 4.5943186e-03]
+ [ 8.1617534e-03]
+ [ 1.9534677e-04]
+ [ 9.0429872e-01]
+ [-3.3649132e-03]
+ [ 1.8401146e-03]
+ [ 1.9295737e-02]
+ [ 2.3053475e-02]
+ [ 3.7743818e-02]] 
+Target--> 4
+Norm: 0.05
+Trying Adversary with label [5]
+Potential CE succeeded
+[[-0.3801376 ]
+ [-0.42194044]
+ [-0.5578007 ]
+ [-0.47793971]
+ [ 0.        ]
+ [-0.52501244]
+ [-0.32550296]
+ [-0.55695388]
+ [ 0.09072571]
+ [-0.49505173]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.530908823013306
+Testing images/mnist_pkl_imgs/im28.pkl
+Output: [[ 1.0126575 ]
+ [ 0.00277393]
+ [ 0.01991509]
+ [ 0.01568621]
+ [ 0.01105231]
+ [ 0.02064231]
+ [ 0.00826494]
+ [-0.00325842]
+ [ 0.01931104]
+ [ 0.00436315]] 
+Target--> 0
+Norm: 0.05
+Trying Adversary with label [9]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im29.pkl
+Output: [[-3.7192106e-03]
+ [ 1.0032957e+00]
+ [ 6.5141767e-03]
+ [ 1.1407658e-03]
+ [-4.0537678e-03]
+ [-5.8697909e-04]
+ [-1.8165037e-03]
+ [ 5.2562654e-03]
+ [ 1.1754230e-02]
+ [-3.2954961e-03]] 
+Target--> 1
+Norm: 0.05
+Trying Adversary with label [5]
+Potential CE succeeded
+[[-0.28190885]
+ [ 0.        ]
+ [-0.43656227]
+ [-0.44208988]
+ [-0.44775891]
+ [-0.36742758]
+ [-0.25015495]
+ [-0.39950863]
+ [ 0.07186394]
+ [-0.50859873]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 17.180678367614746
+Testing images/mnist_pkl_imgs/im30.pkl
+Output: [[-0.0093009 ]
+ [ 0.01418923]
+ [ 0.01663908]
+ [ 1.0016719 ]
+ [ 0.00143415]
+ [-0.01642109]
+ [-0.0020968 ]
+ [ 0.01974946]
+ [ 0.01193953]
+ [-0.00175276]] 
+Target--> 3
+Norm: 0.05
+Trying Adversary with label [8]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im31.pkl
+Output: [[-4.5473911e-03]
+ [ 9.9086213e-01]
+ [ 1.0874465e-02]
+ [ 4.4676811e-03]
+ [ 3.1336024e-04]
+ [ 4.2126998e-03]
+ [-8.5397810e-04]
+ [ 4.3200403e-03]
+ [ 1.4740314e-02]
+ [-9.9471211e-04]] 
+Target--> 1
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[ 0.19136861]
+ [ 0.        ]
+ [-0.07554147]
+ [-0.06098963]
+ [-0.10721943]
+ [-0.18809496]
+ [-0.11849143]
+ [-0.11998715]
+ [ 0.39424905]
+ [-0.24133969]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.801764011383057
+Testing images/mnist_pkl_imgs/im32.pkl
+Output: [[-7.07828626e-03]
+ [ 8.13420117e-03]
+ [ 9.44799185e-03]
+ [ 9.94311452e-01]
+ [-1.10860914e-04]
+ [ 2.09056586e-03]
+ [-1.72539055e-03]
+ [ 1.36249363e-02]
+ [ 8.88076425e-03]
+ [-1.68456882e-03]] 
+Target--> 3
+Norm: 0.05
+Trying Adversary with label [5]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im33.pkl
+Output: [[ 0.02719576]
+ [-0.00882235]
+ [-0.01190387]
+ [-0.00501727]
+ [ 1.007035  ]
+ [-0.00988571]
+ [ 0.0449787 ]
+ [-0.05775163]
+ [ 0.02506342]
+ [ 0.00913185]] 
+Target--> 4
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[ 0.17690763]
+ [-0.02157114]
+ [-0.00873078]
+ [-0.01707911]
+ [ 0.        ]
+ [-0.02655861]
+ [-0.04655873]
+ [-0.05568365]
+ [ 0.5727628 ]
+ [-0.17678956]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.115410804748535
+Testing images/mnist_pkl_imgs/im34.pkl
+Output: [[ 2.4569454e-02]
+ [ 5.5374503e-03]
+ [-1.0132283e-02]
+ [-7.7400953e-03]
+ [-2.7731769e-03]
+ [-1.3447553e-04]
+ [-2.3846552e-03]
+ [ 9.8823225e-01]
+ [ 2.3635779e-02]
+ [-3.3860579e-03]] 
+Target--> 7
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[ 0.12799593]
+ [-0.15476386]
+ [-0.12736391]
+ [-0.14084292]
+ [-0.18072501]
+ [-0.110278  ]
+ [-0.11073859]
+ [ 0.        ]
+ [ 0.44637475]
+ [-0.35791744]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.604994297027588
+Testing images/mnist_pkl_imgs/im35.pkl
+Output: [[-0.01765075]
+ [-0.01244101]
+ [ 1.0567065 ]
+ [-0.01604416]
+ [-0.00424535]
+ [-0.0369845 ]
+ [-0.00449484]
+ [ 0.00264196]
+ [-0.01330926]
+ [-0.01525134]] 
+Target--> 2
+Norm: 0.05
+Trying Adversary with label [9]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im36.pkl
+Output: [[ 0.01158346]
+ [-0.00933001]
+ [-0.01404481]
+ [-0.01072455]
+ [-0.00108256]
+ [-0.00822774]
+ [-0.00364189]
+ [ 1.0160093 ]
+ [ 0.01042575]
+ [ 0.00888981]] 
+Target--> 7
+Norm: 0.05
+Trying Adversary with label [3]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im37.pkl
+Output: [[-3.9313734e-03]
+ [ 1.0184790e+00]
+ [ 3.8272738e-03]
+ [-4.6425313e-04]
+ [-4.0753745e-03]
+ [-2.0600557e-03]
+ [-2.8321967e-03]
+ [ 6.9114566e-04]
+ [ 1.2281507e-02]
+ [-4.8113093e-03]] 
+Target--> 1
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[-0.27396248]
+ [ 0.        ]
+ [-0.45541532]
+ [-0.43293714]
+ [-0.42063151]
+ [-0.39767378]
+ [-0.22021246]
+ [-0.40741594]
+ [ 0.09103899]
+ [-0.52092288]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.405628681182861
+Testing images/mnist_pkl_imgs/im38.pkl
+Output: [[-0.01034544]
+ [-0.01966421]
+ [ 1.0760946 ]
+ [ 0.00653289]
+ [-0.00266002]
+ [-0.03318907]
+ [-0.01226618]
+ [-0.00690089]
+ [-0.01326045]
+ [-0.01980922]] 
+Target--> 2
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[-0.21590453]
+ [-0.23665842]
+ [ 0.        ]
+ [-0.40851148]
+ [-0.36310328]
+ [-0.43865401]
+ [-0.39127624]
+ [-0.43009404]
+ [ 0.1398528 ]
+ [-0.42380421]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 102.45327472686768
+Testing images/mnist_pkl_imgs/im39.pkl
+Output: [[-4.6466738e-03]
+ [ 9.9956185e-01]
+ [ 9.6516162e-03]
+ [ 4.1791722e-03]
+ [ 2.3084320e-03]
+ [ 4.2998716e-03]
+ [-1.0692552e-03]
+ [-7.5584650e-04]
+ [ 1.6948294e-02]
+ [-1.4342219e-03]] 
+Target--> 1
+Norm: 0.05
+Trying Adversary with label [5]
+Potential CE succeeded
+[[-0.14231593]
+ [ 0.        ]
+ [-0.21749298]
+ [-0.2295425 ]
+ [-0.19414743]
+ [-0.20964449]
+ [-0.10921251]
+ [-0.20714769]
+ [ 0.81046888]
+ [-0.20541581]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.21066427230835
+Testing images/mnist_pkl_imgs/im40.pkl
+Output: [[-2.6519634e-03]
+ [ 9.8413712e-01]
+ [ 9.5340610e-03]
+ [ 4.4776052e-03]
+ [ 1.6139857e-03]
+ [ 2.4429634e-03]
+ [ 1.0824278e-03]
+ [ 3.9359033e-03]
+ [ 1.6887620e-02]
+ [-1.9972026e-04]] 
+Target--> 1
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[ 0.19909618]
+ [ 0.        ]
+ [-0.11241987]
+ [-0.06871152]
+ [-0.15706196]
+ [-0.26215911]
+ [-0.17707966]
+ [-0.1167404 ]
+ [ 0.33227675]
+ [-0.31274807]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.331829309463501
+Testing images/mnist_pkl_imgs/im41.pkl
+Output: [[ 0.02069929]
+ [-0.00721901]
+ [-0.01640175]
+ [-0.01115735]
+ [-0.00222093]
+ [-0.00567824]
+ [-0.00453471]
+ [ 1.0144068 ]
+ [ 0.01694212]
+ [ 0.00432979]] 
+Target--> 7
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[-0.01521707]
+ [-0.06537272]
+ [-0.16598188]
+ [-0.15108303]
+ [-0.15799606]
+ [-0.18583552]
+ [-0.07392746]
+ [ 0.        ]
+ [ 0.1732813 ]
+ [ 0.16757857]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.662624359130859
+Testing images/mnist_pkl_imgs/im42.pkl
+Output: [[ 3.4138374e-03]
+ [-3.2474473e-03]
+ [-7.3754787e-04]
+ [-3.4158751e-03]
+ [ 1.0110452e+00]
+ [-4.9546286e-03]
+ [-5.3858086e-03]
+ [-8.1296116e-03]
+ [ 1.5900418e-02]
+ [ 1.1931211e-02]] 
+Target--> 4
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[-0.35836812]
+ [-0.40684535]
+ [-0.49491589]
+ [-0.47339553]
+ [ 0.        ]
+ [-0.44252446]
+ [-0.46790002]
+ [-0.46912661]
+ [ 0.00427119]
+ [-0.50707992]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 85.92718005180359
+Testing images/mnist_pkl_imgs/im43.pkl
+Output: [[-0.00626593]
+ [-0.00854153]
+ [ 1.0073963 ]
+ [ 0.015126  ]
+ [ 0.00118187]
+ [-0.02025513]
+ [-0.00319526]
+ [-0.00129776]
+ [-0.00597774]
+ [-0.00800786]] 
+Target--> 2
+Norm: 0.05
+Trying Adversary with label [9]
+Potential CE succeeded
+[[ 0.05988344]
+ [-0.05083823]
+ [ 0.        ]
+ [-0.08678971]
+ [-0.09898773]
+ [-0.06642226]
+ [ 0.01335384]
+ [-0.09119224]
+ [ 0.79198002]
+ [-0.07716766]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.209481239318848
+Testing images/mnist_pkl_imgs/im44.pkl
+Output: [[-7.7790953e-03]
+ [ 4.6705604e-03]
+ [ 1.8703967e-02]
+ [ 9.6776760e-01]
+ [-1.4475100e-03]
+ [ 3.7976354e-04]
+ [-2.2718981e-03]
+ [ 1.6978852e-02]
+ [ 1.1949617e-02]
+ [-4.6186745e-03]] 
+Target--> 3
+Norm: 0.05
+Trying Adversary with label [5]
+Potential CE succeeded
+[[-0.64301448]
+ [-0.56302177]
+ [-0.51573482]
+ [ 0.        ]
+ [-0.57156032]
+ [-0.59445911]
+ [-0.53095442]
+ [-0.51415557]
+ [ 0.06106336]
+ [-0.48777511]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 6.545278549194336
+Testing images/mnist_pkl_imgs/im45.pkl
+Output: [[-1.1865772e-02]
+ [ 5.9441701e-03]
+ [ 1.1841506e-03]
+ [ 1.9859374e-03]
+ [-4.9089305e-03]
+ [ 1.0069031e+00]
+ [-1.1102930e-03]
+ [ 8.8715553e-04]
+ [ 2.7872026e-03]
+ [-4.0538982e-03]] 
+Target--> 5
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[ 0.21101846]
+ [-0.0035636 ]
+ [ 0.02519231]
+ [ 0.01110205]
+ [-0.00592581]
+ [ 0.        ]
+ [-0.03279137]
+ [-0.02097314]
+ [ 0.60105227]
+ [-0.15227262]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 6.434503555297852
+Testing images/mnist_pkl_imgs/im46.pkl
+Output: [[-8.1363730e-03]
+ [ 1.0600467e+00]
+ [ 1.5202314e-03]
+ [-2.7041510e-03]
+ [-4.3593980e-03]
+ [-7.6032430e-04]
+ [-7.9439655e-03]
+ [-9.2725158e-03]
+ [ 1.1058468e-02]
+ [-8.5617751e-03]] 
+Target--> 1
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[-0.17804119]
+ [ 0.        ]
+ [-0.3187765 ]
+ [-0.46624275]
+ [-0.41695531]
+ [-0.46088398]
+ [-0.40978754]
+ [-0.42196245]
+ [ 0.42139569]
+ [-0.52517852]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 6.584153175354004
+Testing images/mnist_pkl_imgs/im47.pkl
+Output: [[-0.00288215]
+ [-0.00702194]
+ [ 0.99962467]
+ [ 0.00474793]
+ [ 0.00364321]
+ [-0.01328982]
+ [-0.00264811]
+ [ 0.00198519]
+ [-0.00624137]
+ [-0.00831438]] 
+Target--> 2
+Norm: 0.05
+Trying Adversary with label [9]
+Potential CE succeeded
+[[ 0.18582612]
+ [-0.02875592]
+ [ 0.        ]
+ [-0.01409028]
+ [-0.03111816]
+ [-0.02519231]
+ [-0.05798369]
+ [-0.04616546]
+ [ 0.57585996]
+ [-0.17746495]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.51704216003418
+Testing images/mnist_pkl_imgs/im48.pkl
+Output: [[ 0.01292397]
+ [-0.00102246]
+ [-0.00251432]
+ [-0.00555216]
+ [ 0.99000245]
+ [-0.00930161]
+ [-0.00280263]
+ [-0.00277705]
+ [ 0.01341558]
+ [ 0.01993176]] 
+Target--> 4
+Norm: 0.05
+Trying Adversary with label [0]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im49.pkl
+Output: [[ 0.02952612]
+ [ 0.00124097]
+ [ 0.00217319]
+ [-0.0035566 ]
+ [ 0.9245042 ]
+ [-0.00853785]
+ [-0.00275616]
+ [ 0.01980925]
+ [ 0.02689961]
+ [ 0.04530607]] 
+Target--> 4
+Norm: 0.05
+Trying Adversary with label [9]
+Potential CE succeeded
+[[-0.0138092 ]
+ [-0.23806029]
+ [-0.287953  ]
+ [-0.28885093]
+ [ 0.        ]
+ [-0.19557296]
+ [-0.27956618]
+ [-0.26511177]
+ [ 0.30070999]
+ [-0.30886366]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.505033016204834
+Testing images/mnist_pkl_imgs/im50.pkl
+Output: [[ 0.01096014]
+ [ 0.01346322]
+ [-0.00509407]
+ [ 0.02503523]
+ [-0.00199524]
+ [-0.01098391]
+ [ 1.0056102 ]
+ [ 0.01482726]
+ [ 0.01194707]
+ [ 0.01947441]] 
+Target--> 6
+Norm: 0.05
+Trying Adversary with label [3]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im51.pkl
+Output: [[-8.6431429e-03]
+ [ 8.9581013e-03]
+ [ 1.0359451e-02]
+ [ 1.0205165e+00]
+ [-5.1841140e-05]
+ [-1.6126253e-02]
+ [-2.1765009e-03]
+ [ 1.5263781e-02]
+ [ 8.6595789e-03]
+ [-4.6170726e-03]] 
+Target--> 3
+Norm: 0.05
+Trying Adversary with label [8]
+Trying Adversary with label [2]
+Trying Adversary with label [1]
+Trying Adversary with label [7]
+Trying Adversary with label [5]
+Trying Adversary with label [9]
+Trying Adversary with label [0]
+Trying Adversary with label [6]
+Trying Adversary with label [4]
+Problem is Infeasible, Total time:42.925184
+
+
+Testing images/mnist_pkl_imgs/im52.pkl
+Output: [[-1.6736809e-02]
+ [ 1.3916820e-02]
+ [ 4.5658499e-03]
+ [ 8.7895244e-04]
+ [-8.9856945e-03]
+ [ 9.9287754e-01]
+ [-1.1413358e-02]
+ [ 4.7785044e-03]
+ [ 1.1334866e-02]
+ [ 2.3580343e-04]] 
+Target--> 5
+Norm: 0.05
+Trying Adversary with label [3]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im53.pkl
+Output: [[-0.01231688]
+ [ 0.00708813]
+ [ 0.00389004]
+ [-0.02067525]
+ [-0.00507275]
+ [ 1.0374674 ]
+ [-0.00801364]
+ [ 0.00116514]
+ [-0.00206494]
+ [-0.00614858]] 
+Target--> 5
+Norm: 0.05
+Trying Adversary with label [9]
+Potential CE succeeded
+[[ 0.21101846]
+ [-0.0035636 ]
+ [ 0.02519231]
+ [ 0.01110205]
+ [-0.00592581]
+ [ 0.        ]
+ [-0.03279137]
+ [-0.02097314]
+ [ 0.60105227]
+ [-0.15227262]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.088416337966919
+Testing images/mnist_pkl_imgs/im54.pkl
+Output: [[ 5.0247908e-03]
+ [ 6.8202615e-05]
+ [-2.0433962e-02]
+ [ 1.2564257e-02]
+ [-6.1198063e-03]
+ [-4.1001238e-02]
+ [ 1.1109189e+00]
+ [-3.7293583e-03]
+ [ 6.1816871e-03]
+ [ 3.0166730e-03]] 
+Target--> 6
+Norm: 0.05
+Trying Adversary with label [8]
+Trying Adversary with label [3]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im55.pkl
+Output: [[0.91816604]
+ [0.00586669]
+ [0.06270986]
+ [0.01315448]
+ [0.01230142]
+ [0.01620962]
+ [0.02614803]
+ [0.00222081]
+ [0.02628022]
+ [0.01520065]] 
+Target--> 0
+Norm: 0.05
+Trying Adversary with label [8]
+[[ 0.        ]
+ [-0.12330372]
+ [-0.10019667]
+ [-0.14736393]
+ [-0.13900012]
+ [-0.10947997]
+ [-0.08768681]
+ [-0.1269751 ]
+ [ 0.62078219]
+ [-0.21823928]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 3.859159231185913
+Testing images/mnist_pkl_imgs/im56.pkl
+Output: [[ 3.5446465e-02]
+ [ 2.4615899e-03]
+ [ 1.1874735e-03]
+ [-2.7895123e-03]
+ [ 9.4859523e-01]
+ [-9.2808977e-03]
+ [ 8.0438703e-04]
+ [-2.1235496e-03]
+ [ 2.2653501e-02]
+ [ 2.5505304e-02]] 
+Target--> 4
+Norm: 0.05
+Trying Adversary with label [0]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im57.pkl
+Output: [[-0.00486662]
+ [ 1.0147753 ]
+ [ 0.0067037 ]
+ [ 0.00138996]
+ [-0.00145145]
+ [ 0.00161214]
+ [-0.00295294]
+ [-0.00126314]
+ [ 0.01404457]
+ [-0.00387235]] 
+Target--> 1
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[ 0.15872477]
+ [ 0.        ]
+ [-0.06987564]
+ [-0.11219192]
+ [-0.03381402]
+ [-0.1035893 ]
+ [-0.14125863]
+ [-0.08415454]
+ [ 0.40223391]
+ [ 0.30339129]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.407424688339233
+Testing images/mnist_pkl_imgs/im58.pkl
+Output: [[-0.00120654]
+ [-0.00670853]
+ [-0.00396535]
+ [-0.00337548]
+ [-0.04417924]
+ [-0.00200097]
+ [ 0.00605373]
+ [ 0.00871504]
+ [ 0.06269098]
+ [ 1.0133661 ]] 
+Target--> 9
+Norm: 0.05
+Trying Adversary with label [8]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im59.pkl
+Output: [[-1.6635939e-02]
+ [ 1.6383551e-02]
+ [-2.8181076e-04]
+ [ 2.4183214e-02]
+ [-8.8134222e-03]
+ [ 9.7682786e-01]
+ [-2.3503043e-02]
+ [ 7.1136653e-03]
+ [ 1.6152672e-02]
+ [ 3.0413270e-03]] 
+Target--> 5
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[-0.04745284]
+ [-0.23944822]
+ [-0.23883859]
+ [-0.15640753]
+ [-0.20754375]
+ [ 0.        ]
+ [-0.29234806]
+ [-0.25214829]
+ [ 0.2320429 ]
+ [-0.22790582]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.042329549789429
+Testing images/mnist_pkl_imgs/im60.pkl
+Output: [[ 2.0363176e-02]
+ [-1.4519915e-03]
+ [-8.1673861e-03]
+ [-6.0631633e-03]
+ [-1.4100466e-02]
+ [-4.2313188e-03]
+ [-7.9870969e-04]
+ [ 9.9343938e-01]
+ [ 2.0667270e-02]
+ [-3.2603443e-03]] 
+Target--> 7
+Norm: 0.05
+Trying Adversary with label [0]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im61.pkl
+Output: [[-0.01740456]
+ [-0.0040905 ]
+ [ 0.07074008]
+ [-0.03385132]
+ [ 0.00727093]
+ [ 0.00227894]
+ [-0.00263213]
+ [-0.01257922]
+ [ 1.0057914 ]
+ [-0.01136991]] 
+Target--> 8
+Norm: 0.05
+Trying Adversary with label [0]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im62.pkl
+Output: [[-1.17065758e-03]
+ [-3.02580744e-03]
+ [ 1.24504715e-02]
+ [-1.83217227e-03]
+ [-1.43430643e-02]
+ [-1.42380595e-04]
+ [ 8.55685771e-03]
+ [-1.52985752e-02]
+ [ 2.43037567e-02]
+ [ 9.96266246e-01]] 
+Target--> 9
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[0.34343902]
+ [0.12446112]
+ [0.1518683 ]
+ [0.13484336]
+ [0.11715364]
+ [0.12796674]
+ [0.08868288]
+ [0.10791628]
+ [0.72456096]
+ [0.        ]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.228658676147461
+Testing images/mnist_pkl_imgs/im63.pkl
+Output: [[-0.00987452]
+ [ 0.00136477]
+ [ 0.10747562]
+ [ 0.7918173 ]
+ [ 0.00085583]
+ [ 0.05388363]
+ [-0.00834886]
+ [ 0.0210822 ]
+ [ 0.02563206]
+ [-0.00104641]] 
+Target--> 3
+Norm: 0.05
+Trying Adversary with label [9]
+Potential CE succeeded
+[[ 0.20871368]
+ [-0.01627045]
+ [ 0.01806096]
+ [ 0.        ]
+ [-0.01645464]
+ [-0.0006584 ]
+ [-0.03468839]
+ [-0.02971235]
+ [ 0.58668069]
+ [-0.14193392]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 6.517959117889404
+Testing images/mnist_pkl_imgs/im64.pkl
+Output: [[ 0.00905368]
+ [ 0.00973875]
+ [ 0.01554173]
+ [ 0.00133042]
+ [-0.002264  ]
+ [ 0.00719938]
+ [ 0.00986002]
+ [ 0.9319118 ]
+ [ 0.01741706]
+ [-0.01589621]] 
+Target--> 7
+Norm: 0.05
+Trying Adversary with label [3]
+[[ 0.23199159]
+ [ 0.01740954]
+ [ 0.04616546]
+ [ 0.03207519]
+ [ 0.01504733]
+ [ 0.02097314]
+ [-0.01181823]
+ [ 0.        ]
+ [ 0.62202541]
+ [-0.13129949]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 3.9307920932769775
+Testing images/mnist_pkl_imgs/im65.pkl
+Output: [[-0.00556111]
+ [ 0.00563148]
+ [ 0.01784664]
+ [ 0.00855903]
+ [ 0.8825684 ]
+ [ 0.01467291]
+ [-0.00320498]
+ [ 0.03002847]
+ [ 0.02455924]
+ [ 0.04177424]] 
+Target--> 4
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[ 0.29048698]
+ [-0.00915227]
+ [ 0.07220663]
+ [ 0.01850445]
+ [ 0.        ]
+ [ 0.09082182]
+ [ 0.05350824]
+ [-0.00821037]
+ [ 0.57750917]
+ [ 0.04151096]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.108006000518799
+Testing images/mnist_pkl_imgs/im66.pkl
+Output: [[ 1.5583783e-03]
+ [ 3.0563176e-03]
+ [-1.1536062e-02]
+ [ 1.3165951e-02]
+ [-5.0177388e-03]
+ [-3.3576287e-02]
+ [ 1.0884975e+00]
+ [ 3.7881732e-04]
+ [ 5.8697164e-04]
+ [ 1.1693835e-03]] 
+Target--> 6
+Norm: 0.05
+Trying Adversary with label [8]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im67.pkl
+Output: [[ 1.0521643e-02]
+ [ 5.5261701e-04]
+ [ 5.1009804e-03]
+ [-2.5631264e-03]
+ [ 9.3245018e-01]
+ [-1.5197694e-03]
+ [-4.0195361e-03]
+ [ 1.8683918e-02]
+ [ 1.9415282e-02]
+ [ 4.3180168e-02]] 
+Target--> 4
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[-0.15677763]
+ [-0.25412296]
+ [-0.32686605]
+ [-0.28468561]
+ [ 0.        ]
+ [-0.31204999]
+ [-0.24700702]
+ [-0.38496543]
+ [ 0.31608247]
+ [-0.42430413]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.147910833358765
+Testing images/mnist_pkl_imgs/im68.pkl
+Output: [[-5.7414211e-03]
+ [ 9.5576644e-03]
+ [ 1.3144597e-02]
+ [ 9.5926940e-01]
+ [ 5.5714697e-04]
+ [ 1.8222600e-02]
+ [-5.7218224e-04]
+ [ 1.3552070e-02]
+ [ 9.8273158e-03]
+ [ 2.0160675e-03]] 
+Target--> 3
+Norm: 0.05
+Trying Adversary with label [8]
+Trying Adversary with label [7]
+Trying Adversary with label [2]
+Trying Adversary with label [9]
+Trying Adversary with label [5]
+Trying Adversary with label [1]
+Trying Adversary with label [0]
+Trying Adversary with label [4]
+Trying Adversary with label [6]
+Problem is Infeasible, Total time:61.268458
+
+
+Testing images/mnist_pkl_imgs/im69.pkl
+Output: [[ 1.0413717e+00]
+ [ 7.7594072e-03]
+ [-1.2576759e-02]
+ [ 2.2090055e-02]
+ [ 6.7149401e-03]
+ [ 1.0866262e-02]
+ [ 1.1206269e-03]
+ [ 3.7374943e-03]
+ [ 1.1907339e-02]
+ [-8.8286400e-04]] 
+Target--> 0
+Norm: 0.05
+Trying Adversary with label [9]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im70.pkl
+Output: [[ 2.0202138e-02]
+ [-3.8896054e-03]
+ [ 1.9348860e-03]
+ [ 5.5716187e-04]
+ [-1.1805780e-03]
+ [ 3.7076771e-03]
+ [ 2.1501034e-03]
+ [ 9.4278663e-01]
+ [ 2.3246676e-02]
+ [ 1.3220623e-02]] 
+Target--> 7
+Norm: 0.05
+Trying Adversary with label [3]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im71.pkl
+Output: [[ 1.0619023e+00]
+ [-1.7571449e-03]
+ [-2.4117529e-03]
+ [ 1.4506161e-02]
+ [ 7.7010132e-03]
+ [ 1.2234502e-02]
+ [ 7.1835220e-03]
+ [-7.1564168e-03]
+ [ 1.3136610e-02]
+ [ 9.3146414e-04]] 
+Target--> 0
+Norm: 0.05
+Problem is Infeasible, Total time:1.164203
+
+
+Testing images/mnist_pkl_imgs/im72.pkl
+Output: [[-1.0544751e-02]
+ [-5.5134296e-03]
+ [ 1.0190282e+00]
+ [-9.4980448e-03]
+ [-7.2319433e-04]
+ [-3.2359548e-02]
+ [ 1.9853562e-03]
+ [ 5.4506660e-03]
+ [-8.2281753e-03]
+ [-1.2583189e-02]] 
+Target--> 2
+Norm: 0.05
+Trying Adversary with label [0]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im73.pkl
+Output: [[-0.00556106]
+ [-0.01318002]
+ [-0.00363092]
+ [ 0.00720759]
+ [-0.02322533]
+ [-0.01367699]
+ [ 0.00163382]
+ [-0.020593  ]
+ [ 0.05520435]
+ [ 1.0292114 ]] 
+Target--> 9
+Norm: 0.05
+Trying Adversary with label [8]
+[[-0.35178664]
+ [-0.3467396 ]
+ [-0.39153353]
+ [-0.41633188]
+ [-0.37314885]
+ [-0.36716032]
+ [-0.37817596]
+ [-0.36807872]
+ [ 0.4017353 ]
+ [ 0.        ]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 3.59000825881958
+Testing images/mnist_pkl_imgs/im74.pkl
+Output: [[-1.6588755e-03]
+ [ 1.0078738e+00]
+ [ 4.7847778e-03]
+ [-7.1160495e-04]
+ [-4.5237876e-03]
+ [-1.2242123e-03]
+ [-2.0095557e-03]
+ [ 3.5279989e-04]
+ [ 1.3442397e-02]
+ [-4.7665462e-03]] 
+Target--> 1
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[ 0.03413697]
+ [ 0.        ]
+ [-0.1066142 ]
+ [-0.14089326]
+ [-0.13394904]
+ [-0.11136446]
+ [-0.01617738]
+ [-0.14972547]
+ [ 0.57019611]
+ [-0.18421629]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.31800651550293
+Testing images/mnist_pkl_imgs/im75.pkl
+Output: [[ 0.01406068]
+ [-0.01511958]
+ [-0.00510469]
+ [-0.00681773]
+ [-0.00637889]
+ [-0.00359622]
+ [-0.00144433]
+ [ 1.0126498 ]
+ [ 0.01933333]
+ [-0.00305334]] 
+Target--> 7
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[-2.29871243e-01]
+ [-2.10678941e-01]
+ [-1.78556319e-01]
+ [ 1.63757896e-15]
+ [-2.24602873e-01]
+ [-1.09701068e-01]
+ [-2.20531892e-01]
+ [ 0.00000000e+00]
+ [-1.91891361e-01]
+ [-1.03790710e-01]]
+Adversarial example found with label 3 ,delta 0.050000
+Total time: 1010.3137612342834
+Testing images/mnist_pkl_imgs/im76.pkl
+Output: [[-0.00666513]
+ [ 0.00487637]
+ [ 0.01254235]
+ [ 0.9956314 ]
+ [-0.00139205]
+ [ 0.00220001]
+ [-0.00217406]
+ [ 0.00866009]
+ [ 0.00764047]
+ [-0.00313445]] 
+Target--> 3
+Norm: 0.05
+Trying Adversary with label [5]
+Potential CE succeeded
+[[ 0.19194812]
+ [-0.02012069]
+ [ 0.00952015]
+ [ 0.        ]
+ [-0.02478627]
+ [-0.01717828]
+ [-0.04731793]
+ [-0.03711227]
+ [ 0.58434961]
+ [-0.16945521]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.126900672912598
+Testing images/mnist_pkl_imgs/im77.pkl
+Output: [[ 1.5760958e-04]
+ [-1.8384948e-02]
+ [ 1.0648291e+00]
+ [-3.7486471e-02]
+ [-5.3960718e-03]
+ [-2.7607955e-02]
+ [-2.3427606e-03]
+ [ 1.1241436e-04]
+ [-1.7565094e-02]
+ [-2.0969085e-02]] 
+Target--> 2
+Norm: 0.05
+Trying Adversary with label [3]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im78.pkl
+Output: [[-0.00291841]
+ [-0.00658131]
+ [ 0.00513665]
+ [-0.00629403]
+ [-0.03124521]
+ [-0.00246451]
+ [ 0.00429287]
+ [ 0.00769725]
+ [ 0.05101661]
+ [ 0.9982189 ]] 
+Target--> 9
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[ 0.12343418]
+ [-0.13551423]
+ [-0.06480373]
+ [-0.06752423]
+ [-0.10365337]
+ [-0.08834089]
+ [-0.10300836]
+ [-0.1144454 ]
+ [ 0.42845545]
+ [ 0.        ]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 6.872784852981567
+Testing images/mnist_pkl_imgs/im79.pkl
+Output: [[ 8.69211182e-03]
+ [-1.22132078e-02]
+ [ 1.12562686e-01]
+ [-3.35900113e-02]
+ [-1.73058100e-02]
+ [-1.86300501e-02]
+ [-5.95606118e-03]
+ [ 1.00300181e+00]
+ [ 3.75546515e-04]
+ [-3.82436663e-02]] 
+Target--> 7
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[-3.03734966e-01]
+ [-3.02398167e-01]
+ [-9.47403332e-02]
+ [ 1.45716772e-16]
+ [-3.15411714e-01]
+ [-2.51793996e-01]
+ [-3.31683170e-01]
+ [ 0.00000000e+00]
+ [-2.82054090e-01]
+ [-3.23155938e-01]]
+Adversarial example found with label 3 ,delta 0.050000
+Total time: 214.90520858764648
+Testing images/mnist_pkl_imgs/im80.pkl
+Output: [[ 0.00599462]
+ [-0.01878536]
+ [-0.00747602]
+ [-0.01061267]
+ [-0.00952919]
+ [-0.00577959]
+ [-0.00256711]
+ [ 1.0507567 ]
+ [ 0.01704656]
+ [-0.01567353]] 
+Target--> 7
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[-0.10851755]
+ [-0.4075116 ]
+ [-0.48711706]
+ [-0.43658321]
+ [-0.38911938]
+ [-0.45627075]
+ [-0.38248706]
+ [ 0.        ]
+ [ 0.2184339 ]
+ [-0.63503768]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.134646892547607
+Testing images/mnist_pkl_imgs/im81.pkl
+Output: [[-0.00477013]
+ [ 0.00988179]
+ [ 0.00520484]
+ [ 0.00176673]
+ [-0.00467594]
+ [ 0.04482234]
+ [ 0.96344864]
+ [ 0.00841045]
+ [ 0.00578395]
+ [ 0.005526  ]] 
+Target--> 6
+Norm: 0.05
+Trying Adversary with label [9]
+Potential CE succeeded
+[[ 0.24380982]
+ [ 0.02922778]
+ [ 0.05798369]
+ [ 0.04389342]
+ [ 0.02686555]
+ [ 0.03279137]
+ [ 0.        ]
+ [ 0.01181823]
+ [ 0.63384363]
+ [-0.11948124]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 6.7877702713012695
+Testing images/mnist_pkl_imgs/im82.pkl
+Output: [[-0.0047829 ]
+ [-0.00393245]
+ [ 0.97522944]
+ [ 0.00628056]
+ [ 0.00248862]
+ [-0.02508654]
+ [ 0.00156973]
+ [ 0.01105697]
+ [-0.00325935]
+ [-0.00841595]] 
+Target--> 2
+Norm: 0.05
+Trying Adversary with label [0]
+Potential CE succeeded
+[[ 0.00168908]
+ [-0.34658353]
+ [ 0.        ]
+ [-0.36169625]
+ [-0.27034172]
+ [-0.31899979]
+ [-0.21099711]
+ [-0.3573356 ]
+ [-0.20936135]
+ [-0.35642206]]
+Adversarial example found with label 0 ,delta 0.050000
+Total time: 68.90714168548584
+Testing images/mnist_pkl_imgs/im83.pkl
+Output: [[ 0.01801765]
+ [-0.00731666]
+ [-0.02012828]
+ [-0.0130971 ]
+ [-0.01268312]
+ [-0.00844718]
+ [-0.00599739]
+ [ 1.0410872 ]
+ [ 0.018689  ]
+ [-0.00313288]] 
+Target--> 7
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[ 0.21720311]
+ [ 0.0023641 ]
+ [ 0.02617548]
+ [ 0.01351613]
+ [-0.00475974]
+ [ 0.00555542]
+ [-0.02018706]
+ [ 0.        ]
+ [ 0.60858383]
+ [-0.16329709]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.158707857131958
+Testing images/mnist_pkl_imgs/im84.pkl
+Output: [[-4.92046401e-03]
+ [-3.17639112e-03]
+ [ 3.38664651e-03]
+ [ 1.84875727e-03]
+ [ 8.31873715e-03]
+ [ 3.17418575e-03]
+ [ 2.87106633e-03]
+ [-6.18815422e-04]
+ [ 1.01420259e+00]
+ [-1.11996755e-02]] 
+Target--> 8
+Norm: 0.05
+Trying Adversary with label [0]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im85.pkl
+Output: [[ 0.01760795]
+ [-0.00221761]
+ [-0.00717469]
+ [-0.00887983]
+ [ 1.0042737 ]
+ [-0.01279674]
+ [-0.00505043]
+ [-0.00168329]
+ [ 0.01146156]
+ [ 0.02035595]] 
+Target--> 4
+Norm: 0.05
+Trying Adversary with label [0]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im86.pkl
+Output: [[ 2.8634600e-02]
+ [ 3.0994564e-03]
+ [-3.3290684e-04]
+ [-3.3996254e-04]
+ [-4.9341097e-04]
+ [ 6.2018260e-03]
+ [ 1.9222945e-03]
+ [ 9.3669295e-01]
+ [ 2.7670547e-02]
+ [ 7.2005168e-03]] 
+Target--> 7
+Norm: 0.05
+Trying Adversary with label [9]
+Potential CE succeeded
+[[ 0.23199159]
+ [ 0.01740954]
+ [ 0.04616546]
+ [ 0.03207519]
+ [ 0.01504733]
+ [ 0.02097314]
+ [-0.01181823]
+ [ 0.        ]
+ [ 0.62202541]
+ [-0.13129949]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 6.587589740753174
+Testing images/mnist_pkl_imgs/im87.pkl
+Output: [[-0.0076149 ]
+ [ 0.0163418 ]
+ [ 0.00988986]
+ [ 0.97961366]
+ [ 0.00370932]
+ [-0.00351408]
+ [-0.00392938]
+ [ 0.02060256]
+ [ 0.00954259]
+ [ 0.003403  ]] 
+Target--> 3
+Norm: 0.05
+Trying Adversary with label [5]
+TIMEOUT!
+Testing images/mnist_pkl_imgs/im88.pkl
+Output: [[ 4.2996481e-03]
+ [ 1.8227994e-03]
+ [-6.8924278e-03]
+ [ 1.0061085e-02]
+ [-4.1341670e-03]
+ [-1.6515322e-02]
+ [ 1.0524666e+00]
+ [ 7.2842836e-04]
+ [ 2.6991293e-03]
+ [ 2.9416531e-03]] 
+Target--> 6
+Norm: 0.05
+Trying Adversary with label [3]
+[[ 0.24380982]
+ [ 0.02922778]
+ [ 0.05798369]
+ [ 0.04389342]
+ [ 0.02686555]
+ [ 0.03279137]
+ [ 0.        ]
+ [ 0.01181823]
+ [ 0.63384363]
+ [-0.11948124]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 3.934722423553467
+Testing images/mnist_pkl_imgs/im89.pkl
+Output: [[-3.7106685e-03]
+ [ 1.0058773e+00]
+ [ 6.3412935e-03]
+ [ 2.6072860e-03]
+ [ 1.5201010e-03]
+ [ 8.4444880e-04]
+ [-6.4891577e-04]
+ [-1.5439093e-03]
+ [ 1.6975015e-02]
+ [-2.1704361e-03]] 
+Target--> 1
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[-0.40024126]
+ [ 0.        ]
+ [-0.42981463]
+ [-0.42718478]
+ [-0.4016535 ]
+ [-0.45283072]
+ [-0.39849193]
+ [-0.39995344]
+ [ 0.04764806]
+ [-0.37409119]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 696.0967199802399
+Testing images/mnist_pkl_imgs/im90.pkl
+Output: [[-0.00640303]
+ [ 0.0040157 ]
+ [ 0.02251163]
+ [ 0.97784364]
+ [-0.00139366]
+ [ 0.00289407]
+ [-0.00228768]
+ [ 0.00812618]
+ [ 0.00882453]
+ [-0.00297518]] 
+Target--> 3
+Norm: 0.05
+Trying Adversary with label [8]
+[[-0.37597587]
+ [-0.41819844]
+ [-0.31352653]
+ [ 0.        ]
+ [-0.43609408]
+ [-0.44553599]
+ [-0.43867124]
+ [-0.28735092]
+ [ 0.10850104]
+ [-0.45420511]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 3.669790029525757
+Testing images/mnist_pkl_imgs/im91.pkl
+Output: [[-9.7841024e-04]
+ [ 1.2915432e-03]
+ [-2.9546171e-03]
+ [ 8.0601647e-03]
+ [-5.6581087e-03]
+ [-2.2875890e-03]
+ [ 1.0338074e+00]
+ [ 1.0392368e-03]
+ [ 1.6790405e-03]
+ [ 3.5388991e-03]] 
+Target--> 6
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[-0.04438763]
+ [-0.26329922]
+ [-0.32190889]
+ [-0.22243728]
+ [-0.28975317]
+ [-0.32118118]
+ [ 0.        ]
+ [-0.27609259]
+ [ 0.27857903]
+ [-0.28042296]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 6.607824325561523
+Testing images/mnist_pkl_imgs/im92.pkl
+Output: [[-0.00425009]
+ [-0.00697136]
+ [ 0.00274079]
+ [ 0.00146849]
+ [ 0.26755974]
+ [-0.00745691]
+ [ 0.0008129 ]
+ [-0.00467336]
+ [ 0.02930197]
+ [ 0.72975326]] 
+Target--> 9
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[0.36329108]
+ [0.14870901]
+ [0.17746495]
+ [0.16337469]
+ [0.14634681]
+ [0.15227262]
+ [0.11948124]
+ [0.13129949]
+ [0.75332488]
+ [0.        ]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 6.527159214019775
+Testing images/mnist_pkl_imgs/im93.pkl
+Output: [[-8.1119239e-03]
+ [ 5.1715970e-04]
+ [-3.2344460e-04]
+ [ 9.5103490e-01]
+ [-5.8882050e-03]
+ [ 3.2804906e-02]
+ [-2.0358711e-03]
+ [ 4.2343140e-04]
+ [ 1.0756429e-02]
+ [ 1.1994228e-02]] 
+Target--> 3
+Norm: 0.05
+Trying Adversary with label [9]
+[[-0.08710433]
+ [-0.11491985]
+ [-0.08173353]
+ [ 0.        ]
+ [-0.16597396]
+ [-0.0601662 ]
+ [-0.15101733]
+ [-0.16004356]
+ [ 0.29992387]
+ [ 0.30017535]]
+Adversarial example found with label 9 ,delta 0.050000
+Total time: 3.631344795227051
+Testing images/mnist_pkl_imgs/im94.pkl
+Output: [[-1.9211583e-03]
+ [ 9.7686994e-01]
+ [ 1.1472940e-02]
+ [ 5.1397681e-03]
+ [ 2.3219362e-03]
+ [ 4.6639740e-03]
+ [ 1.3305396e-03]
+ [ 3.0512959e-03]
+ [ 1.8066436e-02]
+ [ 1.6767532e-04]] 
+Target--> 1
+Norm: 0.05
+Trying Adversary with label [8]
+[[-0.29367929]
+ [ 0.        ]
+ [-0.3350225 ]
+ [-0.32793005]
+ [-0.30248307]
+ [-0.37048702]
+ [-0.29971224]
+ [-0.3284312 ]
+ [ 0.5934518 ]
+ [-0.33147124]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 3.231532335281372
+Testing images/mnist_pkl_imgs/im95.pkl
+Output: [[ 0.00823019]
+ [-0.00975234]
+ [-0.01655948]
+ [-0.00766669]
+ [ 0.9247341 ]
+ [-0.01409664]
+ [ 0.13024914]
+ [-0.02256361]
+ [ 0.00330554]
+ [ 0.01500311]] 
+Target--> 4
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[ 0.21694429]
+ [ 0.00236221]
+ [ 0.03111816]
+ [ 0.01702787]
+ [ 0.        ]
+ [ 0.00592581]
+ [-0.02686555]
+ [-0.01504733]
+ [ 0.60697806]
+ [-0.14634681]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 6.537884473800659
+Testing images/mnist_pkl_imgs/im96.pkl
+Output: [[-0.00585584]
+ [ 1.0575355 ]
+ [-0.00108618]
+ [-0.00518597]
+ [-0.00872074]
+ [-0.00469637]
+ [-0.00758278]
+ [-0.00570674]
+ [ 0.00859192]
+ [-0.00978835]] 
+Target--> 1
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[ 0.10451697]
+ [ 0.        ]
+ [-0.06818525]
+ [-0.16934712]
+ [-0.1372863 ]
+ [-0.12223809]
+ [-0.17004427]
+ [-0.15886399]
+ [ 0.66014363]
+ [-0.17809748]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 7.112559795379639
+Testing images/mnist_pkl_imgs/im97.pkl
+Output: [[ 0.03440893]
+ [ 0.00793898]
+ [-0.02534385]
+ [ 0.00720373]
+ [ 0.00864179]
+ [ 0.02418071]
+ [ 0.01116092]
+ [ 0.9072934 ]
+ [ 0.03956047]
+ [-0.00162011]] 
+Target--> 7
+Norm: 0.05
+Trying Adversary with label [3]
+Potential CE succeeded
+[[-8.51587570e-02]
+ [-4.78478430e-02]
+ [-1.75116181e-04]
+ [-1.80441460e-01]
+ [ 3.80823718e-02]
+ [-8.90449333e-03]
+ [-1.07372894e-02]
+ [ 0.00000000e+00]
+ [ 4.16682609e-01]
+ [-2.42673873e-01]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 6.7976624965667725
+Testing images/mnist_pkl_imgs/im98.pkl
+Output: [[ 1.7565846e-02]
+ [ 5.0160289e-03]
+ [-1.7194241e-02]
+ [ 5.7063997e-04]
+ [-6.4371638e-03]
+ [ 2.6656151e-02]
+ [ 1.0279386e+00]
+ [ 1.0722727e-03]
+ [ 1.4985684e-02]
+ [ 6.9964007e-03]] 
+Target--> 6
+Norm: 0.05
+Trying Adversary with label [5]
+Potential CE succeeded
+[[ 0.24096453]
+ [-0.40392747]
+ [-0.38884475]
+ [-0.36133106]
+ [-0.37926409]
+ [-0.49119956]
+ [ 0.        ]
+ [-0.35770433]
+ [-0.55904345]
+ [-0.51215071]]
+Adversarial example found with label 0 ,delta 0.050000
+Total time: 7.204380750656128
+Testing images/mnist_pkl_imgs/im99.pkl
+Output: [[-0.00143596]
+ [-0.00849698]
+ [-0.00524604]
+ [-0.00183641]
+ [-0.05530454]
+ [-0.00335019]
+ [ 0.00553638]
+ [ 0.0171698 ]
+ [ 0.06516453]
+ [ 1.017321  ]] 
+Target--> 9
+Norm: 0.05
+Trying Adversary with label [0]
+Potential CE succeeded
+[[-0.54541814]
+ [-0.58073689]
+ [-0.571249  ]
+ [-0.53067957]
+ [-0.59171693]
+ [-0.58742254]
+ [-0.55080167]
+ [-0.5727633 ]
+ [ 0.03992908]
+ [ 0.        ]]
+Adversarial example found with label 8 ,delta 0.050000
+Total time: 3305.443605184555
+Adv: 67 ,non_adv: 4 ,unproven: 28 ,Total time: 107369.63492441177
