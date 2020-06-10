@@ -701,8 +701,7 @@ Output: [[-6070.38300178]
 Target--> 2
 Norm: 1.0
 Trying Adversary with label [1]
-Using license file /home/hkhedr/gurobi.lic
-Academic license - for non-commercial use only
+
 [[-6.46832185e+03]
  [ 5.00000000e-01]
  [ 0.00000000e+00]

@@ -19,8 +19,6 @@ Output: [[ 2.3925614e-02]
 Target--> 7
 Norm: 0.05
 Trying Adversary with label [3]
-Using license file /home/hkhedr/gurobi.lic
-Academic license - for non-commercial use only
 Potential CE succeeded
 [[ 0.03301634]
  [-0.29415508]
