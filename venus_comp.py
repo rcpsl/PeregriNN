@@ -31,25 +31,27 @@ if __name__ == "__main__":
     adv = non_adv = timed_out = 0
 
     #init Neural network
-    nnet = 'models/cifar-net.h5'
-    nn = KerasNN()
+    nnet = 'models/cifar.nnet'
+    nn = NeuralNetworkStruct()
     nn.parse_network(nnet,type = 'mnist')
     print('Loaded network:',nnet)
 
     # image_files = sorted(glob.glob('images/*'))
     
     num_test = 100
-    image_files = ['images/cifar_pkl_imgs/im%d.pkl'%idx for idx in range(4,num_test)]
-    delta = 0.01
+    image_files = ['images/cifar/image%d'%idx for idx in range(0,num_test)]
+    delta = 0.0075
     begin_time = time()
-    for image_file in image_files[:num_test]:
+    for image_file in image_files:
         start_time = time()
-        with open(image_file, 'rb') as f:
-            data = pickle.load(f)
-            image = data[0].reshape((-1,1))
-            target = data[1]
+        with open(image_file, 'r') as f:
+            image_name = image_file.split('/')[-1]
+            image = f.readline().split(',')
+            image = np.array([float(num) for num in image[:-1]]).reshape((-1,1))
             nn.parse_network(nnet,type = 'mnist')
-            output = nn.evaluate(image)
+            output= nn.evaluate(image)
+            print(output)
+            target = np.argmax(output)
             nn.set_target(target)
             other_ouputs = [i for i in range(nn.output_size) if i != target]
             print('Testing',image_file)
@@ -75,11 +77,14 @@ if __name__ == "__main__":
                 #Add Input bounds as constraints in the SAT solver
                 #TODO: Make the solver apply the bound directly from the NN object
                 input_vars = [solver.state_vars[i] for i in range(len(solver.state_vars))]
-                A = np.eye(network.image_size)
-                lower_bound = input_bounds[:,0]
-                upper_bound = input_bounds[:,1]
-                solver.add_linear_constraints(A,input_vars,lower_bound,GRB.GREATER_EQUAL)
-                solver.add_linear_constraints(A,input_vars,upper_bound,GRB.LESS_EQUAL)
+               # A = np.eye(network.image_size)
+               # lower_bound = input_bounds[:,0]
+               # upper_bound = input_bounds[:,1]
+               # solver.add_linear_constraints(A,input_vars,lower_bound,GRB.GREATER_EQUAL)
+               # solver.add_linear_constraints(A,input_vars,upper_bound,GRB.LESS_EQUAL)
+                for i in range(len(solver.state_vars)):
+                     solver.add_linear_constraints([[1]],[solver.state_vars[i]],[input_bounds[i,0]],GRB.GREATER_EQUAL)
+                     solver.add_linear_constraints([[1]],[solver.state_vars[i]],[input_bounds[i,1]],GRB.LESS_EQUAL)
 
                 # A = np.eye(len(solver.state_vars))
                 # b = [-0.277091,0.173774,0.515735,0.978737,0.684880]

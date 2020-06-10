@@ -27,7 +27,7 @@ def check_property(x):
 
 if __name__ == "__main__":
 
-    TIMEOUT=1200
+    TIMEOUT= 3600
     adv = non_adv = timed_out = 0
 
     #init Neural network
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     
     num_test = 100
     image_files = ['images/image%d'%idx for idx in range(num_test)]
-    deltas = [2.6]
+    deltas = [15.0]
     begin_time = time()
     for image_file in image_files[:num_test]:
         start_time = time()

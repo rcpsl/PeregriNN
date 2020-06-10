@@ -39,6 +39,7 @@ class Solver():
         self.abs2d              = [[0,i] for i in range(self.__input_dim)]
         self._2dabs              = {}
         self.fixed_relus = set()
+        self.MAX_DEPTH = 1000
 
         #Layer index 
         self.model.update()
@@ -215,6 +216,7 @@ class Solver():
                 eq = self.nn.layers[layer_idx]['in_sym'].upper[neuron_idx]
                 b,A = -eq[-1], eq[:-1]
                 H_rep = np.concatenate((H_rep,np.hstack((b,-A)).reshape((1,6))),axis = 0)
+                self.MAX_DEPTH = 2
 
             A = cdd.Matrix(H_rep)
             A.rep_type = 1
@@ -305,10 +307,12 @@ class Solver():
     def dfs(self, infeasible_relus,fixed_relus,layers_masks, depth = 0,undecided_relus = [],paths = 0):
         #node to be handled
         status = 'UNKNOWN'
+        if(depth>self.MAX_DEPTH):
+            return status
         relu_idx,phase =  infeasible_relus[0]
         nonlin_relus = copy(undecided_relus)
         min_layer,_ = self.abs2d[nonlin_relus[0]]
-        # relu_idx,phase = self.split_neuron(infeasible_relus,min_layer*50 +5)
+        #relu_idx,phase = self.split_neuron(infeasible_relus,min_layer*52 +5)
         layer_idx,neuron_idx = self.abs2d[relu_idx]
         if(layer_idx > min_layer):
             relu_idx,phase = nonlin_relus[0],int(self.model.getVarByName('n[%d]'%nonlin_relus[0]).X >=0)
@@ -333,11 +337,11 @@ class Solver():
                 status = self.dfs(infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
         if(status != 'SolFound'):
             paths[0] += 1 
-            if(self.model.Status == 3):
-                IIS = self.getIIS('result1.ilp')
-                if(len(IIS) and relu_idx != IIS[-1] and IIS[-1] in [n_idx for n_idx,_ in fixed_relus]):
-                    self.set_neuron_bounds(layer_idx,neuron_idx,-1,layers_masks)
-                    return status
+           # if(self.model.Status == 3):
+           #     IIS = self.getIIS('result1.ilp')
+           #     if(len(IIS) and relu_idx != IIS[-1] and IIS[-1] in [n_idx for n_idx,_ in fixed_relus]):
+           #         self.set_neuron_bounds(layer_idx,neuron_idx,-1,layers_masks)
+           #         return status
 
             phase = 1 - phase
             # print('Backtrack, Setting neuron %d to %d'%(relu_idx,phase))
@@ -357,8 +361,8 @@ class Solver():
             else:
                 status = 'UNSAT'
 
-            if(status != 'SolFound'):
-                status = 'UNSAT'
+            #if(status != 'SolFound'):
+            #    status = 'UNSAT'
         
             self.set_neuron_bounds(layer_idx,neuron_idx,-1,layers_masks)
         return status
