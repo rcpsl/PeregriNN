@@ -6,6 +6,7 @@ import signal
 import sys,os
 import glob
 from NeuralNetwork import *
+from multiprocessing import Process, Value
 
 eps = 5E-1
 
@@ -25,26 +26,34 @@ def check_property(x):
     return False
 
 
-def run_instance(network, input_bounds, check_property, target):
+def run_instance(network, input_bounds, check_property, target,adv_found):
 
-    solver = Solver(network = network,property_check=check_property,target = target)
-    input_vars = [solver.state_vars[i] for i in range(len(solver.state_vars))]
-    A = np.eye(network.image_size)
-    lower_bound = input_bounds[:,0]
-    upper_bound = input_bounds[:,1]
-    solver.add_linear_constraints(A,input_vars,lower_bound,GRB.GREATER_EQUAL)
-    solver.add_linear_constraints(A,input_vars,upper_bound,GRB.LESS_EQUAL)
-    
-    output_vars = [solver.out_vars[i] for i in range(len(solver.out_vars))]
-    A = np.zeros(network.output_size)
-    A[out_idx] = 1
-    A[target] = -1
-    b = [eps]
-    solver.add_linear_constraints([A],output_vars,b,GRB.GREATER_EQUAL)
-    
-    solver.preprocessing = False
-    s = time()
-    nn_in,nn_out,status = solver.solve()
+    try:
+        solver = Solver(network = network,property_check=check_property,target = target)
+        input_vars = [solver.state_vars[i] for i in range(len(solver.state_vars))]
+        A = np.eye(network.image_size)
+        lower_bound = input_bounds[:,0]
+        upper_bound = input_bounds[:,1]
+        solver.add_linear_constraints(A,input_vars,lower_bound,GRB.GREATER_EQUAL)
+        solver.add_linear_constraints(A,input_vars,upper_bound,GRB.LESS_EQUAL)
+        
+        output_vars = [solver.out_vars[i] for i in range(len(solver.out_vars))]
+        A = np.zeros(network.output_size)
+        A[out_idx] = 1
+        A[target] = -1
+        b = [eps]
+        solver.add_linear_constraints([A],output_vars,b,GRB.GREATER_EQUAL)
+        
+        solver.preprocessing = False
+        nn_in,nn_out,status = solver.solve()
+        if(status == 'SolFound'):
+            adv_found.value = 1
+        
+        # print('Terminated')
+    except Exception as e:
+        print(e)
+
+
 if __name__ == "__main__":
 
     TIMEOUT= 1200
@@ -60,7 +69,7 @@ if __name__ == "__main__":
     
     num_test = 50
     image_files = ['VNN/mnist_images/image%d'%idx for idx in range(1,num_test+1)]
-    deltas = [0.05]
+    deltas = [0.03]
     begin_time = time()
     for image_file in image_files:
         start_time = time()
@@ -88,60 +97,24 @@ if __name__ == "__main__":
                 out_list_ub = copy(nn.layers[nn.num_layers-1]['conc_ub'])
                 other_ouputs = np.flip(np.argsort(out_list_ub,axis = 0))
                 other_ouputs = [idx for idx in other_ouputs if idx!= target and out_list_ub[idx] > 0]
+                adv_found = Value('i',0)
+                processes = []
                 for out_idx in other_ouputs:
                     network = deepcopy(nn)
-                    print('Trying Adversary with label',out_idx)
-                    solver = Solver(network = network,property_check=check_property,target = target)
-                    #Add Input bounds as constraints in the SAT solver
-                    #TODO: Make the solver apply the bound directly from the NN object
-                    input_vars = [solver.state_vars[i] for i in range(len(solver.state_vars))]
-                    A = np.eye(network.image_size)
-                    lower_bound = input_bounds[:,0]
-                    upper_bound = input_bounds[:,1]
-                    solver.add_linear_constraints(A,input_vars,lower_bound,GRB.GREATER_EQUAL)
-                    solver.add_linear_constraints(A,input_vars,upper_bound,GRB.LESS_EQUAL)
-
-                    # A = np.eye(len(solver.state_vars))
-                    # b = [-0.277091,0.173774,0.515735,0.978737,0.684880]
-                    # b = [-0.258785, 0.143822, 0.148294,0.50000,0.477025]
-                    # b = [-0.100000,-0.025285,0.011807,-0.009691,-0.100000]
-                    # solver.add_linear_constraints(A,input_vars,b,GRB.EQUAL)
-
-                    # output_vars = [solver.out_vars[i] for i in range(len(solver.out_vars))]
-                    # A = np.eye(len(solver.out_vars))
-                    # b = [-0.0162349481, -0.0180076580, -0.0178982665, -0.0178564177, -0.0174600866]
-                    # solver.add_linear_constraints(A,output_vars,b,GRB.EQUAL)
-
-                    output_vars = [solver.out_vars[i] for i in range(len(solver.out_vars))]
-                    A = np.zeros(network.output_size)
-                    A[out_idx] = 1
-                    A[target] = -1
-                    b = [eps]
-                    solver.add_linear_constraints([A],output_vars,b,GRB.GREATER_EQUAL)
-                    
-                    solver.preprocessing = False
-                    s = time()
-                    nn_in,nn_out,status = solver.solve()
-                    e = time()
-                    if(status == 'SolFound'):
-                        adv_found = True
-                        nn_in = np.array([solver.state_vars[idx].X for idx in range(network.image_size)]).reshape((-1,1))
-                        nn_out = np.array([solver.out_vars[idx].X for idx in range(network.output_size)]).reshape((-1,1))
-                        net_out = network.evaluate(nn_in)
-                        err = np.sum(np.fabs(network.evaluate(nn_in) - nn_out))
-                        # print(nn_in)
-                        print(net_out)
-                        print('Adversarial example found with label %d ,delta %f'%(out_idx,delta))
-                        # print('Error',err)
-                        print('Total time:',time() - start_time)
-                        adv += 1
-                        break
-                    # else:
-                    #     print("Problem Infeasible,Time:%f"%(e-s))
-
-                if(not adv_found):
-                    print('Problem is Infeasible, Total time:%f\n\n'%(time() - start_time))
-                    non_adv += 1
+                    p = Process(target=run_instance, args=(network, input_bounds, check_property, target,adv_found))
+                    p.start()
+                    processes.append(p)
+                
+                while(any(p.is_alive() for p in processes) and adv_found.value == 0):
+                    sleep(1)
+                if(adv_found.value == 1):
+                    print("Adv found")
+                    adv +=1
+                else:
+                    print("No Adv")
+                    non_adv +=1
+                for p in processes:
+                    p.terminate()
         except TimeOutException as e:
             timed_out += 1
     print('Adv:',adv,',non_adv:',non_adv,',unproven:',timed_out,',Total time:',time() - begin_time)
