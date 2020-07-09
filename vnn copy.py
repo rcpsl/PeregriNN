@@ -27,7 +27,7 @@ def check_property(x):
 
 if __name__ == "__main__":
 
-    TIMEOUT= 1200
+    TIMEOUT= 900
     adv = non_adv = timed_out = 0
 
     #init Neural network

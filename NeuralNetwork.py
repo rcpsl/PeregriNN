@@ -91,6 +91,8 @@ class NeuralNetworkStruct(object):
     def __compute_sym_bounds(self):
         #first layer Symbolic interval
         self.nonlin_relus = []
+        self.active_relus = []
+        self.inactive_relus = []
         W = self.layers[1]['weights']
         b = self.layers[1]['bias'].reshape((-1,1))
         input_bounds = np.hstack((self.layers[0]['lb'],self.layers[0]['ub']))
@@ -224,11 +226,19 @@ class NeuralNetworkStruct(object):
             in_mean = self.input_mean[inputIndex]
             in_range = self.input_range[inputIndex]
             if ( val[inputIndex] < in_min ):
-                ret[inputIndex] = in_min
+                val[inputIndex] = in_min
             elif ( val[inputIndex] > in_max ):
-                ret[inputIndex] = in_max
-            else:
-                ret[inputIndex] = ( val[inputIndex] - in_mean ) / in_range
+                val[inputIndex] = in_max
+            
+            ret[inputIndex] = ( val[inputIndex] - in_mean ) / in_range
+        return ret
+
+    def normalize_output(self,val):
+        ret = np.zeros_like(val)
+        out_mean = self.out_mean
+        out_range = self.out_range
+            
+        ret = ( val  - out_mean ) / out_range
         return ret
     def unnormalize_input(self,inputIndex, val):
         in_mean = self.input_mean[inputIndex]

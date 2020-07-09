@@ -56,11 +56,11 @@ def run_instance(network, input_bounds, check_property, target,adv_found):
 
 if __name__ == "__main__":
 
-    TIMEOUT= 1200
+    TIMEOUT= 900
     adv = non_adv = timed_out = 0
 
     #init Neural network
-    nnet = 'VNN/mnist-net_256x6.nnet'
+    nnet = 'VNN/mnist-net_256x4.nnet'
     nn = NeuralNetworkStruct()
     nn.parse_network(nnet,type = 'mnist')
     print('Loaded network:',nnet)
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     
     num_test = 50
     image_files = ['VNN/mnist_images/image%d'%idx for idx in range(1,num_test+1)]
-    deltas = [0.03]
+    deltas = [0.05]
     begin_time = time()
     for image_file in image_files:
         start_time = time()
@@ -85,11 +85,11 @@ if __name__ == "__main__":
             print('Output:',output,'\nTarget-->',target)
         signal.signal(signal.SIGALRM, alarm_handler)
         signal.alarm(TIMEOUT)
+        processes = []
         try:
             for delta in deltas:
                 print('Norm:',delta)
                 #Solve the problem for each other output
-                adv_found = False
                 lb = np.maximum(image-delta,0.0)
                 ub = np.minimum(image+delta,1.0)
                 input_bounds = np.concatenate((lb,ub),axis = 1)
@@ -98,7 +98,6 @@ if __name__ == "__main__":
                 other_ouputs = np.flip(np.argsort(out_list_ub,axis = 0))
                 other_ouputs = [idx for idx in other_ouputs if idx!= target and out_list_ub[idx] > 0]
                 adv_found = Value('i',0)
-                processes = []
                 for out_idx in other_ouputs:
                     network = deepcopy(nn)
                     p = Process(target=run_instance, args=(network, input_bounds, check_property, target,adv_found))
@@ -106,17 +105,19 @@ if __name__ == "__main__":
                     processes.append(p)
                 
                 while(any(p.is_alive() for p in processes) and adv_found.value == 0):
-                    sleep(1)
+                    pass
                 if(adv_found.value == 1):
                     print("Adv found")
                     adv +=1
                 else:
                     print("No Adv")
                     non_adv +=1
-                for p in processes:
-                    p.terminate()
+
         except TimeOutException as e:
             timed_out += 1
+        
+        for p in processes:
+            p.terminate()
     print('Adv:',adv,',non_adv:',non_adv,',unproven:',timed_out,',Total time:',time() - begin_time)
 
 
