@@ -110,7 +110,10 @@ if __name__ == "__main__":
 
             
         except TimeOutException as e:
-            results.append("Timeout")  
+            results.append("Timeout") 
+            for p in processes:
+                p.terminate() 
+            break
             
         for p in processes:
             p.terminate()

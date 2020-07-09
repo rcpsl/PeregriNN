@@ -9,7 +9,7 @@ from NeuralNetwork import *
 from utils.sample_network import * 
 from multiprocessing import Process,Value
 eps = 1E-3
-# Clear-of-Conflict (COC), weak right, strong right, weak left, or strong left
+#  [Clear-of-Conflict, weak left, weak right, strong left, strong right]
 class TimeOutException(Exception):
     pass
 
@@ -68,10 +68,10 @@ if __name__ == "__main__":
     start_time = time()
     unsafe = 0
     # networks = [networks[-1]]
-    raw_lower_bounds = np.array([12000, 0.7, -3.141592, 100, 0]).reshape((-1,1))
-    raw_upper_bounds = np.array([62000, 3.141592, -3.141592, 1200, 1200]).reshape((-1,1))
+    raw_lower_bounds = np.array([36000, 0.7, -3.141592, 900, 600]).reshape((-1,1))
+    raw_upper_bounds = np.array([60760, 3.141592, -3.141592 + 0.01, 1200, 1200]).reshape((-1,1))
 
-    print("Checking property 6 on %s"%network[5:])
+    print("Checking property 9 on %s"%network[5:])
     nnet = NeuralNetworkStruct()
     nnet.parse_network(network)
     lower_bounds = nnet.normalize_input(raw_lower_bounds)
@@ -114,7 +114,7 @@ if __name__ == "__main__":
             for p in processes:
                 p.terminate() 
             break
-
+        
         for p in processes:
             p.terminate()
         # sys.exit()
