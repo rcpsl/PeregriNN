@@ -19,7 +19,7 @@ def alarm_handler(signum, frame):
 
 def check_potential_CE(x):
     u = nn.evaluate(x)
-    if(np.argmin(u) != 4 ):
+    if(np.argmin(u) != 0 ):
         print("Potential CE success")
         print(u)
         return True
@@ -28,7 +28,7 @@ def check_potential_CE(x):
 
 def run_instance(nn, input_bounds, check_property, adv_found, target):
     nn.set_bounds(input_bounds)
-    if np.min(nn.layers[7]['conc_lb'][target]) > nn.layers[7]['conc_ub'][4]:
+    if np.min(nn.layers[7]['conc_lb'][target]) > nn.layers[7]['conc_ub'][0]:
         print("Problem Infeasible")
         return
     solver = Solver(network = nn,property_check=check_property)
@@ -68,17 +68,17 @@ if __name__ == "__main__":
     start_time = time()
     unsafe = 0
     # networks = [networks[-1]]
-    raw_lower_bounds = np.array([250, 0.2, -3.141592, 100, 0]).reshape((-1,1))
-    raw_upper_bounds = np.array([400, 0.4, -3.141592, 400, 400]).reshape((-1,1))
+    raw_lower_bounds = np.array([12000, 0.7, -3.141592, 100, 0]).reshape((-1,1))
+    raw_upper_bounds = np.array([62000, 3.141592, -3.141592, 1200, 1200]).reshape((-1,1))
 
-    print("Checking property 5 on %s"%network[5:])
+    print("Checking property 6 on %s"%network[5:])
     nnet = NeuralNetworkStruct()
     nnet.parse_network(network)
     lower_bounds = nnet.normalize_input(raw_lower_bounds)
     upper_bounds = nnet.normalize_input(raw_upper_bounds)
     # sample_network(nn,lower_bounds,upper_bounds)
     input_bounds = np.concatenate((lower_bounds,upper_bounds),axis = 1)
-    other_ouputs = [i for i in range(nnet.output_size) if i != 4]
+    other_ouputs = [i for i in range(nnet.output_size) if i != 0]
     for other_out in other_ouputs:
 
         problems = split_input_space1(nnet,input_bounds,32)
