@@ -2,12 +2,12 @@ import numpy as np
 from random import random,seed, uniform,randint
 from NeuralNetwork import *
 from time import time
-from copy import deepcopy
+from copy import deepcopy,copy
 def sample_network(nn,bounds):
     start  = time()
     lower_bounds, upper_bounds = bounds[:,0],bounds[:,1]
     err_bound = (upper_bounds - lower_bounds)/10.
-    num_samples = 3
+    num_samples = 25
     global_err = []
     for _ in range(num_samples):
         sample = uniform(lower_bounds, upper_bounds)
@@ -48,6 +48,36 @@ def split_input_space(nn,bounds,MAX_SPLITS = 128):
             new_splits.append(int1)
             new_splits.append(int2)
         splits = new_splits
+    return splits
+
+def split_input_space2(nn,bounds,MAX_SPLITS = 128):
+    splits = []
+    disparity = []
+    DISP_THRESH  = 0.2
+    splits.append(bounds)
+    disparity.append(sample_network(nn,bounds))
+    change = True
+    while(len(splits) < MAX_SPLITS and change):
+        # splits = sorted(splits,key=lambda x: (x[0]))
+        new_splits = []
+        change = False
+        delete_me = []
+        for idx,interval_bound in enumerate(copy(splits)):
+            if disparity[idx] > DISP_THRESH:
+                dim_to_split = np.argmax(interval_bound[:,1] - interval_bound[:,0])
+                int1,int2 = split_interval(interval_bound,dim_to_split)
+                disp1 = sample_network(nn,int1)
+                disp2 = sample_network(nn,int2)
+                new_splits.append(int1)
+                new_splits.append(int2)
+                disparity.append(disp1)
+                disparity.append(disp2)
+                delete_me.append(idx)
+                change = True
+        splits +=new_splits
+        for idx in delete_me:
+            del splits[idx]
+            del disparity[idx]
     return splits
 def pick_dim(nn,bounds):
 

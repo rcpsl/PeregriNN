@@ -20,15 +20,15 @@ def alarm_handler(signum, frame):
 def check_potential_CE(x):
     u = nn.evaluate(x)
     if(np.argmin(u) != 0 ):
-        print("Potential CE success")
-        print(u)
+        # print("Potential CE success")
+        # print(u)
         return True
     return False
 
 
-def run_instance(nn, input_bounds, check_property, adv_found, target):
+def run_instance(nn, input_bounds, check_property, adv_found, target,instance = -1):
     nn.set_bounds(input_bounds)
-    if np.min(nn.layers[7]['conc_lb'][target]) > nn.layers[7]['conc_ub'][0]:
+    if np.min(nn.layers[7]['conc_lb'][1:]) > nn.layers[7]['conc_ub'][0]:
         print("Problem Infeasible")
         return
     solver = Solver(network = nn,property_check=check_property)
@@ -57,21 +57,23 @@ def run_instance(nn, input_bounds, check_property, adv_found, target):
     nn_in,nn_out,status = solver.solve()
     if(status == 'SolFound'):
         adv_found.value = 1
+   
+    print("Finished Instance",instance,'with disparity',disparity[instance])
 
 
 if __name__ == "__main__":
 
     #init Neural network
     TIMEOUT= 900
-    network = "models/ACASXU_run2a_1_1_batch_2000.nnet"
+    network = "models/ACASXU_run2a_4_5_batch_2000.nnet"
     results = []
     start_time = time()
     unsafe = 0
     # networks = [networks[-1]]
     raw_lower_bounds = np.array([36000, 0.7, -3.141592, 900, 600]).reshape((-1,1))
-    raw_upper_bounds = np.array([60760, 3.141592, -3.141592 + 0.01, 1200, 1200]).reshape((-1,1))
+    raw_upper_bounds = np.array([60760, 3.141592, -3.141592, 1200, 1200]).reshape((-1,1))
 
-    print("Checking property 9 on %s"%network[5:])
+    print("Checking property 10 on %s"%network[5:])
     nnet = NeuralNetworkStruct()
     nnet.parse_network(network)
     lower_bounds = nnet.normalize_input(raw_lower_bounds)
@@ -81,20 +83,23 @@ if __name__ == "__main__":
     other_ouputs = [i for i in range(nnet.output_size) if i != 0]
     for other_out in other_ouputs:
 
-        problems = split_input_space1(nnet,input_bounds,512)
+        problems = split_input_space(nnet,input_bounds,512)
+        disparity = []
+        for problem in problems:
+            disparity.append(sample_network(nnet,problem))
         print(len(problems),"subproblems")
         adv_found = Value('i',0)
         processes = []
         try:
             signal.signal(signal.SIGALRM, alarm_handler)
             signal.alarm(TIMEOUT)
-            for input_bounds in problems:
+            for idx,input_bounds in enumerate(problems):
                 nn = deepcopy(nnet)
                 # input_bounds = problems[k]
-                p = Process(target=run_instance, args=(nn, input_bounds, check_potential_CE,adv_found, other_out))
+                p = Process(target=run_instance, args=(nn, input_bounds, check_potential_CE,adv_found, other_out,idx))
                 p.start()
                 processes.append(p)
-                    
+            wait = 0
             while(any(p.is_alive() for p in processes) and adv_found.value == 0):
                 pass
             if(adv_found.value == 1):
@@ -112,6 +117,9 @@ if __name__ == "__main__":
         except TimeOutException as e:
             results.append("Timeout") 
             for p in processes:
+                if(p.is_alive()):
+                    pid = int(p.name.split('-')[-1]) - 1
+                    print("Process",pid,'timed out with disparity', disparity[pid])
                 p.terminate() 
             break
         
