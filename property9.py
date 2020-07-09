@@ -62,14 +62,14 @@ def run_instance(nn, input_bounds, check_property, adv_found, target):
 if __name__ == "__main__":
 
     #init Neural network
-    TIMEOUT= 900
-    network = "models/ACASXU_run2a_1_1_batch_2000.nnet"
+    TIMEOUT= 1800
+    network = "models/ACASXU_run2a_3_3_batch_2000.nnet"
     results = []
     start_time = time()
     unsafe = 0
     # networks = [networks[-1]]
     raw_lower_bounds = np.array([2000, -0.4, -3.141592, 100, 0]).reshape((-1,1))
-    raw_upper_bounds = np.array([7000, -0.14, -3.141592+0.01, 150, 150]).reshape((-1,1))
+    raw_upper_bounds = np.array([7000, -0.14, -3.141592, 150, 150]).reshape((-1,1))
 
     print("Checking property 9 on %s"%network[5:])
     nnet = NeuralNetworkStruct()
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     other_ouputs = [i for i in range(nnet.output_size) if i != 3]
     for other_out in other_ouputs:
 
-        problems = split_input_space1(nnet,input_bounds,512)
+        problems = split_input_space(nnet,input_bounds,512)
         print(len(problems),"subproblems")
         adv_found = Value('i',0)
         processes = []

@@ -28,7 +28,7 @@ def check_potential_CE(x):
 
 def run_instance(nn, input_bounds, check_property, adv_found, target):
     nn.set_bounds(input_bounds)
-    if np.min(nn.layers[7]['conc_lb'][target]) > nn.layers[7]['conc_ub'][0]:
+    if np.min(nn.layers[7]['conc_lb'][1:]) > nn.layers[7]['conc_ub'][0]:
         print("Problem Infeasible")
         return
     solver = Solver(network = nn,property_check=check_property)
@@ -63,13 +63,13 @@ if __name__ == "__main__":
 
     #init Neural network
     TIMEOUT= 900
-    network = "models/ACASXU_run2a_1_1_batch_2000.nnet"
+    network = "models/ACASXU_run2a_4_5_batch_2000.nnet"
     results = []
     start_time = time()
     unsafe = 0
     # networks = [networks[-1]]
     raw_lower_bounds = np.array([36000, 0.7, -3.141592, 900, 600]).reshape((-1,1))
-    raw_upper_bounds = np.array([60760, 3.141592, -3.141592 + 0.01, 1200, 1200]).reshape((-1,1))
+    raw_upper_bounds = np.array([60760, 3.141592, -3.141592, 1200, 1200]).reshape((-1,1))
 
     print("Checking property 9 on %s"%network[5:])
     nnet = NeuralNetworkStruct()
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     other_ouputs = [i for i in range(nnet.output_size) if i != 0]
     for other_out in other_ouputs:
 
-        problems = split_input_space1(nnet,input_bounds,512)
+        problems = split_input_space(nnet,input_bounds,512)
         print(len(problems),"subproblems")
         adv_found = Value('i',0)
         processes = []
