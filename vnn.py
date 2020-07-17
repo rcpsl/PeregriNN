@@ -13,15 +13,16 @@ eps = 5E-1
 class TimeOutException(Exception):
     pass
 
- 
+def print_summary(network,prop, safety, time):
+    print('%s,%f,%s,%f'%(network[14:19],prop,safety,time))
 def alarm_handler(signum, frame):
-    print('TIMEOUT!')
+    # print('TIMEOUT!')
     raise TimeOutException()
 
 def check_property(x):
     u = nn.evaluate(x)
     if(np.argmax(u) != target):
-        print("Potential CE succeeded")
+        # print("Potential CE succeeded")
         return True
     return False
 
@@ -56,21 +57,27 @@ def run_instance(network, input_bounds, check_property, target,adv_found):
 
 if __name__ == "__main__":
 
+    if(len(sys.argv) < 3):
+        print("Arguments missing vnn.py network epsilon")
+        sys.exit()
+    
     TIMEOUT= 900
     adv = non_adv = timed_out = 0
 
     #init Neural network
-    nnet = 'VNN/mnist-net_256x4.nnet'
+    # nnet = 'VNN/mnist-net_256x4.nnet'
+    nnet = sys.argv[1]
     nn = NeuralNetworkStruct()
     nn.parse_network(nnet,type = 'mnist')
-    print('Loaded network:',nnet)
+    # print('Loaded network:',nnet)
 
     # image_files = sorted(glob.glob('images/*'))
     
     num_test = 50
     image_files = ['VNN/mnist_images/image%d'%idx for idx in range(1,num_test+1)]
-    deltas = [0.05]
+    delta = float(sys.argv[-1])
     begin_time = time()
+    results = []
     for image_file in image_files:
         start_time = time()
         with open(image_file,'r') as f:
@@ -81,44 +88,60 @@ if __name__ == "__main__":
             target = np.argmax(output)
             nn.set_target(target)
             other_ouputs = [i for i in range(nn.output_size) if i != target]
-            print('Testing',image_file)
-            print('Output:',output,'\nTarget-->',target)
+            # print('Testing',image_file)
+            # print('Output:',output,'\nTarget-->',target)
         signal.signal(signal.SIGALRM, alarm_handler)
         signal.alarm(TIMEOUT)
         processes = []
         try:
-            for delta in deltas:
-                print('Norm:',delta)
-                #Solve the problem for each other output
-                lb = np.maximum(image-delta,0.0)
-                ub = np.minimum(image+delta,1.0)
-                input_bounds = np.concatenate((lb,ub),axis = 1)
-                nn.set_bounds(input_bounds)
-                out_list_ub = copy(nn.layers[nn.num_layers-1]['conc_ub'])
-                other_ouputs = np.flip(np.argsort(out_list_ub,axis = 0))
-                other_ouputs = [idx for idx in other_ouputs if idx!= target and out_list_ub[idx] > 0]
-                adv_found = Value('i',0)
-                for out_idx in other_ouputs:
-                    network = deepcopy(nn)
-                    p = Process(target=run_instance, args=(network, input_bounds, check_property, target,adv_found))
-                    p.start()
-                    processes.append(p)
-                
-                while(any(p.is_alive() for p in processes) and adv_found.value == 0):
-                    pass
-                if(adv_found.value == 1):
-                    print("Adv found")
-                    adv +=1
-                else:
-                    print("No Adv")
-                    non_adv +=1
+            # print('Norm:',delta)
+            #Solve the problem for each other output
+            lb = np.maximum(image-delta,0.0)
+            ub = np.minimum(image+delta,1.0)
+            input_bounds = np.concatenate((lb,ub),axis = 1)
+            nn.set_bounds(input_bounds)
+            out_list_ub = copy(nn.layers[nn.num_layers-1]['conc_ub'])
+            other_ouputs = np.flip(np.argsort(out_list_ub,axis = 0)).flatten().tolist()
+            other_ouputs = [idx for idx in other_ouputs if idx!= target and out_list_ub[idx] > 0]
+            adv_found = Value('i',0)
+            for out_idx in other_ouputs:
+                if nn.layers[len(nn.layers)-1]['conc_lb'][target] > np.max(nn.layers[len(nn.layers)-1]['conc_ub'][other_ouputs]):
+                    continue
+                network = deepcopy(nn)
+                p = Process(target=run_instance, args=(network, input_bounds, check_property, target,adv_found))
+                p.start()
+                processes.append(p)
+            
+            prev_n_alive = -1
+            while(any(p.is_alive() for p in processes) and adv_found.value == 0):
+                sleep(5)
+                n_alive = np.sum([p.is_alive() for p in processes])
+                if(n_alive != prev_n_alive):
+                    prev_n_alive = n_alive
+
+            if(adv_found.value == 1):
+                #print("Adv found")
+                adv +=1
+                results.append("UNSAFE")
+                print_summary(nnet,0,'unsafe',time() - start_time)
+                for p in processes:
+                    p.terminate()
+            else:
+                #print("No Adv")
+                results.append("Safe")
+                non_adv +=1
+                print_summary(nnet,0,'safe',time()-start_time)
 
         except TimeOutException as e:
             timed_out += 1
+            print_summary(nnet,delta,'timeout',TIMEOUT)
+            results.append("Timeout") 
+            for p in processes:
+                p.terminate() 
         
         for p in processes:
             p.terminate()
-    print('Adv:',adv,',non_adv:',non_adv,',unproven:',timed_out,',Total time:',time() - begin_time)
+    # print('Adv:',adv,',non_adv:',non_adv,',unproven:',timed_out,',Total time:',time() - begin_time)
 
 
 

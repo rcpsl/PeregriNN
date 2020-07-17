@@ -147,13 +147,13 @@ class Solver():
             # self.model.write('model.lp')
             self.model.optimize()
             if(self.model.Status == 3): #Infeasible
-                IIS_slack = []
-                try:
-                    self.model.computeIIS() 
-                    fname = 'result.ilp'
-                    self.model.write(fname)
-                except Exception as e:
-                    print(e)
+                # IIS_slack = []
+                # try:
+                #     self.model.computeIIS() 
+                #     fname = 'result.ilp'
+                #     self.model.write(fname)
+                # except Exception as e:
+                #     print(e)
                 status = 'UNSAT'
                 return None,None,status
             else:   
@@ -355,7 +355,7 @@ class Solver():
                 SAT,infeasible_set = self.check_SAT()
                 valid = self.check_potential_CE(np.array([self.model.getVarByName('x[%d]'%i).X for i in range(len(self.state_vars))]).reshape((-1,1)))
                 if(SAT or valid):
-                    print('Solution found')
+                    # print('Solution found')
                     status = 'SolFound'  
                 else:
                     status = self.dfs(infeasible_set,copy(fixed_relus),layers_masks,depth +1,nonlin_relus,paths)

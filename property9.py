@@ -14,22 +14,23 @@ class TimeOutException(Exception):
     pass
 
 def alarm_handler(signum, frame):
-    print('TIMEOUT!')
+    #print('TIMEOUT!')
     raise TimeOutException()
 
 def check_potential_CE(x):
     u = nn.evaluate(x)
     if(np.argmin(u) != 3 ):
-        print("Potential CE success")
-        print(u)
+        #print("Potential CE success")
+        #print(u)
         return True
     return False
 
 
 def run_instance(nn, input_bounds, check_property, adv_found, target):
     nn.set_bounds(input_bounds)
-    if np.min(nn.layers[7]['conc_lb'][target]) > nn.layers[7]['conc_ub'][3]:
-        print("Problem Infeasible")
+    other_outs = [0,1,2,4]
+    if np.min(nn.layers[7]['conc_lb'][other_outs]) > nn.layers[7]['conc_ub'][3]:
+        #print("Problem Infeasible")
         return
     solver = Solver(network = nn,property_check=check_property)
     #Add Input bounds as constraints in the solver
@@ -62,7 +63,12 @@ def run_instance(nn, input_bounds, check_property, adv_found, target):
 if __name__ == "__main__":
 
     #init Neural network
-    TIMEOUT= 1800
+    if(len(sys.argv) > 1):
+        TIMEOUT = 21600
+        split_input = split_input_space1
+    else:
+        TIMEOUT= 300
+        split_input = split_input_space
     network = "models/ACASXU_run2a_3_3_batch_2000.nnet"
     results = []
     start_time = time()
@@ -71,7 +77,7 @@ if __name__ == "__main__":
     raw_lower_bounds = np.array([2000, -0.4, -3.141592, 100, 0]).reshape((-1,1))
     raw_upper_bounds = np.array([7000, -0.14, -3.141592, 150, 150]).reshape((-1,1))
 
-    print("Checking property 9 on %s"%network[5:])
+    #print("Checking property 9 on %s"%network[5:])
     nnet = NeuralNetworkStruct()
     nnet.parse_network(network)
     lower_bounds = nnet.normalize_input(raw_lower_bounds)
@@ -79,15 +85,20 @@ if __name__ == "__main__":
     # sample_network(nn,lower_bounds,upper_bounds)
     input_bounds = np.concatenate((lower_bounds,upper_bounds),axis = 1)
     other_ouputs = [i for i in range(nnet.output_size) if i != 3]
+    signal.signal(signal.SIGALRM, alarm_handler)
+    signal.alarm(TIMEOUT)
     for other_out in other_ouputs:
 
-        problems = split_input_space(nnet,input_bounds,512)
-        print(len(problems),"subproblems")
+        nnet.set_bounds(input_bounds)
+        other_outs = [0,1,2,4]
+        if np.min(nnet.layers[7]['conc_lb'][other_outs]) > nnet.layers[7]['conc_ub'][3]:
+            #print("Problem Infeasible")
+            break 
+        problems = split_input(nnet,input_bounds,512)
+        #print(len(problems),"subproblems")
         adv_found = Value('i',0)
         processes = []
         try:
-            signal.signal(signal.SIGALRM, alarm_handler)
-            signal.alarm(TIMEOUT)
             for input_bounds in problems:
                 nn = deepcopy(nnet)
                 # input_bounds = problems[k]
@@ -95,21 +106,31 @@ if __name__ == "__main__":
                 p.start()
                 processes.append(p)
                     
+            prev_n_alive = -1
             while(any(p.is_alive() for p in processes) and adv_found.value == 0):
-                pass
+                sleep(5)
+                n_alive = np.sum([p.is_alive() for p in processes])
+                if(n_alive != prev_n_alive):
+                    prev_n_alive = n_alive
+                    #print('Progress %d/%d' %(len(problems)-n_alive,len(problems)))
+                    
             if(adv_found.value == 1):
-                print("Adv found")
+                #print("Adv found")
                 unsafe +=1
                 results.append("UNSAFE")
+                print_summary(network,9,'unsafe',time()-start_time)
+
                 for p in processes:
                     p.terminate()
                 break
             else:
-                print("No Adv")
+                #print("No Adv")
                 results.append("Safe")
+                print_summary(network,9,'safe',time()-start_time)
 
             
         except TimeOutException as e:
+            print_summary(network,9,'timeout',TIMEOUT)
             results.append("Timeout") 
             for p in processes:
                 p.terminate() 
@@ -118,8 +139,8 @@ if __name__ == "__main__":
         for p in processes:
             p.terminate()
         # sys.exit()
-    print('Total time for all nets:',time()-start_time)
-    print(results)
+    #print('Total time for all nets:',time()-start_time)
+    #print(results)
 
     #active neurons [ 3  4  6  7  9 12 15 20 22 23 25 27 28 30 32 33 34 40 45 49]
 

@@ -3,6 +3,10 @@ from random import random,seed, uniform,randint
 from NeuralNetwork import *
 from time import time
 from copy import deepcopy,copy
+
+def print_summary(network,prop, safety, time):
+    print('%s,%d,%s,%f'%(network[20:23],prop,safety,time))
+    
 def sample_network(nn,bounds):
     start  = time()
     lower_bounds, upper_bounds = bounds[:,0],bounds[:,1]
@@ -93,8 +97,10 @@ def pick_dim(nn,bounds):
         nn2.set_bounds(int2)
         f_relus1 = len(nn1.active_relus) + len(nn1.inactive_relus)
         f_relus2 = len(nn2.active_relus) + len(nn2.inactive_relus)
-        if(f_relus1 > max_stable or f_relus2 > max_stable):
-            max_stable = max(f_relus1,f_relus2)
+        avg = f_relus1 + f_relus2
+        # if(f_relus1 > max_stable or f_relus2 > max_stable):
+        if avg > max_stable:
+            max_stable = avg
             split_dim = dim
             interval1,interval2 = int1,int2
 
