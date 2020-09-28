@@ -9,11 +9,30 @@ from NeuralNetwork import *
 from copy import copy,deepcopy
 import re
 import cdd
+from poset import *
+from utils.sample_network import *
 eps = 1E-5
 
+
+def pick_largest_ub(nn,samples,phases,y,neurons_idxs, fixed_neurons, output_idx):
+    ret = [neurons_idxs[0][0],neurons_idxs[0][1],0]
+    # phases,y = nn.get_phases(samples)
+    samples_idxs = list(range(len(samples)))
+    for l_idx,n_idx,phase in fixed_neurons:
+        samples_idxs = np.where(phases[l_idx-1][samples_idxs,n_idx]  == phase)[0]
+    max_count = -1E5
+    for l_idx, n_idx in neurons_idxs:
+        for phase in [True, False]:
+            outs = y[np.where(phases[l_idx-1][samples_idxs,n_idx] == phase)[0]]
+            if(outs.shape[0] > 0):
+                count_prop = len(np.where(np.argmax(outs,axis =1)== output_idx)[0])
+                if(count_prop > max_count):
+                    max_count = count_prop
+                    ret = [l_idx,n_idx,phase]
+    return ret
 class Solver():
 
-    def __init__(self, network = None, target = -1,maxIter = 100000,property_check=None):
+    def __init__(self, network = None, target = -1,maxIter = 100000,property_check=None, samples = None):
         self.maxNumberOfIterations = maxIter
         self.nn        = deepcopy(network)
         self.orig_net = deepcopy(self.nn)
@@ -40,14 +59,19 @@ class Solver():
         self._2dabs              = {}
         self.fixed_relus = set()
         self.MAX_DEPTH = 2500
+        self.samples = samples
+        self.phases,self.samples_outs = self.nn.get_phases(self.samples)
 
         #Layer index 
         self.model.update()
         self.layer_start_idx = [0] * len(self.nn.layers)
+        self.layer_stats = np.zeros((self.nn.num_layers-1,2))
+
         idx = self.__input_dim
         for layer_idx, layer in self.nn.layers.items():
             if(layer_idx == 0):
                 continue
+            # self.layer_stats[layer_idx] = {'undecided':0, 'infeasible':0}
             self._2dabs[layer_idx] = {}
             self.layer_start_idx[layer_idx] = self.layer_start_idx[layer_idx-1] + self.nn.layers[layer_idx-1]['num_nodes']
             for neuron_idx in range(layer['num_nodes']):
@@ -147,13 +171,13 @@ class Solver():
             # self.model.write('model.lp')
             self.model.optimize()
             if(self.model.Status == 3): #Infeasible
-                # IIS_slack = []
-                # try:
-                #     self.model.computeIIS() 
-                #     fname = 'result.ilp'
-                #     self.model.write(fname)
-                # except Exception as e:
-                #     print(e)
+                IIS_slack = []
+                try:
+                    self.model.computeIIS() 
+                    fname = 'result.ilp'
+                    self.model.write(fname)
+                except Exception as e:
+                    print(e)
                 status = 'UNSAT'
                 return None,None,status
             else:   
@@ -183,6 +207,7 @@ class Solver():
 
                     paths = [1]
                     status = self.dfs(infeasible_relus,[],layers_masks,undecided_relus=copy(sorted(non_lin_relus)),paths = paths)
+                    # print(self.layer_stats[0])
                     # print(status)
                     # print('Paths:',paths)
 
@@ -272,7 +297,7 @@ class Solver():
         H_rep = np.vstack((H_rep,np.hstack((-lower_bound,A))))
         min_volume = np.prod(in_rectangle[:,1] - in_rectangle[:,0])
         ret,min_phase = infeas_relus[0]
-
+    
         for relu_idx,_ in infeas_relus:
         # for relu_idx in infeas_relus:
             for phase in [0,1]:
@@ -303,14 +328,100 @@ class Solver():
                 except Exception as e:
                     pass
         return ret,min_phase
+    def get_effective_weights(self,W,b,layer):
+        W_ = self.nn.layers[1]['weights']
+        b_ = self.nn.layers[1]['bias']
+        net = np.array([self.model.getVarByName('n[%d]'%idx).X for idx in range(len(self.net_vars))])
+        phases = (net > 0).astype(int)
+        layer_phases = phases[self.nn.image_size:self.nn.image_size + self.nn.layers_sizes[1]]
+        for layer_idx in range(2,layer):
+            W_l  = self.nn.layers[layer_idx]['weights']
+            b_l  = self.nn.layers[layer_idx]['bias']
+            W_ = np.matmul(W_l,W_ *layer_phases.reshape((-1,1)))
+            b_ = W_l.dot(b_ * layer_phases.reshape((-1,1))) + b_l
+            layer_start = self.layer_start_idx[layer_idx]
+            layer_phases = phases[layer_start:layer_start + self.nn.layers_sizes[layer_idx]]
+        
+        W_ = np.matmul(W,W_ *layer_phases.reshape((-1,1)))
+        b_ = W.dot(b_ *layer_phases.reshape((-1,1))) + b
+        return W_,b_
+
+    def pick_one(self, infeasible_relus, fixed_relus):
+        #Assume infeasible_relus are sorted
+        # try:
+        k = 10
+        slacks = np.array([self.model.getVarByName('s[%d]'%idx).X for idx in range(len(self.slack_vars))])
+        y = np.array([self.model.getVarByName('y[%d]'%idx).X for idx in range(len(self.relu_vars))])
+        x = np.array([self.model.getVarByName('x[%d]'%idx).X for idx in range(len(self.state_vars))]).reshape((-1,1))
+        # inactive_infeas =  np.where(net < 0)[0] 
+        slacks[y==0] = 0
+        layer_infeasible = []
+        min_layer,_ = self.abs2d[infeasible_relus[0]]
+        # min_layer += 1
+        for relu_idx in infeasible_relus:
+            if(self.abs2d[relu_idx][0]  > min_layer):
+                break
+            layer_infeasible.append(relu_idx)
+        ######## just choose based on sampling
+        SAMPLING = True
+        if(SAMPLING):
+            
+            prev_fixed_relus = [[layer_idx,relu_idx, 1] for layer_idx,relu_idx in self.nn.active_relus] 
+            prev_fixed_relus += [[layer_idx,relu_idx, 0] for layer_idx,relu_idx in self.nn.inactive_relus] 
+            pairs_idx = [self.abs2d[n_idx] for n_idx in layer_infeasible]
+            l_idx,n_idx,phase = pick_largest_ub(self.nn, self.samples,self.phases,self.samples_outs,pairs_idx, prev_fixed_relus, 0)
+            return self._2dabs[l_idx][n_idx],phase
+            counts = count_changes_layer(self.nn,min_layer,self.phases,prev_fixed_relus)
+            to_pick_from = counts[np.array(layer_infeasible) - self.layer_start_idx[min_layer]]
+            relu_idx = np.argmin([(act + inact)/2 for act,inact in to_pick_from])
+            phase = np.argmin(to_pick_from[relu_idx])
+            return layer_infeasible[relu_idx] ,phase
+        #######################################
+        if(len(layer_infeasible) == 1):
+            return infeasible_relus[0], 1 - infeasible_relus[0]
+        layer_slacks = slacks[layer_infeasible]
+        top_k = np.argsort(layer_slacks)
+        top_k = top_k[-k:]
+        W = self.nn.layers[min_layer]['weights'][top_k]
+        b = self.nn.layers[min_layer]['bias'][top_k]
+        if(min_layer > 1):
+            W,b = self.get_effective_weights(W,b,min_layer)
+        b = -b
+        c = W.dot(x) 
+        idxs = np.where(c > b)[0]
+        W[idxs] = -W[idxs]
+        b[idxs] = -b[idxs]
+        # prev_layer_bounds = np.hstack((self.nn.layers[min_layer-1]['Relu_lb'],self.nn.layers[min_layer-1]['Relu_ub']))
+        poset = Poset(self.nn.input_bound,W,b,x)
+        poset.build_poset()
+        if(len(poset.hashMap) < 2):
+            return -1,None
+        compute_successors(poset.root)
+        successors = [child.num_successors for child in poset.root.children]
+        print(successors)
+        inverted_relu = poset.root.children[np.argmin(successors)].fixed_faces.pop()
+        min_idx = top_k[inverted_relu]
+        relu_idx = layer_infeasible[min_idx]
+        phase = 1
+        if(min_idx in idxs):
+            phase = 0
+        return relu_idx,phase
+        # except Exception as e:
+        #     print(e)
+        
 
     def dfs(self, infeasible_relus,fixed_relus,layers_masks, depth = 0,undecided_relus = [],paths = 0):
         #node to be handled
         status = 'UNKNOWN'
         # if(depth>self.MAX_DEPTH):
-        #     print("MAX depth")
+         #     print("MAX depth")
         #     return status
-        relu_idx,phase =  infeasible_relus[0]
+        relu_idx = None
+        relu_idx,phase = self.pick_one(undecided_relus,fixed_relus)
+        # print(relu_idx,phase)
+        if(relu_idx is None):
+            # print('Used orig')
+            relu_idx,phase =  infeasible_relus[0]
         nonlin_relus = copy(undecided_relus)
         min_layer,_ = self.abs2d[nonlin_relus[0]]
         #relu_idx,phase = self.split_neuron(infeasible_relus,min_layer*52 +5)
@@ -329,13 +440,16 @@ class Solver():
         self.fix_relu(fixed_relus)
         self.model.optimize()
         if(self.model.Status != 3): #Feasible solution
+            self.layer_stats[layer_idx-1][0] +=  1
             SAT,infeasible_set = self.check_SAT()
             valid = self.check_potential_CE(np.array([self.model.getVarByName('x[%d]'%i).X for i in range(len(self.state_vars))]).reshape((-1,1)))
             if(SAT or valid):
-                # print('Solution found')
+                #print('Solution found')
                 status = 'SolFound'  
             else:
                 status = self.dfs(infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+        else:
+            self.layer_stats[layer_idx-1][1] += 1
         if(status != 'SolFound'):
             paths[0] += 1 
             # if(self.model.Status == 3):
@@ -352,20 +466,23 @@ class Solver():
             self.fix_relu(fixed_relus)
             self.model.optimize()
             if(self.model.Status != 3): #Feasible solution
+                self.layer_stats[layer_idx-1][0] += 1
                 SAT,infeasible_set = self.check_SAT()
                 valid = self.check_potential_CE(np.array([self.model.getVarByName('x[%d]'%i).X for i in range(len(self.state_vars))]).reshape((-1,1)))
                 if(SAT or valid):
-                    # print('Solution found')
+                    #print('Solution found')
                     status = 'SolFound'  
                 else:
                     status = self.dfs(infeasible_set,copy(fixed_relus),layers_masks,depth +1,nonlin_relus,paths)
             else:
                 status = 'UNSAT'
+                self.layer_stats[layer_idx-1][1] += 1
 
             #if(status != 'SolFound'):
             #    status = 'UNSAT'
         
             self.set_neuron_bounds(layer_idx,neuron_idx,-1,layers_masks)
+        
         return status
             
 
@@ -383,49 +500,16 @@ class Solver():
         slacks[inactive] = y[inactive]
         offset = 0
         infeas_relus=[]
-        # for layer_size in self.nn.layers_sizes[1:-1]:
-        #     active = active[active >= offset]
-        #     inactive = inactive[inactive >= offset]
-        #     layer_infeas = active[active < offset + layer_size]
-        #     layer_infeas = np.concatenate((layer_infeas,inactive[inactive < offset + layer_size]))
-        #     slack_infeas = slacks[layer_infeas]
-        #     order_infeas = np.flip(np.argsort(slack_infeas))
-        #     # order_infeas = np.argsort(slack_infeas)
-        #     layer_infeas = layer_infeas[order_infeas]
-        #     for neuron in layer_infeas:
-        #         infeas_relus.append((neuron+self.__input_dim,int(net[neuron] > eps)))
-        #     offset += layer_size
-    
-    
+       
         active = list(np.where(active_infeas == True)[0] + self.__input_dim)
         inactive = list(np.where(inactive_infeas == True)[0] + self.__input_dim)            
         infeas_relus = [(n_idx,0) for n_idx in inactive]
         infeas_relus +=  [(n_idx,1) for n_idx in active]
         infeas_relus = sorted(infeas_relus)
         if(len(infeas_relus) is not 0):
-            infeas_relus = [(idx,phase) for idx,phase in infeas_relus if idx not in self.fixed_relus]
+            infeas_relus = [(idx,phase) for idx,phase in infeas_relus]
             return False, infeas_relus
         return True, None
-
-    def quickXplain_predicate(self,constraints):
-        fixed_relus = sorted((constraints))
-        nn = deepcopy(self.orig_net)
-        layers_masks = []
-        for layer_idx,layer in self.nn.layers.items():
-            if(layer_idx < 1):
-                continue
-            layers_masks += [-1*np.ones((layer['num_nodes'],1))]
-        for relu,phase in fixed_relus:
-            layer_idx,relu_idx = self.abs2d[relu]
-            layers_masks[layer_idx-1][relu_idx] = phase
-        nn.recompute_bounds(layers_masks)
-        self.nn = nn
-        self.__prepare_problem()
-        self.fix_relu(fixed_relus)
-        self.model.optimize()
-        if(self.model.Status == 2):
-            return True
-        return False
 
     def __prepare_problem(self):
         #clear all constraints
@@ -450,7 +534,7 @@ class Solver():
             ub[ub > 0] = 1
             weights += list(init_weight * ub)
             # weights += [1] * layer_size
-            init_weight *= 1000
+            init_weight *= 10000
 
         obj = LinExpr()
         if(fixed_relus):

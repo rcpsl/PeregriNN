@@ -205,6 +205,24 @@ class NeuralNetworkStruct(object):
         self.__compute_sym_bounds()
 
 
+    def get_phases(self, input):
+
+        #input shapes N*D where N is the batch size and D is the dim of input point
+        phases = []
+        prev = input
+        for index in range(self.num_layers):
+            if(index == 0):
+                continue
+            W = self.layers[index]['weights']
+            b = self.layers[index]['bias']
+            net = prev @ W.T + b.T
+            phases.append(net > 1E-5)
+            if(self.layers[index]['type'] == 'output'):
+                prev =  net
+            else:
+                prev = np.maximum(0,net)
+        return phases, prev
+
     def evaluate(self,input):
         prev = input
         for index in range(self.num_layers):

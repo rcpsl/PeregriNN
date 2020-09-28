@@ -7,6 +7,7 @@ import sys,os
 import glob
 from NeuralNetwork import *
 from utils.sample_network import * 
+from utils.utils import *
 from multiprocessing import Process,Value
 eps = 1E-3
 
@@ -24,13 +25,17 @@ def check_potential_CE(x):
         return True
     return False
 
+def check_prop_samples(nn,samples):
+    _,outs = nn.get_phases(samples)
+    outs = np.argmax(outs,axis = 1)
+    return np.any(outs  == 0)
 
 def run_instance(nn, input_bounds, check_property, adv_found):
     nn.set_bounds(input_bounds)
     if np.max(nn.layers[7]['conc_lb'][1:]) > nn.layers[7]['conc_ub'][0]:
         # print("Problem Infeasible")
         return
-    solver = Solver(network = nn,property_check=check_property)
+    solver = Solver(network = nn,property_check=check_property, samples = samples)
     #Add Input bounds as constraints in the solver
     #TODO: Make the solver apply the bound directly from the NN object
     input_vars = [solver.state_vars[i] for i in range(len(solver.state_vars))]
@@ -85,6 +90,11 @@ if __name__ == "__main__":
             # print("Problem Infeasible")
             print_summary(network,2,'safe',time()-instance_start)
             continue
+        samples = sample_network(nnet,input_bounds,15000)
+        SAT = check_prop_samples(nnet,samples)
+        if(SAT):
+            print_summary(network,2,'unsafe using samples',time()-instance_start)
+            continue
         problems = split_input(nnet,input_bounds,512)
         # problems = [input_bounds]
         # print(len(problems),"subproblems")
@@ -95,7 +105,9 @@ if __name__ == "__main__":
             signal.alarm(TIMEOUT)
             for input_bounds in problems:
                 nn = deepcopy(nnet)
+                samples = sample_network(nnet,input_bounds,15000)
                 # input_bounds = problems[k]
+                #run_instance(nn, input_bounds, check_potential_CE,adv_found)
                 p = Process(target=run_instance, args=(nn, input_bounds, check_potential_CE,adv_found))
                 p.start()
                 processes.append(p)
@@ -105,7 +117,7 @@ if __name__ == "__main__":
                 n_alive = np.sum([p.is_alive() for p in processes])
                 if(n_alive != prev_n_alive):
                     prev_n_alive = n_alive
-                    # print('Progress %d/%d' %(len(problems)-n_alive,len(problems)))
+                    print('Progress %d/%d' %(len(problems)-n_alive,len(problems)))
                     
             if(adv_found.value == 1):
                 # print("Adv found")

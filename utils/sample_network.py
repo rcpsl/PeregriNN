@@ -7,30 +7,84 @@ from copy import deepcopy,copy
 def print_summary(network,prop, safety, time):
     print('%s,%d,%s,%f'%(network[20:23],prop,safety,time))
     
-def sample_network(nn,bounds):
+def sample_network(nn,bounds,num_samples):
     start  = time()
     lower_bounds, upper_bounds = bounds[:,0],bounds[:,1]
-    err_bound = (upper_bounds - lower_bounds)/10.
-    num_samples = 25
-    global_err = []
-    for _ in range(num_samples):
-        sample = uniform(lower_bounds, upper_bounds)
-        activations = nn.evaluate(sample)
-        activations[activations>0] = 1
-        activations[activations<=0] = 0
-        err = []
-        n_samples = 5
-        for _ in range(n_samples):
-            new_sample = uniform(sample-err_bound, sample + err_bound)
-            new_act = nn.evaluate(new_sample)
-            new_act[new_act>0] = 1
-            new_act[new_act<=0] = 0
-            err.append(np.sum(new_act != activations))
-        global_err.append(sum(err))
-    disparity = np.mean(global_err)
-    # print(time()-start)
-    return disparity
+    np.random.seed(5)
+    samples = np.random.uniform(lower_bounds, upper_bounds,size = (num_samples,len(lower_bounds)))
+    #
+    # phases,y = nn.get_phases(samples)
+    # phases = phases[:-1]
+    # count_regions(nn,phases)
+    return samples
 
+def count_regions(nn, phases):
+    
+    all_phases = np.zeros((phases[0].shape[0],0))
+    regions = {}
+    fixed_relus = [neuron_idx for layer,neuron_idx in nn.active_relus + nn.inactive_relus if layer ==1] 
+    top_k = list(set(range(nn.layers_sizes[1])) - set(fixed_relus))
+    for layer_phase in phases:
+        all_phases = np.hstack((all_phases,layer_phase)).astype(int)
+    for sample_phase in all_phases:
+        fl = int(np.array2string(sample_phase[top_k],max_line_width = 10000000, separator = '')[1:-1],2)
+        hash_val = hash(fl)
+        if(hash_val in regions):
+            regions[hash_val] += 1
+        else:
+            regions[hash_val] = 1
+            # regions[has]
+
+    return all_phases
+
+
+def count_changes_layer(nn,layer_idx,phases,fixed_relus):
+   
+    layer_counts = []
+    neurons_counts = []
+    for neuron_idx in range(nn.layers_sizes[layer_idx]):
+        active_samples = np.where(phases[layer_idx-1][:,neuron_idx]  == True)[0]
+        inactive_samples = np.where(phases[layer_idx-1][:,neuron_idx]  == False)[0]
+        for fixed_neuron in fixed_relus:
+            l_idx,n_idx,phase = fixed_neuron
+            active_samples = np.where(phases[l_idx-1][active_samples,n_idx]  == phase)[0]
+            inactive_samples = np.where(phases[l_idx-1][inactive_samples,n_idx]  == phase)[0]
+        active_changes = 0
+        inactive_changes = 0
+        for layer_phases in phases[layer_idx-1:]:
+            if(active_samples.shape[0] > 0):
+                active_count = np.sum(layer_phases[active_samples],axis = 0)
+                active_changes += np.sum(np.logical_and(active_count > 0 , active_count < active_samples.shape[0]))
+            if(inactive_samples.shape[0] > 0):
+                inactive_count = np.sum(layer_phases[inactive_samples],axis = 0)
+                inactive_changes += np.sum(np.logical_and(inactive_count > 0 , inactive_count < inactive_samples.shape[0]))
+
+        neurons_counts.append((active_changes,inactive_changes))
+    return np.array(neurons_counts)
+    pass
+
+def count_changes(nn,phases):
+   
+    layer_counts = []
+    for layer_idx in range(1,nn.num_layers-1):
+        neurons_counts = []
+        for neuron_idx in range(nn.layers_sizes[layer_idx]):
+            active_samples = np.where(phases[layer_idx-1][:,neuron_idx]  == True)[0]
+            inactive_samples = np.where(phases[layer_idx-1][:,neuron_idx]  == False)[0]
+            active_changes = 0
+            inactive_changes = 0
+            for layer_phases in phases[layer_idx-1:]:
+                if(active_samples.shape[0] > 0):
+                    active_count = np.sum(layer_phases[active_samples],axis = 0)
+                    active_changes += np.sum(np.logical_and(active_count > 0 , active_count < active_samples.shape[0]))
+                if(inactive_samples.shape[0] > 0):
+                    inactive_count = np.sum(layer_phases[inactive_samples],axis = 0)
+                    inactive_changes += np.sum(np.logical_and(inactive_count > 0 , inactive_count < inactive_samples.shape[0]))
+
+            neurons_counts.append((active_changes,inactive_changes))
+        layer_counts.append(neurons_counts)
+    return np.array(layer_counts)
+    pass
 
 def split_interval(interval_bound,dim_to_split):
     int1 = np.copy(interval_bound)
@@ -97,10 +151,8 @@ def pick_dim(nn,bounds):
         nn2.set_bounds(int2)
         f_relus1 = len(nn1.active_relus) + len(nn1.inactive_relus)
         f_relus2 = len(nn2.active_relus) + len(nn2.inactive_relus)
-        avg = f_relus1 + f_relus2
-        # if(f_relus1 > max_stable or f_relus2 > max_stable):
-        if avg > max_stable:
-            max_stable = avg
+        if(f_relus1 > max_stable or f_relus2 > max_stable):
+            max_stable = max(f_relus1,f_relus2)
             split_dim = dim
             interval1,interval2 = int1,int2
 

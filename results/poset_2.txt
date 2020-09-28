@@ -1,0 +1,344 @@
+Using TensorFlow backend.
+Checking property 2 on s/ACASXU_run2a_1_1_batch_2000.nnet
+Progress 469/512
+Progress 471/512
+Progress 472/512
+Progress 473/512
+Progress 474/512
+Progress 475/512
+Progress 477/512
+Progress 478/512
+Progress 479/512
+Progress 480/512
+Progress 483/512
+Progress 484/512
+Progress 485/512
+Progress 486/512
+Progress 488/512
+Progress 491/512
+Progress 492/512
+Progress 493/512
+Progress 495/512
+Progress 496/512
+Progress 497/512
+Progress 498/512
+Progress 499/512
+Progress 500/512
+Progress 501/512
+1_1,2,timeout,300.114112
+Checking property 2 on s/ACASXU_run2a_1_2_batch_2000.nnet
+Progress 428/512
+Progress 429/512
+Progress 430/512
+Progress 431/512
+Progress 432/512
+Solution found
+Progress 433/512
+1_2,2,unsafe,84.316432
+Checking property 2 on s/ACASXU_run2a_1_3_batch_2000.nnet
+Progress 366/512
+Progress 386/512
+Progress 387/512
+Progress 389/512
+Progress 390/512
+Progress 391/512
+Progress 392/512
+Progress 393/512
+Progress 395/512
+Progress 396/512
+Progress 397/512
+Progress 399/512
+Progress 400/512
+Progress 401/512
+Progress 402/512
+Progress 405/512
+Progress 406/512
+Progress 407/512
+1_3,2,timeout,300.174453
+Checking property 2 on s/ACASXU_run2a_1_4_batch_2000.nnet
+1_4,2,unsafe,26.813134
+Checking property 2 on s/ACASXU_run2a_1_5_batch_2000.nnet
+Progress 430/512
+Progress 431/512
+Progress 432/512
+Progress 433/512
+Progress 434/512
+Progress 435/512
+Progress 436/512
+Progress 438/512
+Progress 439/512
+Progress 442/512
+Progress 443/512
+Progress 444/512
+Progress 445/512
+Progress 446/512
+Progress 448/512
+Progress 449/512
+Progress 450/512
+Solution found
+Progress 451/512
+1_5,2,unsafe,277.638583
+Checking property 2 on s/ACASXU_run2a_1_6_batch_2000.nnet
+Progress 376/512
+Progress 401/512
+Progress 403/512
+Progress 404/512
+Progress 406/512
+Progress 407/512
+Progress 408/512
+Progress 409/512
+Progress 410/512
+Progress 411/512
+Progress 412/512
+Progress 413/512
+Progress 414/512
+Progress 415/512
+Progress 416/512
+Progress 417/512
+Solution found
+Progress 418/512
+Progress 419/512
+1_6,2,unsafe,266.999362
+Checking property 2 on s/ACASXU_run2a_1_7_batch_2000.nnet
+Progress 439/512
+Progress 447/512
+Progress 448/512
+Progress 449/512
+Progress 450/512
+Progress 451/512
+Progress 453/512
+Progress 456/512
+Progress 457/512
+Progress 458/512
+Progress 459/512
+Progress 460/512
+Progress 462/512
+Progress 463/512
+Progress 468/512
+Progress 469/512
+Progress 470/512
+Progress 472/512
+Progress 473/512
+Progress 474/512
+Progress 476/512
+Progress 479/512
+Progress 481/512
+Progress 482/512
+Progress 484/512
+Progress 485/512
+Progress 486/512
+1_7,2,timeout,300.182709
+Checking property 2 on s/ACASXU_run2a_1_8_batch_2000.nnet
+Progress 374/512
+Progress 402/512
+Progress 403/512
+Progress 404/512
+Progress 405/512
+Progress 406/512
+Progress 407/512
+Progress 408/512
+Progress 409/512
+Progress 411/512
+Progress 412/512
+Progress 413/512
+Progress 414/512
+Progress 415/512
+Progress 417/512
+Progress 419/512
+Progress 422/512
+Progress 424/512
+Progress 425/512
+Progress 426/512
+Progress 428/512
+Progress 429/512
+1_8,2,timeout,300.103349
+Checking property 2 on s/ACASXU_run2a_1_9_batch_2000.nnet
+Progress 392/512
+Progress 430/512
+Progress 431/512
+Progress 433/512
+Progress 434/512
+Progress 435/512
+Progress 437/512
+Progress 438/512
+Progress 439/512
+Progress 440/512
+Progress 442/512
+Progress 444/512
+Progress 445/512
+Progress 446/512
+Progress 447/512
+Progress 448/512
+1_9,2,timeout,300.152141
+Checking property 2 on s/ACASXU_run2a_2_1_batch_2000.nnet
+Solution found
+2_1,2,unsafe,22.187844
+Checking property 2 on s/ACASXU_run2a_2_2_batch_2000.nnet
+2_2,2,unsafe,30.631583
+Checking property 2 on s/ACASXU_run2a_2_3_batch_2000.nnet
+2_3,2,unsafe,22.426646
+Checking property 2 on s/ACASXU_run2a_2_4_batch_2000.nnet
+Solution found
+Solution found
+Solution found
+Solution found
+2_4,2,unsafe,20.764960
+Checking property 2 on s/ACASXU_run2a_2_5_batch_2000.nnet
+Solution found
+2_5,2,unsafe,27.074859
+Checking property 2 on s/ACASXU_run2a_2_6_batch_2000.nnet
+Solution found
+Solution found
+2_6,2,unsafe,30.420826
+Checking property 2 on s/ACASXU_run2a_2_7_batch_2000.nnet
+2_7,2,unsafe,40.724541
+Checking property 2 on s/ACASXU_run2a_2_8_batch_2000.nnet
+2_8,2,unsafe,32.342460
+Checking property 2 on s/ACASXU_run2a_2_9_batch_2000.nnet
+2_9,2,unsafe,33.199596
+Checking property 2 on s/ACASXU_run2a_3_1_batch_2000.nnet
+3_1,2,unsafe,23.791596
+Checking property 2 on s/ACASXU_run2a_3_2_batch_2000.nnet
+Solution found
+Progress 440/512
+3_2,2,unsafe,26.353144
+Checking property 2 on s/ACASXU_run2a_3_3_batch_2000.nnet
+Progress 355/512
+Progress 366/512
+Progress 367/512
+Progress 368/512
+Progress 369/512
+Progress 370/512
+Progress 372/512
+Progress 374/512
+Progress 376/512
+Progress 378/512
+Progress 379/512
+Progress 380/512
+Progress 381/512
+Progress 382/512
+Progress 383/512
+Progress 384/512
+Progress 385/512
+3_3,2,timeout,300.158346
+Checking property 2 on s/ACASXU_run2a_3_4_batch_2000.nnet
+3_4,2,unsafe,20.189408
+Checking property 2 on s/ACASXU_run2a_3_5_batch_2000.nnet
+Solution found
+Solution found
+Solution found
+3_5,2,unsafe,22.125107
+Checking property 2 on s/ACASXU_run2a_3_6_batch_2000.nnet
+3_6,2,unsafe,36.240487
+Checking property 2 on s/ACASXU_run2a_3_7_batch_2000.nnet
+Progress 262/512
+Progress 321/512
+Progress 323/512
+Progress 326/512
+Progress 327/512
+Progress 328/512
+Progress 329/512
+Progress 330/512
+Progress 331/512
+Progress 332/512
+Progress 333/512
+Progress 334/512
+Progress 335/512
+Progress 336/512
+Progress 338/512
+3_7,2,unsafe,175.527599
+Checking property 2 on s/ACASXU_run2a_3_8_batch_2000.nnet
+3_8,2,unsafe,31.611631
+Checking property 2 on s/ACASXU_run2a_3_9_batch_2000.nnet
+Solution found
+Solution found
+3_9,2,unsafe,26.841243
+Checking property 2 on s/ACASXU_run2a_4_1_batch_2000.nnet
+4_1,2,unsafe,38.747446
+Checking property 2 on s/ACASXU_run2a_4_2_batch_2000.nnet
+Progress 232/512
+Progress 248/512
+Progress 250/512
+Progress 252/512
+Progress 253/512
+Progress 254/512
+Progress 256/512
+Progress 259/512
+Progress 260/512
+Progress 261/512
+Progress 262/512
+Progress 265/512
+Progress 267/512
+Progress 268/512
+Progress 270/512
+Progress 271/512
+Progress 273/512
+Progress 275/512
+Progress 276/512
+Progress 277/512
+Progress 278/512
+Progress 280/512
+Progress 283/512
+Progress 284/512
+Progress 285/512
+Progress 286/512
+Progress 288/512
+Progress 289/512
+Progress 291/512
+Progress 292/512
+Progress 293/512
+Progress 294/512
+4_2,2,timeout,300.197183
+Checking property 2 on s/ACASXU_run2a_4_3_batch_2000.nnet
+Solution found
+4_3,2,unsafe,25.152682
+Checking property 2 on s/ACASXU_run2a_4_4_batch_2000.nnet
+Solution found
+4_4,2,unsafe,17.817380
+Checking property 2 on s/ACASXU_run2a_4_5_batch_2000.nnet
+4_5,2,unsafe,33.325665
+Checking property 2 on s/ACASXU_run2a_4_6_batch_2000.nnet
+4_6,2,unsafe,28.212453
+Checking property 2 on s/ACASXU_run2a_4_7_batch_2000.nnet
+4_7,2,unsafe,36.151398
+Checking property 2 on s/ACASXU_run2a_4_8_batch_2000.nnet
+4_8,2,unsafe,25.703915
+Checking property 2 on s/ACASXU_run2a_4_9_batch_2000.nnet
+4_9,2,unsafe,36.263228
+Checking property 2 on s/ACASXU_run2a_5_1_batch_2000.nnet
+Solution found
+Solution found
+5_1,2,unsafe,20.882260
+Checking property 2 on s/ACASXU_run2a_5_2_batch_2000.nnet
+Solution found
+5_2,2,unsafe,26.843155
+Checking property 2 on s/ACASXU_run2a_5_3_batch_2000.nnet
+Progress 436/512
+Progress 438/512
+Progress 439/512
+Progress 441/512
+Progress 442/512
+Progress 443/512
+Progress 444/512
+Progress 445/512
+Progress 446/512
+Progress 448/512
+5_3,2,timeout,300.166889
+Checking property 2 on s/ACASXU_run2a_5_4_batch_2000.nnet
+Solution found
+Solution found
+5_4,2,unsafe,21.608356
+Checking property 2 on s/ACASXU_run2a_5_5_batch_2000.nnet
+Solution found
+5_5,2,unsafe,25.820049
+Checking property 2 on s/ACASXU_run2a_5_6_batch_2000.nnet
+5_6,2,unsafe,34.574999
+Checking property 2 on s/ACASXU_run2a_5_7_batch_2000.nnet
+Solution found
+Solution found
+Solution found
+5_7,2,unsafe,31.472956
+Checking property 2 on s/ACASXU_run2a_5_8_batch_2000.nnet
+5_8,2,unsafe,36.517778
+Checking property 2 on s/ACASXU_run2a_5_9_batch_2000.nnet
+5_9,2,unsafe,36.332450
