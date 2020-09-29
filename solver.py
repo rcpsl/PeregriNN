@@ -11,25 +11,12 @@ import re
 import cdd
 from poset import *
 from utils.sample_network import *
+from hitandrun import *
+from polytope import *
 eps = 1E-5
 
 
-def pick_largest_ub(nn,samples,phases,y,neurons_idxs, fixed_neurons, output_idx):
-    ret = [neurons_idxs[0][0],neurons_idxs[0][1],0]
-    # phases,y = nn.get_phases(samples)
-    samples_idxs = list(range(len(samples)))
-    for l_idx,n_idx,phase in fixed_neurons:
-        samples_idxs = np.where(phases[l_idx-1][samples_idxs,n_idx]  == phase)[0]
-    max_count = -1E5
-    for l_idx, n_idx in neurons_idxs:
-        for phase in [True, False]:
-            outs = y[np.where(phases[l_idx-1][samples_idxs,n_idx] == phase)[0]]
-            if(outs.shape[0] > 0):
-                count_prop = len(np.where(np.argmax(outs,axis =1)== output_idx)[0])
-                if(count_prop > max_count):
-                    max_count = count_prop
-                    ret = [l_idx,n_idx,phase]
-    return ret
+
 class Solver():
 
     def __init__(self, network = None, target = -1,maxIter = 100000,property_check=None, samples = None):
@@ -346,6 +333,53 @@ class Solver():
         b_ = W.dot(b_ *layer_phases.reshape((-1,1))) + b
         return W_,b_
 
+    def pick_largest_ub(self, nn,samples,phases,y,neurons_idxs, fixed_neurons, output_idx):
+        ret = [neurons_idxs[0][0],neurons_idxs[0][1],0]
+        min_layer = neurons_idxs[0][0]
+        num_samples = 100
+        samples_idxs = list(range(num_samples))
+        RESAMPLE = True
+        if(RESAMPLE):
+            A = np.zeros((0,nn.image_size))
+            b = np.zeros((0,1))
+            for l_idx,n_idx,phase in fixed_neurons:
+                if(l_idx > min_layer):
+                    break
+                W,c = nn.layers[l_idx]['weights'][n_idx].reshape((1,-1)),nn.layers[l_idx]['bias'][n_idx]
+                if(l_idx > 1):
+                    W,c = self.get_effective_weights(W,c,l_idx)
+                c = -c
+                if phase == 1:
+                    W = -W
+                    c = -c
+                A = np.vstack((A,W))
+                b = np.vstack((b,c))
+            A_ = np.vstack((np.eye(A.shape[1]),-np.eye(A.shape[1])))
+            b_ = np.vstack((nn.input_bound[:,1].reshape((-1,1)),-nn.input_bound[:,0].reshape((-1,1))))
+            A = np.vstack((A,A_))
+            b = np.vstack((b,b_))
+            polytope = Polytope(A=A, b=b.flatten())
+            x0 = np.array([self.model.getVarByName('x[%d]'%idx).X for idx in range(len(self.state_vars))])
+            hitandrun = HitAndRun(polytope=polytope, starting_point=x0)
+            samples = hitandrun.get_samples(n_samples=num_samples) 
+            phases,y = nn.get_phases(samples)
+
+        # phases,y = nn.get_phases(samples)
+        else:
+            for l_idx,n_idx,phase in fixed_neurons:
+                samples_idxs = np.where(phases[l_idx-1][samples_idxs,n_idx]  == phase)[0]
+
+        max_count = -1E5
+        for l_idx, n_idx in neurons_idxs:
+            for phase in [True, False]:
+                outs = y[np.where(phases[l_idx-1][samples_idxs,n_idx] == phase)[0]]
+                if(outs.shape[0] > 0):
+                    count_prop = len(np.where(np.argmax(outs,axis =1)== output_idx)[0])
+                    if(count_prop > max_count):
+                        max_count = count_prop
+                        ret = [l_idx,n_idx,phase]
+        return ret
+
     def pick_one(self, infeasible_relus, fixed_relus):
         #Assume infeasible_relus are sorted
         # try:
@@ -368,8 +402,9 @@ class Solver():
             
             prev_fixed_relus = [[layer_idx,relu_idx, 1] for layer_idx,relu_idx in self.nn.active_relus] 
             prev_fixed_relus += [[layer_idx,relu_idx, 0] for layer_idx,relu_idx in self.nn.inactive_relus] 
+            prev_fixed_relus = sorted(prev_fixed_relus)
             pairs_idx = [self.abs2d[n_idx] for n_idx in layer_infeasible]
-            l_idx,n_idx,phase = pick_largest_ub(self.nn, self.samples,self.phases,self.samples_outs,pairs_idx, prev_fixed_relus, 0)
+            l_idx,n_idx,phase = self.pick_largest_ub(self.nn, self.samples,self.phases,self.samples_outs,pairs_idx, prev_fixed_relus, 0)
             return self._2dabs[l_idx][n_idx],phase
             counts = count_changes_layer(self.nn,min_layer,self.phases,prev_fixed_relus)
             to_pick_from = counts[np.array(layer_infeasible) - self.layer_start_idx[min_layer]]
