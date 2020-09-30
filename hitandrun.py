@@ -55,10 +55,8 @@ class HitAndRun(object):
             self.thin = thin
 
         # keep only one every thin
-        for i in tqdm.tqdm(
-            range(self.n_samples),
-            desc="hit-and-run steps:"
-        ):
+        #for i in tqdm.tqdm(range(self.n_samples), desc="hit-and-run steps:"):
+        for i in range(self.n_samples):
             for _ in range(self.thin):
                 self._step()
             self._add_current_to_samples()

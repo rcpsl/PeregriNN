@@ -369,14 +369,15 @@ class Solver():
             for l_idx,n_idx,phase in fixed_neurons:
                 samples_idxs = np.where(phases[l_idx-1][samples_idxs,n_idx]  == phase)[0]
 
-        max_count = -1E5
+        max_bound = -1E5
         for l_idx, n_idx in neurons_idxs:
             for phase in [True, False]:
                 outs = y[np.where(phases[l_idx-1][samples_idxs,n_idx] == phase)[0]]
                 if(outs.shape[0] > 0):
-                    count_prop = len(np.where(np.argmax(outs,axis =1)== output_idx)[0])
-                    if(count_prop > max_count):
-                        max_count = count_prop
+                    #count_prop = len(np.where(np.argmax(outs,axis =1)== output_idx)[0])
+                    count_prop = np.max(outs[output_idx,:])
+                    if(count_prop > max_bound):
+                        max_bound = count_prop
                         ret = [l_idx,n_idx,phase]
         return ret
 
