@@ -39,17 +39,16 @@ def run_instance(nn, input_bounds, check_property, adv_found):
     solver = Solver(network = nn,property_check=check_property, samples = samples)
     #Add Input bounds as constraints in the solver
     #TODO: Make the solver apply the bound directly from the NN object
-    input_vars = [solver.state_vars[i] for i in range(len(solver.state_vars))]
     A = np.eye(nn.image_size)
     lower_bound = input_bounds[:,0]
     upper_bound = input_bounds[:,1]
-    solver.add_linear_constraints(A,input_vars,lower_bound,GRB.GREATER_EQUAL)
-    solver.add_linear_constraints(A,input_vars,upper_bound,GRB.LESS_EQUAL)
+    solver.add_linear_constraints(A,solver.in_vars_names,lower_bound,GRB.GREATER_EQUAL)
+    solver.add_linear_constraints(A,solver.in_vars_names,upper_bound,GRB.LESS_EQUAL)
 
-    output_vars = [solver.out_vars[i] for i in range(len(solver.out_vars))]
+    
     A = [[1,-1,0,0,0],[1,0,-1,0,0],[1,0,0,-1,0],[1,0,0,0,-1]]
     b = [0] * 4
-    solver.add_linear_constraints(A,output_vars,b,GRB.GREATER_EQUAL)
+    solver.add_linear_constraints(A,solver.out_vars_names,b,GRB.GREATER_EQUAL)
 
 
 
@@ -108,7 +107,7 @@ if __name__ == "__main__":
                 nn = deepcopy(nnet)
                 samples = sample_network(nnet,input_bounds,15000)
                 # input_bounds = problems[k]
-                #run_instance(nn, input_bounds, check_potential_CE,adv_found)
+                # run_instance(nn, input_bounds, check_potential_CE,adv_found)
                 p = Process(target=run_instance, args=(nn, input_bounds, check_potential_CE,adv_found))
                 p.start()
                 processes.append(p)
