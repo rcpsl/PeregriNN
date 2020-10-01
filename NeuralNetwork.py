@@ -80,7 +80,7 @@ class NeuralNetworkStruct(object):
                 self.active_relus += [[layer_idx,idx] for idx in active_neurons]
                 inactive_neurons = np.where(layer_mask == 0)[0]
                 self.inactive_relus += [[layer_idx,idx] for idx in inactive_neurons]
-                layer_sym,error_vec = layer_sym.forward_relu(layer = layer_idx,nonlin_relus = self.nonlin_relus,inact_relus=self.inactive_relus,act_relus= self.active_relus)
+                layer_sym,error_vec = layer_sym.forward_relu(layer = layer_idx,nonlin_relus = self.nonlin_relus,inact_relus=self.inactive_relus,act_relus= [])
                 layer_sym.lower[active_neurons]  = layer_sym.upper[active_neurons] =  layer['in_sym'].upper[active_neurons]
                 layer_sym.upper[inactive_neurons] = layer_sym.lower[inactive_neurons] = 0      
             layer['Relu_sym'] = layer_sym
