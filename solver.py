@@ -208,7 +208,7 @@ class Solver():
                 # print('Paths:',paths)
 
         
-        return self.model.getVars(),counter_examples,status
+        return self.model.getVars(),status
 
     def fix_relu(self, model, nn, fixed_relus):
         input_vars = [model.getVarByName(var_name) for var_name in self.in_vars_names]
@@ -268,7 +268,7 @@ class Solver():
         else:
             layers_masks[layer_idx-1][neuron_idx] = -1
 
-        self.nn.recompute_bounds(layers_masks)
+        nn.recompute_bounds(layers_masks)
         # bounds = self.update_in_interval()
         # self.nn.input_bound = bounds
         # self.nn.recompute_bounds(layers_masks)
@@ -481,7 +481,7 @@ class Solver():
 
         
         nonlin_relus.remove(relu_idx)
-        print('DFS:',depth,"Setting neuron %d to %d"%(relu_idx,phase))
+        # print('DFS:',depth,"Setting neuron %d to %d"%(relu_idx,phase))
         layers_masks = deepcopy(layers_masks)
         network = deepcopy(nn)
         self.set_neuron_bounds(network,layer_idx,neuron_idx,phase,layers_masks)
@@ -511,12 +511,13 @@ class Solver():
             #        self.set_neuron_bounds(layer_idx,neuron_idx,-1,layers_masks)
             #        return status
 
+            model1 = model.copy()
+            network = deepcopy(nn)
             phase = 1 - phase
             # print('Backtrack, Setting neuron %d to %d'%(relu_idx,phase))
             self.set_neuron_bounds(network, layer_idx,neuron_idx,phase,layers_masks)
             fixed_relus[-1] = [relu_idx,phase]
             # self.__prepare_problem()
-            model1 = model.copy()
             self.fix_relu(model1,network,fixed_relus)
             model1.optimize()
             if(model1.Status != 3): #Feasible solution

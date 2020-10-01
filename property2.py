@@ -44,16 +44,13 @@ def run_instance(nn, input_bounds, check_property, adv_found):
     upper_bound = input_bounds[:,1]
     solver.add_linear_constraints(A,solver.in_vars_names,lower_bound,GRB.GREATER_EQUAL)
     solver.add_linear_constraints(A,solver.in_vars_names,upper_bound,GRB.LESS_EQUAL)
-
     
     A = [[1,-1,0,0,0],[1,0,-1,0,0],[1,0,0,-1,0],[1,0,0,0,-1]]
     b = [0] * 4
     solver.add_linear_constraints(A,solver.out_vars_names,b,GRB.GREATER_EQUAL)
 
-
-
     solver.preprocessing = False
-    nn_in,nn_out,status = solver.solve()
+    nn_in,status = solver.solve()
     if(status == 'SolFound'):
         adv_found.value = 1
 
@@ -77,7 +74,7 @@ if __name__ == "__main__":
     # networks = [networks[-1]]
     raw_lower_bounds = np.array([55947.691, -3.141592, -3.141592, 1145, 0]).reshape((-1,1))
     raw_upper_bounds = np.array([62000, 3.141592, 3.141592, 1200, 60]).reshape((-1,1))
-    for network in networks:
+    for network in networks[1:]:
         instance_start = time()
         # print("Checking property 2 on %s"%network[5:])
         nnet = NeuralNetworkStruct()
@@ -91,10 +88,10 @@ if __name__ == "__main__":
             print_summary(network,2,'safe',time()-instance_start)
             continue
         samples = sample_network(nnet,input_bounds,15000)
-        SAT = check_prop_samples(nnet,samples)
-        if(SAT):
-            print_summary(network,2,'unsafe using samples',time()-instance_start)
-            continue
+        # SAT = check_prop_samples(nnet,samples)
+        # if(SAT):
+        #     print_summary(network,2,'unsafe using samples',time()-instance_start)
+        #     continue
         problems = split_input(nnet,input_bounds,512)
         # problems = [input_bounds]
         # print(len(problems),"subproblems")
@@ -102,7 +99,7 @@ if __name__ == "__main__":
         processes = []
         try:
             signal.signal(signal.SIGALRM, alarm_handler)
-            signal.alarm(TIMEOUT)
+            # signal.alarm(TIMEOUT)
             for input_bounds in problems:
                 nn = deepcopy(nnet)
                 samples = sample_network(nnet,input_bounds,15000)
