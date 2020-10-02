@@ -132,7 +132,7 @@ class Solver():
                         fixed_relus +=1
                     else:
                         factor = (in_ub[neuron_idx]/ (in_ub[neuron_idx]-in_lb[neuron_idx]))[0]
-                        model.addConstr(relu_vars[neuron_abs_idx] <= factor * (net_vars[neuron_abs_idx]- in_lb[neuron_idx]),name="relaxed_%d"%neuron_abs_idx)
+                        model.addConstr(relu_vars[neuron_abs_idx] <= factor * (net_vars[neuron_abs_idx]- in_lb[neuron_idx]),name="%d_relaxed"%neuron_abs_idx)
                         A_up = nn.layers[layer_idx]['Relu_sym'].upper[neuron_idx]
                         model.addConstr(LinExpr(A_up[:-1],state_vars)  + A_up[-1]  >= relu_vars[neuron_abs_idx])
             
@@ -462,11 +462,31 @@ class Solver():
     def fix_after_propgt(self,model,nn):
         fixed_relus  = [(self._2dabs[layer_idx][relu_idx],1) for layer_idx,relu_idx in nn.active_relus] 
         fixed_relus += [(self._2dabs[layer_idx][relu_idx],0) for layer_idx,relu_idx in nn.inactive_relus] 
+
         for relu_idx,phase in fixed_relus:
             if(phase == 1 and model.getConstrByName("%d_active"%relu_idx) is None):
                 model.addConstr(model.getVarByName(self.slack_vars_names[relu_idx]) == 0,name = "%d_active"%relu_idx)
             elif(phase == 0 and model.getConstrByName("%d_active"%relu_idx) is None):
                 model.addConstr(model.getVarByName(self.relu_vars_names[relu_idx]) == 0, name = "%d_inactive"%relu_idx)
+
+        for l_idx, relu_idx in nn.nonlin_relus:
+            abs_idx = self._2dabs[l_idx][relu_idx]
+            relu_var = model.getVarByName(self.relu_vars_names[abs_idx])
+            net_var  = model.getVarByName(self.net_vars_names[abs_idx])
+            in_ub = nn.layers[l_idx]['in_ub'][relu_idx]
+            in_lb = nn.layers[l_idx]['in_lb'][relu_idx]
+            model.remove(model.getConstrByName("%d_relaxed"%abs_idx))
+
+            factor = (in_ub/ in_ub-in_lb )[0]
+            model.addConstr(relu_var <= factor * (net_var- in_lb),name="%d_relaxed"%abs_idx)
+
+        for neuron_idx in range(self.__output_dim):
+            out_var = model.getVarByName(self.out_vars_names[neuron_idx])
+            lb = nn.layers[nn.num_layers-1]['conc_lb'][neuron_idx]
+            ub = nn.layers[nn.num_layers-1]['conc_ub'][neuron_idx]
+            model.addConstr(out_var >= lb)
+            model.addConstr(out_var <= ub)
+           
 
     def dfs(self, model, nn, infeasible_relus,fixed_relus,layers_masks, depth = 0,undecided_relus = [],paths = 0):
 
@@ -491,7 +511,7 @@ class Solver():
 
         
         nonlin_relus.remove(relu_idx)
-        # print('DFS:',depth,"Setting neuron %d to %d"%(relu_idx,phase))
+        print('DFS:',depth,"Setting neuron %d to %d"%(relu_idx,phase))
         layers_masks = deepcopy(layers_masks)
         network = deepcopy(nn)
         model1 = model.copy()

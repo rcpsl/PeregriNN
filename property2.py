@@ -92,7 +92,7 @@ if __name__ == "__main__":
         # if(SAT):
         #     print_summary(network,2,'unsafe using samples',time()-instance_start)
         #     continue
-        problems = split_input(nnet,input_bounds,512)
+        problems = split_input(nnet,input_bounds,1)
         # problems = [input_bounds]
         # print(len(problems),"subproblems")
         adv_found = Value('i',0)
@@ -104,8 +104,8 @@ if __name__ == "__main__":
                 nn = deepcopy(nnet)
                 samples = sample_network(nnet,input_bounds,15000)
                 # input_bounds = problems[k]
-                # run_instance(nn, input_bounds, check_potential_CE,adv_found)
-                p = Process(target=run_instance, args=(nn, input_bounds, check_potential_CE,adv_found))
+                run_instance(nn, input_bounds, check_potential_CE,adv_found)
+                # p = Process(target=run_instance, args=(nn, input_bounds, check_potential_CE,adv_found))
                 p.start()
                 processes.append(p)
             prev_n_alive = -1        
