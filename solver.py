@@ -178,7 +178,7 @@ class Solver():
             # except Exception as e:
             #     print(e)
             status = 'UNSAT'
-            return None,None,status
+            return None,status
         else:   
             status = 'UNKNOWN'
             SAT,infeasible_relus = self.check_SAT(model) 
