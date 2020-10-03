@@ -212,7 +212,7 @@ class Solver():
 
     def fix_relu(self, model, nn, fixed_relus):
         input_vars = [model.getVarByName(var_name) for var_name in self.in_vars_names]
-        for relu_idx, phase in fixed_relus:
+        for relu_idx, phase in fixed_relus[-1:]:
             layer_idx,neuron_idx = self.abs2d[relu_idx]
             A_up = nn.layers[layer_idx]['in_sym'].upper[neuron_idx]
             A_low = A_up
@@ -352,7 +352,7 @@ class Solver():
         min_layer = neurons_idxs[0][0]
         num_samples = 100
         samples_idxs = list(range(num_samples))
-        RESAMPLE = True
+        RESAMPLE = False
         if(RESAMPLE):
             A = np.zeros((0,nn.image_size))
             b = np.zeros((0,1))
@@ -460,13 +460,14 @@ class Solver():
         #     print(e)
         
     def fix_after_propgt(self,model,nn):
+        
         fixed_relus  = [(self._2dabs[layer_idx][relu_idx],1) for layer_idx,relu_idx in nn.active_relus] 
         fixed_relus += [(self._2dabs[layer_idx][relu_idx],0) for layer_idx,relu_idx in nn.inactive_relus]
 
         for relu_idx,phase in fixed_relus:
             if(phase == 1 and model.getConstrByName("%d_active"%relu_idx) is None):
                 model.addConstr(model.getVarByName(self.slack_vars_names[relu_idx]) == 0,name = "%d_active"%relu_idx)
-            elif(phase == 0 and model.getConstrByName("%d_active"%relu_idx) is None):
+            elif(phase == 0 and model.getConstrByName("%d_inactive"%relu_idx) is None):
                 model.addConstr(model.getVarByName(self.relu_vars_names[relu_idx]) == 0, name = "%d_inactive"%relu_idx)
         in_vars  = [model.getVarByName(var_name) for var_name in self.in_vars_names]
         for l_idx, relu_idx in nn.nonlin_relus:
@@ -497,7 +498,6 @@ class Solver():
 
             model.addConstr(out_var >= lb,name = "out_%d_LB"%neuron_idx)
             model.addConstr(out_var <= ub,name = "out_%d_UB"%neuron_idx)
-
             A_up = nn.layers[nn.num_layers-1]['Relu_sym'].upper[neuron_idx]
             A_low = nn.layers[nn.num_layers-1]['Relu_sym'].lower[neuron_idx]
             model.addConstr(LinExpr(A_up[:-1],in_vars)  + A_up[-1]  >= out_var, name = "out_%d_sym_UB"%neuron_idx)
@@ -512,7 +512,7 @@ class Solver():
          #     print("MAX depth")
         #     return status
         relu_idx = None
-        # relu_idx,phase = self.pick_one(model, nn, undecided_relus,fixed_relus)
+        #relu_dx,phase = self.pick_one(model, nn, undecided_relus,fixed_relus)
         # print(relu_idx,phase)
         if(relu_idx is None):
             # print('Used orig')
@@ -527,7 +527,7 @@ class Solver():
 
         
         nonlin_relus.remove(relu_idx)
-        print('DFS:',depth,"Setting neuron %d to %d"%(relu_idx,phase))
+        #print('DFS:',depth,"Setting neuron %d to %d"%(relu_idx,phase))
         layers_masks = deepcopy(layers_masks)
         network = deepcopy(nn)
         model1 = model.copy()
