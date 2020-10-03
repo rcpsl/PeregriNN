@@ -460,6 +460,7 @@ class Solver():
         #     print(e)
         
     def fix_after_propgt(self,model,nn):
+<<<<<<< HEAD
         # state_vars = [model.getVarByName(var_name) for var_name in self.in_vars_names]
         # out_vars = [model.getVarByName(var_name) for var_name in self.out_vars_names]
         # relu_vars  = [model.getVarByName(var_name) for var_name in self.relu_vars_names]
@@ -516,6 +517,9 @@ class Solver():
 
 
 
+=======
+        
+>>>>>>> 8e929952b886a91d1607aafdca337f9916970f4c
         fixed_relus  = [(self._2dabs[layer_idx][relu_idx],1) for layer_idx,relu_idx in nn.active_relus] 
         fixed_relus += [(self._2dabs[layer_idx][relu_idx],0) for layer_idx,relu_idx in nn.inactive_relus]
 
@@ -583,7 +587,11 @@ class Solver():
 
         
         nonlin_relus.remove(relu_idx)
+<<<<<<< HEAD
         # print('DFS:',depth,"Setting neuron %d to %d"%(relu_idx,phase))
+=======
+        #print('DFS:',depth,"Setting neuron %d to %d"%(relu_idx,phase))
+>>>>>>> 8e929952b886a91d1607aafdca337f9916970f4c
         layers_masks = deepcopy(layers_masks)
         network = deepcopy(nn)
         model1 = model.copy()
