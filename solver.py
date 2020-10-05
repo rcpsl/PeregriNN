@@ -597,7 +597,7 @@ class Solver():
         if(model1.Status != 3): #Feasible solution
             self.layer_stats[layer_idx-1][0] +=  1
             SAT,infeasible_set = self.check_SAT(model1)
-            valid = self.check_potential_CE(np.array([model1.getVarByName(var_name).X for var_name in self.in_vars_names]).reshape((-1,1)))
+            valid = self.check_potential_CE(network, np.array([model1.getVarByName(var_name).X for var_name in self.in_vars_names]).reshape((-1,1)))
             if(SAT or valid):
                 #print('Solution found')
                 status = 'SolFound'  
@@ -625,7 +625,7 @@ class Solver():
             if(model1.Status != 3): #Feasible solution
                 self.layer_stats[layer_idx-1][0] += 1
                 SAT,infeasible_set = self.check_SAT(model1)
-                valid = self.check_potential_CE(np.array([model1.getVarByName(var_name).X for var_name in self.in_vars_names]).reshape((-1,1)))
+                valid = self.check_potential_CE(network, np.array([model1.getVarByName(var_name).X for var_name in self.in_vars_names]).reshape((-1,1)))
                 if(SAT or valid):
                     #print('Solution found')
                     status = 'SolFound'  

@@ -8,7 +8,7 @@ import glob
 from NeuralNetwork import *
 from utils.sample_network import * 
 from utils.utils import *
-from multiprocessing import Process,Value
+from multiprocessing import Process,Value,Pool,Event,Manager
 from hitandrun import *
 eps = 1E-3
 
@@ -19,7 +19,7 @@ def alarm_handler(signum, frame):
     # print('TIMEOUT!')
     raise TimeOutException()
 
-def check_potential_CE(x):
+def check_potential_CE(nn, x):
     u = nn.evaluate(x)
     if(np.argmax(u) == 0 ):
         # print("Potential CE success")
@@ -31,7 +31,7 @@ def check_prop_samples(nn,samples):
     outs = np.argmax(outs,axis = 1)
     return np.any(outs  == 0)
 
-def run_instance(nn, input_bounds, check_property, adv_found):
+def run_instance(nn, input_bounds, check_property, adv_found,event):
     nn.set_bounds(input_bounds)
     if np.max(nn.layers[7]['conc_lb'][1:]) > nn.layers[7]['conc_ub'][0]:
         # print("Problem Infeasible")
@@ -53,6 +53,7 @@ def run_instance(nn, input_bounds, check_property, adv_found):
     nn_in,status = solver.solve()
     if(status == 'SolFound'):
         adv_found.value = 1
+#         event.set()
 
 
 if __name__ == "__main__":
@@ -74,7 +75,7 @@ if __name__ == "__main__":
     # networks = [networks[-1]]
     raw_lower_bounds = np.array([55947.691, -3.141592, -3.141592, 1145, 0]).reshape((-1,1))
     raw_upper_bounds = np.array([62000, 3.141592, 3.141592, 1200, 60]).reshape((-1,1))
-    for network in networks[1:]:
+    for network in networks[1:2]:
         instance_start = time()
         # print("Checking property 2 on %s"%network[5:])
         nnet = NeuralNetworkStruct()
@@ -95,27 +96,36 @@ if __name__ == "__main__":
         problems = split_input(nnet,input_bounds,512)
         # problems = [input_bounds]
         # print(len(problems),"subproblems")
-        adv_found = Value('i',0)
+        manager = Manager()
+        adv_found = manager.Value('i',0)
+        exit_event = manager.Event()
         processes = []
         try:
             signal.signal(signal.SIGALRM, alarm_handler)
             signal.alarm(TIMEOUT)
+            pool = Pool(processes=None)
             for input_bounds in problems:
                 nn = deepcopy(nnet)
                 # samples = sample_network(nnet,input_bounds,15000)
                 # input_bounds = problems[k]
                 # run_instance(nn, input_bounds, check_potential_CE,adv_found)
-                p = Process(target=run_instance, args=(nn, input_bounds, check_potential_CE,adv_found))
-                p.start()
+#                 p = Process(target=run_instance, args=(nn, input_bounds, check_potential_CE,adv_found,exit_event))
+#                 p.start()
+                p=pool.apply_async(run_instance, args = (nn, input_bounds, check_potential_CE,adv_found,exit_event) )
                 processes.append(p)
+            
+            pool.close()
             prev_n_alive = -1        
-            while(any(p.is_alive() for p in processes) and adv_found.value == 0):
-                sleep(5)
-                n_alive = np.sum([p.is_alive() for p in processes])
+            while(any(not p.ready() for p in processes) and adv_found.value == 0):
+
+                
+                n_alive = np.sum([not p.ready() for p in processes])
                 if(n_alive != prev_n_alive):
                     prev_n_alive = n_alive
-                    #print('Progress %d/%d' %(len(problems)-n_alive,len(problems)))
-                    
+                    print('Progress %d/%d' %(len(problems)-n_alive,len(problems)))
+                
+                sleep(5)
+                
             if(adv_found.value == 1):
                 # print("Adv found")
                 unsafe +=1
@@ -128,16 +138,20 @@ if __name__ == "__main__":
 
            
         except TimeOutException as e:
+            print(e)
             print_summary(network,2,'timeout',time()-instance_start)
             results.append("Timeout") 
-            for p in processes:
-                p.terminate()   
-            
-        for p in processes:
-            p.terminate()
+            pool.terminate()
+#             for p in processes:
+#                 p.terminate()  
+
+        pool.terminate()  
+#         for p in processes:
+#             p.terminate()
         # sys.exit()
     # print('Total time for all nets:',time()-start_time)
     # print(results)
 
     #active neurons [ 3  4  6  7  9 12 15 20 22 23 25 27 28 30 32 33 34 40 45 49]
+
 
