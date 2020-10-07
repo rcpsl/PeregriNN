@@ -6,7 +6,8 @@ import scipy.optimize
 import sys
 from copy import copy
 from queue import Queue
-
+import operator as op
+from functools import reduce
 
 
 
@@ -75,14 +76,14 @@ class Poset(object):
         self.input_domain = input_domain
         self.A = A
         self.b = b 
-        self.pt = pt
+        self.pt = pt.reshape((-1,1))
+        self.hashMap = {}
         A_,b_, minimal_set = self.minimal_H_cdd(self.A, self.b, self.input_domain)
         # if(len(minimal_set) == 0):
         #     print(A)
         #     print(b)
         #     print(input_domain)
         self.root = PosetNode(A_, b_, self.input_domain, minimal_set)
-        self.hashMap = {}
 
 
     def build_poset(self):
@@ -145,57 +146,80 @@ class Poset(object):
         return neighbours
 
     def minimal_H_cdd(self,A,b,bounds):
-        A_ = np.vstack((np.eye(A.shape[1]),-np.eye(A.shape[1])))
-        b_ = np.vstack((bounds[:,1].reshape((-1,1)),-bounds[:,0].reshape((-1,1))))
-        idxs = np.where(A_.dot(self.pt) > -b_)[0]
-        A_[idxs] = -A_[idxs]
-        b_[idxs] = -b_[idxs]
-        A_ = np.vstack((A,A_))
-        b_ = np.vstack((b,b_))
-        # A_ = np.vstack((A,np.eye(A.shape[1])))
-        # A_ = np.vstack((A_,-np.eye(A.shape[1])))
-        # b_ = np.vstack((b,bounds[:,1].reshape((-1,1))))
-        # b_ = np.vstack((b_,-bounds[:,0].reshape((-1,1))))
+        if(len(self.hashMap) == 0):
+            if(len(bounds) > 0):
+                A_ = np.vstack((np.eye(A.shape[1]),-np.eye(A.shape[1])))
+                b_ = np.vstack((bounds[:,1].reshape((-1,1)),-bounds[:,0].reshape((-1,1))))
+                idxs = np.where(A_.dot(self.pt) > b_)[0]
+                A_[idxs] = -A_[idxs]
+                b_[idxs] = -b_[idxs]
+                A_ = np.vstack((A,A_))
+                b_ = np.vstack((b,b_))
+            else:
+                A_ = A
+                b_ = b
+        else:
+            if(len(bounds) >0 ):
+                A_ = np.vstack((A,np.eye(A.shape[1])))
+                A_ = np.vstack((A_,-np.eye(A.shape[1])))
+                b_ = np.vstack((b,bounds[:,1].reshape((-1,1))))
+                b_ = np.vstack((b_,-bounds[:,0].reshape((-1,1))))
+            else:
+                A_ = A
+                b_ = b
         H = np.hstack((b_,-A_))
         mat = cdd.Matrix(H)
         mat.rep_type = cdd.RepType.INEQUALITY
         ret = mat.canonicalize()
-        to_keep = list(frozenset(range(len(A))) - ret[1])
-        return A[to_keep], b[to_keep], to_keep
+        to_keep = sorted(list(frozenset(range(len(A))) - ret[1]))
+        to_keep_region = sorted(list(frozenset(range(len(A_))) - ret[1]))
+        # return A[to_keep], b[to_keep], to_keep
+        return A_[to_keep_region], b_[to_keep_region], to_keep
         pass
 
 
-# if __name__ == "__main__":
-    # input_dim = 2
-    # input_domain = np.array([[-1,1]] * input_dim)
-    # W = np.array([[1,-1],[-1,-1],[1,-1]])
-    # b = np.array([-1,0,0]).reshape((-1,1))
-    # for dim in [50]:
-    #     W = np.random.normal(0,3,size = (dim,input_dim))
-    #     b = np.random.normal(0,3,size = (dim,1)) 
-    #     c = W.dot(np.zeros((input_dim,1))) + b
-    #     idxs = np.where(c < 0)[0]
-    #     W[idxs] = -W[idxs]
-    #     b[idxs] = -b[idxs]
 
-    #     s_t = time()
-    #     poset = Poset(input_domain,W,b)
-    #     e_t = time()
-    #     # print('minimal H rep time:', e_t-s_t)
-    #     poset.build_poset()
-    #     f_t = time()
-    #     print('Dim:',dim,'Minimal H rep:',e_t-s_t,'Total time:', f_t-s_t)
-    #     pass
-    #     for k,node in poset.hashMap.items():
-    #         print(set([0,1,2]) - node.fixed_faces, node.num_successors)
-        # queue = Queue()
-        # queue.put(poset.root)
-        # while(not queue.empty()):
-        #     node = queue.get()
-        #     map(queue.put,node.children)
-        #     print(set([0,1,2]) - node.fixed_faces,len(node.children),node)
-        # pass
+def ncr(n, r):
+    r = min(r, n-r)
+    numer = reduce(op.mul, range(n, n-r, -1), 1)
+    denom = reduce(op.mul, range(1, r+1), 1)
+    return numer // denom  # or / in Python 2
+
+if __name__ == "__main__":
+    input_dim = 5
+    input_domain = np.array([[-1,1]] * input_dim)
+    input_domain = []
+    W = np.array([[1,-1],[-1,-1],[1,-1]])
+    b = np.array([-1,0,0]).reshape((-1,1))
+    for dim in [10]:
+        W = np.random.normal(0,3,size = (dim,input_dim))
+        b = np.random.normal(0,3,size = (dim,1)) 
+        c = W.dot(np.zeros((input_dim,1))) + b
+        idxs = np.where(c < 0)[0]
+        W[idxs] = -W[idxs]
+        b[idxs] = -b[idxs]
+
+        s_t = time()
+        poset = Poset(input_domain,W,b,np.zeros((input_dim,1)))
+        e_t = time()
+        # print('minimal H rep time:', e_t-s_t)
+        poset.build_poset()
+        # compute_successors(poset.root)
+        f_t = time()
+        exact_nodes = sum([ncr(dim,d) for d in range(input_dim+1)])
+        print('Dim:',dim,'nodes:',len(poset.hashMap), 'Minimal H rep:',e_t-s_t,'Total time:', f_t-s_t)
+        pass
+        for k,node in poset.hashMap.items():
+            print(set(range(W.shape[0])) - node.fixed_faces, node.num_successors)
+        queue = Queue()
+        queue.put(poset.root)
+        while(not queue.empty()):
+            node = queue.get()
+            map(queue.put,node.children)
+            print(set([0,1,2]) - node.fixed_faces,len(node.children),node)
+        pass
 
 
     
+
 
