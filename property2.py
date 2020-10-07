@@ -77,7 +77,7 @@ if __name__ == "__main__":
     # networks = [networks[-1]]
     raw_lower_bounds = np.array([55947.691, -3.141592, -3.141592, 1145, 0]).reshape((-1,1))
     raw_upper_bounds = np.array([62000, 3.141592, 3.141592, 1200, 60]).reshape((-1,1))
-    for network in networks:
+    for network in networks[1:]:
         instance_start = time()
         # print("Checking property 2 on %s"%network[5:])
         nnet = NeuralNetworkStruct()
@@ -96,7 +96,7 @@ if __name__ == "__main__":
         #     print_summary(network,2,'unsafe using samples',time()-instance_start)
         #     continue
         splitting_time = time()
-        problems = split(nnet,input_bounds,512)
+        problems = split_input(nnet,input_bounds,512)
         print('Splitting time',time() - splitting_time)
         # problems = [input_bounds]
         # print(len(problems),"subproblems")
