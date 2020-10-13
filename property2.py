@@ -97,7 +97,7 @@ if __name__ == "__main__":
         #     continue
         splitting_time = time()
         problems = split_input(nnet,input_bounds,512)
-        print('Splitting time',time() - splitting_time)
+        #print('Splitting time',time() - splitting_time)
         # problems = [input_bounds]
         # print(len(problems),"subproblems")
         adv_found = Value('i',0)

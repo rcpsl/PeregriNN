@@ -133,17 +133,17 @@ class Solver():
                     else:
                         factor = (in_ub[neuron_idx]/ (in_ub[neuron_idx]-in_lb[neuron_idx]))[0]
                         model.addConstr(relu_vars[neuron_abs_idx] <= factor * (net_vars[neuron_abs_idx]- in_lb[neuron_idx]),name="%d_relaxed"%neuron_abs_idx)
-                        A_up = nn.layers[layer_idx]['Relu_sym'].upper[neuron_idx]
-                        model.addConstr(LinExpr(A_up[:-1],state_vars)  + A_up[-1]  >= relu_vars[neuron_abs_idx],name= "%d_sym_UB"%neuron_abs_idx)
+                        #A_up = nn.layers[layer_idx]['Relu_sym'].upper[neuron_idx]
+                        #model.addConstr(LinExpr(A_up[:-1],state_vars)  + A_up[-1]  >= relu_vars[neuron_abs_idx],name= "%d_sym_UB"%neuron_abs_idx)
             
                 else:
                     model.addConstr(out_vars[neuron_idx] == (net_expr + b[neuron_idx]))
                     model.addConstr(out_vars[neuron_idx] >= lb[neuron_idx],name = "out_%d_LB"%neuron_idx)
                     model.addConstr(out_vars[neuron_idx] <= ub[neuron_idx],name = "out_%d_UB"%neuron_idx)
-                    A_up = nn.layers[layer_idx]['Relu_sym'].upper[neuron_idx]
-                    A_low = nn.layers[layer_idx]['Relu_sym'].lower[neuron_idx]
-                    model.addConstr(LinExpr(A_up[:-1],state_vars)  + A_up[-1]  >= out_vars[neuron_idx],name = "out_%d_sym_UB"%neuron_idx)
-                    model.addConstr(LinExpr(A_low[:-1],state_vars)  + A_low[-1]  <= out_vars[neuron_idx],name = "out_%d_sym_LB"%neuron_idx)
+                    #A_up = nn.layers[layer_idx]['Relu_sym'].upper[neuron_idx]
+                    #A_low = nn.layers[layer_idx]['Relu_sym'].lower[neuron_idx]
+                    #model.addConstr(LinExpr(A_up[:-1],state_vars)  + A_up[-1]  >= out_vars[neuron_idx],name = "out_%d_sym_UB"%neuron_idx)
+                    #model.addConstr(LinExpr(A_low[:-1],state_vars)  + A_low[-1]  <= out_vars[neuron_idx],name = "out_%d_sym_LB"%neuron_idx)
 
                 
         # print('Number of fixed Relus:', len(self.fixed_relus))
@@ -534,29 +534,29 @@ class Solver():
             if(in_lb < 0 and in_ub > 0):
                 if(model.getConstrByName("%d_relaxed"%abs_idx) is not None):
                     model.remove(model.getConstrByName("%d_relaxed"%abs_idx))
-                    model.remove(model.getConstrByName("%d_sym_UB"%abs_idx))
+                    #model.remove(model.getConstrByName("%d_sym_UB"%abs_idx))
 
-                A_up = nn.layers[l_idx]['Relu_sym'].upper[relu_idx]
-                model.addConstr(LinExpr(A_up[:-1],in_vars)  + A_up[-1]  >= relu_var ,name= "%d_sym_UB"%abs_idx)
+                #A_up = nn.layers[l_idx]['Relu_sym'].upper[relu_idx]
+                #model.addConstr(LinExpr(A_up[:-1],in_vars)  + A_up[-1]  >= relu_var ,name= "%d_sym_UB"%abs_idx)
 
                 factor = (in_ub/ (in_ub-in_lb) )[0]
                 model.addConstr(relu_var <= factor * (net_var- in_lb),name="%d_relaxed"%abs_idx)
 
         for neuron_idx in range(self.__output_dim):
             out_var = model.getVarByName(self.out_vars_names[neuron_idx])
-            lb = nn.layers[nn.num_layers-1]['conc_lb'][neuron_idx]
-            ub = nn.layers[nn.num_layers-1]['conc_ub'][neuron_idx]
-            model.remove(model.getConstrByName("out_%d_sym_UB"%neuron_idx))
-            model.remove(model.getConstrByName("out_%d_sym_LB"%neuron_idx))
+            lb = nn.layers[nn.num_layers-1]['in_lb'][neuron_idx]
+            ub = nn.layers[nn.num_layers-1]['in_ub'][neuron_idx]
+            #model.remove(model.getConstrByName("out_%d_sym_UB"%neuron_idx))
+            #model.remove(model.getConstrByName("out_%d_sym_LB"%neuron_idx))
             model.remove(model.getConstrByName("out_%d_LB"%neuron_idx))
             model.remove(model.getConstrByName("out_%d_UB"%neuron_idx))
 
             model.addConstr(out_var >= lb,name = "out_%d_LB"%neuron_idx)
             model.addConstr(out_var <= ub,name = "out_%d_UB"%neuron_idx)
-            A_up = nn.layers[nn.num_layers-1]['Relu_sym'].upper[neuron_idx]
-            A_low = nn.layers[nn.num_layers-1]['Relu_sym'].lower[neuron_idx]
-            model.addConstr(LinExpr(A_up[:-1],in_vars)  + A_up[-1]  >= out_var, name = "out_%d_sym_UB"%neuron_idx)
-            model.addConstr(LinExpr(A_low[:-1],in_vars)  + A_low[-1]  <= out_var,name = "out_%d_sym_LB"%neuron_idx)
+            #A_up = nn.layers[nn.num_layers-1]['Relu_sym'].upper[neuron_idx]
+            #A_low = nn.layers[nn.num_layers-1]['Relu_sym'].lower[neuron_idx]
+            #model.addConstr(LinExpr(A_up[:-1],in_vars)  + A_up[-1]  >= out_var, name = "out_%d_sym_UB"%neuron_idx)
+            #model.addConstr(LinExpr(A_low[:-1],in_vars)  + A_low[-1]  <= out_var,name = "out_%d_sym_LB"%neuron_idx)
            
 
     def dfs(self, model, nn, infeasible_relus,fixed_relus,layers_masks, depth = 0,undecided_relus = [],paths = 0):
