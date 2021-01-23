@@ -195,3 +195,1436 @@ KeyboardInterrupt
 Using TensorFlow backend.
 Using TensorFlow backend.
 Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+Traceback (most recent call last):
+  File "vnn.py", line 126, in <module>
+Process Process-8:
+    sleep(5)
+KeyboardInterrupt
+Process Process-6:
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 53, in run_instance
+    vars,status = solver.solve()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 213, in solve
+    status = self.dfs(model, deepcopy(self.nn), infeasible_relus,[],layers_masks,undecided_relus=copy(sorted(non_lin_relus)),paths = paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 10 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 670, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 658, in dfs
+    self.set_neuron_bounds(model1, network, layer_idx,neuron_idx,phase,layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 278, in set_neuron_bounds
+    nn.recompute_bounds(layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 87, in recompute_bounds
+    layer_sym,error_vec = layer_sym.forward_relu(layer = layer_idx,nonlin_relus = self.nonlin_relus,inact_relus=self.inactive_relus,act_relus= self.active_relus)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 411, in forward_relu
+    lower_lb = self.concrete_lower_bound(relu_lower_eq, self.interval)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 442, in concrete_lower_bound
+    n_idx = np.where(equation[:-1] <= 0)[0]
+  File "<__array_function__ internals>", line 6, in where
+KeyboardInterrupt
+Process Process-5:
+Traceback (most recent call last):
+Process Process-2:
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 53, in run_instance
+    vars,status = solver.solve()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 213, in solve
+    status = self.dfs(model, deepcopy(self.nn), infeasible_relus,[],layers_masks,undecided_relus=copy(sorted(non_lin_relus)),paths = paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 9 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 670, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 623, in dfs
+    self.set_neuron_bounds(model1,network,layer_idx,neuron_idx,phase,layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 278, in set_neuron_bounds
+    nn.recompute_bounds(layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 87, in recompute_bounds
+    layer_sym,error_vec = layer_sym.forward_relu(layer = layer_idx,nonlin_relus = self.nonlin_relus,inact_relus=self.inactive_relus,act_relus= self.active_relus)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 411, in forward_relu
+    lower_lb = self.concrete_lower_bound(relu_lower_eq, self.interval)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 443, in concrete_lower_bound
+    lb = equation[p_idx].dot(interval[p_idx,0]) + equation[n_idx].dot(interval[n_idx,1]) + equation[-1]
+KeyboardInterrupt
+Process Process-4:
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 53, in run_instance
+    vars,status = solver.solve()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 213, in solve
+    status = self.dfs(model, deepcopy(self.nn), infeasible_relus,[],layers_masks,undecided_relus=copy(sorted(non_lin_relus)),paths = paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 10 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 670, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 623, in dfs
+    self.set_neuron_bounds(model1,network,layer_idx,neuron_idx,phase,layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 278, in set_neuron_bounds
+    nn.recompute_bounds(layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 87, in recompute_bounds
+    layer_sym,error_vec = layer_sym.forward_relu(layer = layer_idx,nonlin_relus = self.nonlin_relus,inact_relus=self.inactive_relus,act_relus= self.active_relus)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 412, in forward_relu
+    lower_ub = self.concrete_upper_bound(relu_lower_eq, self.interval)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 448, in concrete_upper_bound
+    p_idx = np.where(equation[:-1] > 0)[0]
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 53, in run_instance
+    vars,status = solver.solve()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 213, in solve
+    status = self.dfs(model, deepcopy(self.nn), infeasible_relus,[],layers_masks,undecided_relus=copy(sorted(non_lin_relus)),paths = paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+Traceback (most recent call last):
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 11 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 658, in dfs
+    self.set_neuron_bounds(model1, network, layer_idx,neuron_idx,phase,layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 278, in set_neuron_bounds
+    nn.recompute_bounds(layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 76, in recompute_bounds
+    layer['in_lb'] = layer_sym.concrete_Mlower_bound(layer_sym.lower,layer_sym.interval)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 456, in concrete_Mlower_bound
+    lb.append(self.concrete_lower_bound(equation,interval))
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 441, in concrete_lower_bound
+    p_idx = np.where(equation[:-1] > 0)[0]
+  File "<__array_function__ internals>", line 6, in where
+KeyboardInterrupt
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 53, in run_instance
+    vars,status = solver.solve()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 213, in solve
+    status = self.dfs(model, deepcopy(self.nn), infeasible_relus,[],layers_masks,undecided_relus=copy(sorted(non_lin_relus)),paths = paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 10 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 670, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 670, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 658, in dfs
+    self.set_neuron_bounds(model1, network, layer_idx,neuron_idx,phase,layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 278, in set_neuron_bounds
+    nn.recompute_bounds(layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 87, in recompute_bounds
+    layer_sym,error_vec = layer_sym.forward_relu(layer = layer_idx,nonlin_relus = self.nonlin_relus,inact_relus=self.inactive_relus,act_relus= self.active_relus)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 405, in forward_relu
+    relu_lower_equtions = copy(self.lower)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/copy.py", line 88, in copy
+    return copier(x)
+KeyboardInterrupt
+Process Process-3:
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 53, in run_instance
+    vars,status = solver.solve()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 213, in solve
+    status = self.dfs(model, deepcopy(self.nn), infeasible_relus,[],layers_masks,undecided_relus=copy(sorted(non_lin_relus)),paths = paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 10 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 658, in dfs
+    self.set_neuron_bounds(model1, network, layer_idx,neuron_idx,phase,layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 278, in set_neuron_bounds
+    nn.recompute_bounds(layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 93, in recompute_bounds
+    layer['conc_lb'] = np.maximum(0,layer_sym.concrete_Mlower_bound(layer_sym.lower,layer_sym.interval))
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 456, in concrete_Mlower_bound
+    lb.append(self.concrete_lower_bound(equation,interval))
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 442, in concrete_lower_bound
+    n_idx = np.where(equation[:-1] <= 0)[0]
+KeyboardInterrupt
+Process Process-7:
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 53, in run_instance
+    vars,status = solver.solve()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 213, in solve
+    status = self.dfs(model, deepcopy(self.nn), infeasible_relus,[],layers_masks,undecided_relus=copy(sorted(non_lin_relus)),paths = paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 10 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 670, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 623, in dfs
+    self.set_neuron_bounds(model1,network,layer_idx,neuron_idx,phase,layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 278, in set_neuron_bounds
+    nn.recompute_bounds(layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 76, in recompute_bounds
+    layer['in_lb'] = layer_sym.concrete_Mlower_bound(layer_sym.lower,layer_sym.interval)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 456, in concrete_Mlower_bound
+    lb.append(self.concrete_lower_bound(equation,interval))
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 442, in concrete_lower_bound
+    n_idx = np.where(equation[:-1] <= 0)[0]
+  File "<__array_function__ internals>", line 6, in where
+KeyboardInterrupt
+Process Process-1:
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 53, in run_instance
+    vars,status = solver.solve()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 213, in solve
+    status = self.dfs(model, deepcopy(self.nn), infeasible_relus,[],layers_masks,undecided_relus=copy(sorted(non_lin_relus)),paths = paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 10 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 670, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 627, in dfs
+    model1.optimize()
+KeyboardInterrupt
+Error in atexit._run_exitfuncs:
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/popen_fork.py", line 28, in poll
+    pid, sts = os.waitpid(self.pid, flag)
+KeyboardInterrupt
+Using TensorFlow backend.
+Traceback (most recent call last):
+  File "vnn.py", line 106, in <module>
+    samples = sample_network(nn,input_bounds,15000)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/utils/sample_network.py", line 14, in sample_network
+    samples = np.random.uniform(lower_bounds, upper_bounds,size = (num_samples,len(lower_bounds)))
+KeyboardInterrupt
+Using TensorFlow backend.
+Using TensorFlow backend.
+Traceback (most recent call last):
+  File "vnn.py", line 106, in <module>
+    samples = sample_network(nn,input_bounds,15000)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/utils/sample_network.py", line 14, in sample_network
+    samples = np.random.uniform(lower_bounds, upper_bounds,size = (num_samples,len(lower_bounds)))
+KeyboardInterrupt
+Using TensorFlow backend.
+Traceback (most recent call last):
+  File "vnn.py", line 111, in <module>
+    nn.set_bounds(input_bounds)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 216, in set_bounds
+    self.__compute_sym_bounds()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 113, in __compute_sym_bounds
+    self.layers[1]['in_lb'] = input_sym.concrete_Mlower_bound(input_sym.lower,input_sym.interval)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 456, in concrete_Mlower_bound
+    lb.append(self.concrete_lower_bound(equation,interval))
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 441, in concrete_lower_bound
+    p_idx = np.where(equation[:-1] > 0)[0]
+KeyboardInterrupt
+Using TensorFlow backend.
+Using TensorFlow backend.
+./run_mnist.sh: line 4: 23731 Quit                    (core dumped) python -u vnn.py VNN/mnist-net_256x2.nnet 0.02 >> mnist_results.txt
+Traceback (most recent call last):
+  File "vnn.py", line 1, in <module>
+    from solver import *
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 8, in <module>
+    from NeuralNetwork import *
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 1, in <module>
+    import numpy as np
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/numpy/__init__.py", line 140, in <module>
+    from . import _distributor_init
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/numpy/_distributor_init.py", line 13, in <module>
+    import mkl
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/mkl/__init__.py", line 49, in <module>
+    from . import _mklinit
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "vnn.py", line 1, in <module>
+    from solver import *
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 8, in <module>
+    from NeuralNetwork import *
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 5, in <module>
+    from keras.models import load_model
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/__init__.py", line 3, in <module>
+    from . import utils
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/utils/__init__.py", line 4, in <module>
+    from . import data_utils
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/utils/data_utils.py", line 25, in <module>
+    from six.moves.urllib.request import urlopen
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/six.py", line 92, in __get__
+    result = self._resolve()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/six.py", line 160, in _resolve
+    module = _import_module(self.mod)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/six.py", line 82, in _import_module
+    __import__(name)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/urllib/request.py", line 88, in <module>
+    import http.client
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/http/client.py", line 71, in <module>
+    import email.parser
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/email/parser.py", line 12, in <module>
+    from email.feedparser import FeedParser, BytesFeedParser
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/email/feedparser.py", line 27, in <module>
+    from email._policybase import compat32
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/email/_policybase.py", line 9, in <module>
+    from email.utils import _has_surrogates
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/email/utils.py", line 33, in <module>
+    from email._parseaddr import quote
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/email/_parseaddr.py", line 16, in <module>
+    import time, calendar
+  File "<frozen importlib._bootstrap>", line 983, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 968, in _find_and_load_unlocked
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "vnn.py", line 1, in <module>
+    from solver import *
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 8, in <module>
+    from NeuralNetwork import *
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 5, in <module>
+    from keras.models import load_model
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/__init__.py", line 3, in <module>
+    from . import utils
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/utils/__init__.py", line 5, in <module>
+    from . import io_utils
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/utils/io_utils.py", line 14, in <module>
+    import h5py
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/h5py/__init__.py", line 58, in <module>
+    from ._hl.base import is_hdf5, HLObject, Empty
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/h5py/_hl/base.py", line 210, in <module>
+    class HLObject(CommonStateObject):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/h5py/_hl/base.py", line 242, in HLObject
+    @with_phil
+  File "h5py/_objects.pyx", line 51, in h5py._objects.with_phil
+  File "<frozen importlib._bootstrap>", line 983, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 963, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 906, in _find_spec
+  File "<frozen importlib._bootstrap_external>", line 1280, in find_spec
+  File "<frozen importlib._bootstrap_external>", line 1252, in _get_spec
+  File "<frozen importlib._bootstrap_external>", line 1391, in find_spec
+  File "<frozen importlib._bootstrap_external>", line 59, in _path_join
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "vnn.py", line 1, in <module>
+    from solver import *
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 8, in <module>
+    from NeuralNetwork import *
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 5, in <module>
+    from keras.models import load_model
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/__init__.py", line 3, in <module>
+    from . import utils
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/utils/__init__.py", line 5, in <module>
+    from . import io_utils
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/utils/io_utils.py", line 14, in <module>
+    import h5py
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/h5py/__init__.py", line 55, in <module>
+    from . import h5a, h5d, h5ds, h5f, h5fd, h5g, h5r, h5s, h5t, h5p, h5z, h5pl
+  File "<frozen importlib._bootstrap>", line 416, in parent
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "vnn.py", line 1, in <module>
+    from solver import *
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 8, in <module>
+    from NeuralNetwork import *
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 1, in <module>
+    import numpy as np
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/numpy/__init__.py", line 236, in <module>
+    __mkl_version__ = "{MajorVersion}.{UpdateVersion}".format(**mkl.get_version())
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "vnn.py", line 1, in <module>
+    from solver import *
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 8, in <module>
+    from NeuralNetwork import *
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 1, in <module>
+    import numpy as np
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/numpy/__init__.py", line 145, in <module>
+    from . import lib
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/numpy/lib/__init__.py", line 39, in <module>
+    from .npyio import *
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/numpy/lib/npyio.py", line 15, in <module>
+    from ._datasource import DataSource
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/numpy/lib/_datasource.py", line 42, in <module>
+    import shutil
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/shutil.py", line 15, in <module>
+    import zlib
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "vnn.py", line 1, in <module>
+    from solver import *
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 8, in <module>
+    from NeuralNetwork import *
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 5, in <module>
+    from keras.models import load_model
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/__init__.py", line 3, in <module>
+    from . import utils
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/utils/__init__.py", line 4, in <module>
+    from . import data_utils
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/utils/data_utils.py", line 25, in <module>
+    from six.moves.urllib.request import urlopen
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/six.py", line 92, in __get__
+    result = self._resolve()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/six.py", line 160, in _resolve
+    module = _import_module(self.mod)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/six.py", line 82, in _import_module
+    __import__(name)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/urllib/request.py", line 88, in <module>
+    import http.client
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/http/client.py", line 71, in <module>
+    import email.parser
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/email/parser.py", line 12, in <module>
+    from email.feedparser import FeedParser, BytesFeedParser
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/email/feedparser.py", line 27, in <module>
+    from email._policybase import compat32
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/email/_policybase.py", line 9, in <module>
+    from email.utils import _has_surrogates
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/email/utils.py", line 33, in <module>
+    from email._parseaddr import quote
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/email/_parseaddr.py", line 16, in <module>
+    import time, calendar
+  File "<frozen importlib._bootstrap>", line 983, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 967, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 670, in _load_unlocked
+  File "<frozen importlib._bootstrap>", line 588, in module_from_spec
+  File "<frozen importlib._bootstrap>", line 36, in _new_module
+KeyboardInterrupt
+Using TensorFlow backend.
+Using TensorFlow backend.
+Traceback (most recent call last):
+  File "vnn.py", line 126, in <module>
+    sleep(5)
+KeyboardInterrupt
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+Traceback (most recent call last):
+  File "vnn.py", line 126, in <module>
+Process Process-64:
+    sleep(5)
+KeyboardInterrupt
+Process Process-68:
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 53, in run_instance
+    vars,status = solver.solve()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 213, in solve
+    status = self.dfs(model, deepcopy(self.nn), infeasible_relus,[],layers_masks,undecided_relus=copy(sorted(non_lin_relus)),paths = paths)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "vnn.py", line 53, in run_instance
+    vars,status = solver.solve()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 213, in solve
+    status = self.dfs(model, deepcopy(self.nn), infeasible_relus,[],layers_masks,undecided_relus=copy(sorted(non_lin_relus)),paths = paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 18 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 670, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 670, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 18 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 670, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 670, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 1 more time]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 614, in dfs
+    model1 = model.copy()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 623, in dfs
+    self.set_neuron_bounds(model1,network,layer_idx,neuron_idx,phase,layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 278, in set_neuron_bounds
+    nn.recompute_bounds(layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 87, in recompute_bounds
+    layer_sym,error_vec = layer_sym.forward_relu(layer = layer_idx,nonlin_relus = self.nonlin_relus,inact_relus=self.inactive_relus,act_relus= self.active_relus)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 411, in forward_relu
+    lower_lb = self.concrete_lower_bound(relu_lower_eq, self.interval)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 443, in concrete_lower_bound
+    lb = equation[p_idx].dot(interval[p_idx,0]) + equation[n_idx].dot(interval[n_idx,1]) + equation[-1]
+KeyboardInterrupt
+KeyboardInterrupt
+Process Process-72:
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 53, in run_instance
+    vars,status = solver.solve()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 213, in solve
+    status = self.dfs(model, deepcopy(self.nn), infeasible_relus,[],layers_masks,undecided_relus=copy(sorted(non_lin_relus)),paths = paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 18 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 670, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 670, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 670, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 623, in dfs
+    self.set_neuron_bounds(model1,network,layer_idx,neuron_idx,phase,layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 278, in set_neuron_bounds
+    nn.recompute_bounds(layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 87, in recompute_bounds
+    layer_sym,error_vec = layer_sym.forward_relu(layer = layer_idx,nonlin_relus = self.nonlin_relus,inact_relus=self.inactive_relus,act_relus= self.active_relus)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 411, in forward_relu
+    lower_lb = self.concrete_lower_bound(relu_lower_eq, self.interval)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 443, in concrete_lower_bound
+    lb = equation[p_idx].dot(interval[p_idx,0]) + equation[n_idx].dot(interval[n_idx,1]) + equation[-1]
+KeyboardInterrupt
+Process Process-69:
+Process Process-66:
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 53, in run_instance
+    vars,status = solver.solve()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 213, in solve
+    status = self.dfs(model, deepcopy(self.nn), infeasible_relus,[],layers_masks,undecided_relus=copy(sorted(non_lin_relus)),paths = paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 18 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 670, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 670, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 670, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 623, in dfs
+    self.set_neuron_bounds(model1,network,layer_idx,neuron_idx,phase,layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 278, in set_neuron_bounds
+    nn.recompute_bounds(layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 87, in recompute_bounds
+    layer_sym,error_vec = layer_sym.forward_relu(layer = layer_idx,nonlin_relus = self.nonlin_relus,inact_relus=self.inactive_relus,act_relus= self.active_relus)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 411, in forward_relu
+    lower_lb = self.concrete_lower_bound(relu_lower_eq, self.interval)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 441, in concrete_lower_bound
+    p_idx = np.where(equation[:-1] > 0)[0]
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 53, in run_instance
+    vars,status = solver.solve()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 213, in solve
+    status = self.dfs(model, deepcopy(self.nn), infeasible_relus,[],layers_masks,undecided_relus=copy(sorted(non_lin_relus)),paths = paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 18 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 670, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 670, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 613, in dfs
+    network = deepcopy(nn)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/copy.py", line 180, in deepcopy
+    y = _reconstruct(x, memo, *rv)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/copy.py", line 281, in _reconstruct
+    state = deepcopy(state, memo)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/copy.py", line 150, in deepcopy
+    y = copier(x, memo)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/copy.py", line 241, in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/copy.py", line 150, in deepcopy
+    y = copier(x, memo)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/copy.py", line 216, in _deepcopy_list
+    append(deepcopy(a, memo))
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/copy.py", line 143, in deepcopy
+    if y is not _nil:
+KeyboardInterrupt
+Process Process-65:
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 53, in run_instance
+    vars,status = solver.solve()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 213, in solve
+    status = self.dfs(model, deepcopy(self.nn), infeasible_relus,[],layers_masks,undecided_relus=copy(sorted(non_lin_relus)),paths = paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 18 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 670, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 670, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 636, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 670, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 658, in dfs
+    self.set_neuron_bounds(model1, network, layer_idx,neuron_idx,phase,layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 284, in set_neuron_bounds
+    self.fix_after_propgt(model,nn)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 475, in fix_after_propgt
+    if(phase == 1 and model.getConstrByName("%d_active"%relu_idx) is None):
+KeyboardInterrupt
+Error in atexit._run_exitfuncs:
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/popen_fork.py", line 28, in poll
+    pid, sts = os.waitpid(self.pid, flag)
+KeyboardInterrupt
+Process Process-67:
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 59, in run_instance
+    print(e)
+KeyboardInterrupt
+Process Process-70:
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 59, in run_instance
+    print(e)
+KeyboardInterrupt
+Process Process-71:
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 59, in run_instance
+    print(e)
+KeyboardInterrupt
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+Process Process-27:
+Traceback (most recent call last):
+  File "vnn.py", line 128, in <module>
+Process Process-25:
+    sleep(5)
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 53, in run_instance
+    vars,status = solver.solve()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 213, in solve
+    status = self.dfs(model, deepcopy(self.nn), infeasible_relus,[],layers_masks,undecided_relus=copy(sorted(non_lin_relus)),paths = paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 4 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 675, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 675, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 675, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "vnn.py", line 53, in run_instance
+    vars,status = solver.solve()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 213, in solve
+    status = self.dfs(model, deepcopy(self.nn), infeasible_relus,[],layers_masks,undecided_relus=copy(sorted(non_lin_relus)),paths = paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 665, in dfs
+    self.fix_relu(model1,network,fixed_relus)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 231, in fix_relu
+    model.addConstr(LinExpr(A_low[:-1],input_vars) + A_low[-1] == relu_var,name ="y%d_active_LB"%relu_idx)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 5 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 675, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+KeyboardInterrupt
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 1 more time]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 675, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 4 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 627, in dfs
+    self.set_neuron_bounds(model1,network,layer_idx,neuron_idx,phase,layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 278, in set_neuron_bounds
+    nn.recompute_bounds(layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 87, in recompute_bounds
+    layer_sym,error_vec = layer_sym.forward_relu(layer = layer_idx,nonlin_relus = self.nonlin_relus,inact_relus=self.inactive_relus,act_relus= self.active_relus)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 409, in forward_relu
+    lower_lb = self.concrete_lower_bound(relu_lower_eq, self.interval)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 440, in concrete_lower_bound
+    n_idx = np.where(equation[:-1] <= 0)[0]
+  File "<__array_function__ internals>", line 6, in where
+KeyboardInterrupt
+Process Process-26:
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 53, in run_instance
+    vars,status = solver.solve()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 213, in solve
+    status = self.dfs(model, deepcopy(self.nn), infeasible_relus,[],layers_masks,undecided_relus=copy(sorted(non_lin_relus)),paths = paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 4 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 675, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 4 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 651, in dfs
+    model1 = model.copy()
+KeyboardInterrupt
+Error in atexit._run_exitfuncs:
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/popen_fork.py", line 28, in poll
+    pid, sts = os.waitpid(self.pid, flag)
+KeyboardInterrupt
+Process Process-23:
+Process Process-24:
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 59, in run_instance
+    print(e)
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 59, in run_instance
+    print(e)
+KeyboardInterrupt
+Process Process-19:
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 53, in run_instance
+    vars,status = solver.solve()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 213, in solve
+    status = self.dfs(model, deepcopy(self.nn), infeasible_relus,[],layers_masks,undecided_relus=copy(sorted(non_lin_relus)),paths = paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 4 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 675, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 675, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 675, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 631, in dfs
+    model1.optimize()
+KeyboardInterrupt
+Process Process-20:
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 59, in run_instance
+    print(e)
+KeyboardInterrupt
+Process Process-22:
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 59, in run_instance
+    print(e)
+KeyboardInterrupt
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+Process Process-20:
+Process Process-26:
+Traceback (most recent call last):
+  File "vnn.py", line 128, in <module>
+    sleep(5)
+KeyboardInterrupt
+Process Process-21:
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 53, in run_instance
+    vars,status = solver.solve()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 213, in solve
+    status = self.dfs(model, deepcopy(self.nn), infeasible_relus,[],layers_masks,undecided_relus=copy(sorted(non_lin_relus)),paths = paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 7 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 627, in dfs
+    self.set_neuron_bounds(model1,network,layer_idx,neuron_idx,phase,layers_masks)
+Process Process-27:
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 284, in set_neuron_bounds
+    self.fix_after_propgt(model,nn)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 496, in fix_after_propgt
+    model.addConstr(LinExpr(A_up[:-1],in_vars)  + A_up[-1]  >= relu_var ,name= "%d_sym_UB"%abs_idx)
+KeyboardInterrupt
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 53, in run_instance
+    vars,status = solver.solve()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 213, in solve
+    status = self.dfs(model, deepcopy(self.nn), infeasible_relus,[],layers_masks,undecided_relus=copy(sorted(non_lin_relus)),paths = paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  [Previous line repeated 7 more times]
+  File "vnn.py", line 53, in run_instance
+    vars,status = solver.solve()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 627, in dfs
+    self.set_neuron_bounds(model1,network,layer_idx,neuron_idx,phase,layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 213, in solve
+    status = self.dfs(model, deepcopy(self.nn), infeasible_relus,[],layers_masks,undecided_relus=copy(sorted(non_lin_relus)),paths = paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 284, in set_neuron_bounds
+    self.fix_after_propgt(model,nn)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 499, in fix_after_propgt
+    model.addConstr(relu_var <= factor * (net_var- in_lb),name="%d_relaxed"%abs_idx)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "model.pxi", line 3241, in gurobipy.Model.addConstr
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "linexpr.pxi", line 461, in gurobipy.LinExpr.__sub__
+  [Previous line repeated 7 more times]
+  File "linexpr.pxi", line 474, in gurobipy.LinExpr.__mul__
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 627, in dfs
+    self.set_neuron_bounds(model1,network,layer_idx,neuron_idx,phase,layers_masks)
+  File "linexpr.pxi", line 43, in gurobipy.LinExpr.__init__
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 284, in set_neuron_bounds
+    self.fix_after_propgt(model,nn)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/abc.py", line 137, in __instancecheck__
+    def __instancecheck__(cls, instance):
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 496, in fix_after_propgt
+    model.addConstr(LinExpr(A_up[:-1],in_vars)  + A_up[-1]  >= relu_var ,name= "%d_sym_UB"%abs_idx)
+KeyboardInterrupt
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 53, in run_instance
+    vars,status = solver.solve()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 213, in solve
+    status = self.dfs(model, deepcopy(self.nn), infeasible_relus,[],layers_masks,undecided_relus=copy(sorted(non_lin_relus)),paths = paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 7 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 627, in dfs
+    self.set_neuron_bounds(model1,network,layer_idx,neuron_idx,phase,layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 278, in set_neuron_bounds
+    nn.recompute_bounds(layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 74, in recompute_bounds
+    layer_sym = layer_sym.forward_linear(weights)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 399, in forward_linear
+    out_low = np.atleast_2d(np.matmul(np.maximum(W,0),self.lower) + np.matmul(np.minimum(W,0),self.upper))
+KeyboardInterrupt
+./run_mnist.sh: line 6: 42084 Quit                    (core dumped) python -u vnn.py VNN/mnist-net_256x6.nnet 0.02 >> mnist_results.txt
+Exception ignored in: <function _get_module_lock.<locals>.cb at 0x7fe25c2eb9e0>
+Traceback (most recent call last):
+  File "<frozen importlib._bootstrap>", line 177, in cb
+KeyboardInterrupt
+Using TensorFlow backend.
+Traceback (most recent call last):
+  File "vnn.py", line 1, in <module>
+    from solver import *
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 8, in <module>
+    from NeuralNetwork import *
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 5, in <module>
+    from keras.models import load_model
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/__init__.py", line 3, in <module>
+    from . import utils
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/utils/__init__.py", line 6, in <module>
+    from . import conv_utils
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/utils/conv_utils.py", line 9, in <module>
+    from .. import backend as K
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/backend/__init__.py", line 1, in <module>
+    from .load_backend import epsilon
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/backend/load_backend.py", line 90, in <module>
+    from .tensorflow_backend import *
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py", line 5, in <module>
+    import tensorflow as tf
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/tensorflow/__init__.py", line 101, in <module>
+    from tensorflow_core import *
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/tensorflow_core/__init__.py", line 40, in <module>
+    from tensorflow.python.tools import module_util as _module_util
+  File "<frozen importlib._bootstrap>", line 983, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 959, in _find_and_load_unlocked
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/tensorflow/__init__.py", line 50, in __getattr__
+    module = self._load()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/tensorflow/__init__.py", line 44, in _load
+    module = _importlib.import_module(self.__name__)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/tensorflow_core/python/__init__.py", line 58, in <module>
+    from tensorflow.python import _pywrap_scoped_annotation
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "vnn.py", line 1, in <module>
+    from solver import *
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 8, in <module>
+    from NeuralNetwork import *
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 1, in <module>
+    import numpy as np
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/numpy/__init__.py", line 236, in <module>
+    __mkl_version__ = "{MajorVersion}.{UpdateVersion}".format(**mkl.get_version())
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "vnn.py", line 1, in <module>
+    from solver import *
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 8, in <module>
+    from NeuralNetwork import *
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 5, in <module>
+    from keras.models import load_model
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/__init__.py", line 3, in <module>
+    from . import utils
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/utils/__init__.py", line 5, in <module>
+    from . import io_utils
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/utils/io_utils.py", line 4, in <module>
+    from __future__ import print_function
+KeyboardInterrupt
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+./run_mnist.sh: line 6: 33335 Quit                    (core dumped) python -u vnn.py VNN/mnist-net_256x6.nnet 0.02 >> mnist_results.txt
+Traceback (most recent call last):
+  File "vnn.py", line 1, in <module>
+    from solver import *
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 8, in <module>
+    from NeuralNetwork import *
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 1, in <module>
+    import numpy as np
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/numpy/__init__.py", line 140, in <module>
+    from . import _distributor_init
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/numpy/_distributor_init.py", line 13, in <module>
+    import mkl
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/mkl/__init__.py", line 49, in <module>
+    from . import _mklinit
+KeyboardInterrupt
+Using TensorFlow backend.
+Traceback (most recent call last):
+  File "vnn.py", line 1, in <module>
+    from solver import *
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 8, in <module>
+    from NeuralNetwork import *
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 5, in <module>
+    from keras.models import load_model
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/__init__.py", line 3, in <module>
+    from . import utils
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/utils/__init__.py", line 6, in <module>
+    from . import conv_utils
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/utils/conv_utils.py", line 9, in <module>
+    from .. import backend as K
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/backend/__init__.py", line 1, in <module>
+    from .load_backend import epsilon
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/backend/load_backend.py", line 90, in <module>
+    from .tensorflow_backend import *
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py", line 5, in <module>
+    import tensorflow as tf
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/tensorflow/__init__.py", line 101, in <module>
+    from tensorflow_core import *
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/tensorflow_core/__init__.py", line 40, in <module>
+    from tensorflow.python.tools import module_util as _module_util
+  File "<frozen importlib._bootstrap>", line 983, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 959, in _find_and_load_unlocked
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/tensorflow/__init__.py", line 50, in __getattr__
+    module = self._load()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/tensorflow/__init__.py", line 44, in _load
+    module = _importlib.import_module(self.__name__)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/tensorflow_core/python/__init__.py", line 64, in <module>
+    from tensorflow.core.framework.graph_pb2 import *
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/tensorflow_core/core/framework/graph_pb2.py", line 7, in <module>
+    from google.protobuf import descriptor as _descriptor
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/google/protobuf/__init__.py", line 37, in <module>
+    __import__('pkg_resources').declare_namespace(__name__)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/pkg_resources/__init__.py", line 84, in <module>
+    __import__('pkg_resources.extern.packaging.requirements')
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/pkg_resources/_vendor/packaging/requirements.py", line 47, in <module>
+    VERSION_PEP440 = Regex(Specifier._regex_str, re.VERBOSE | re.IGNORECASE)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/pkg_resources/_vendor/pyparsing.py", line 2792, in __init__
+    self.re = re.compile(self.pattern, self.flags)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/re.py", line 234, in compile
+    return _compile(pattern, flags)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/re.py", line 286, in _compile
+    p = sre_compile.compile(pattern, flags)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/sre_compile.py", line 764, in compile
+    p = sre_parse.parse(p, flags)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/sre_parse.py", line 924, in parse
+    p = _parse_sub(source, pattern, flags & SRE_FLAG_VERBOSE, 0)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/sre_parse.py", line 420, in _parse_sub
+    not nested and not items))
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/sre_parse.py", line 810, in _parse
+    p = _parse_sub(source, state, sub_verbose, nested + 1)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/sre_parse.py", line 420, in _parse_sub
+    not nested and not items))
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/sre_parse.py", line 810, in _parse
+    p = _parse_sub(source, state, sub_verbose, nested + 1)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/sre_parse.py", line 420, in _parse_sub
+    not nested and not items))
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/sre_parse.py", line 810, in _parse
+    p = _parse_sub(source, state, sub_verbose, nested + 1)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/sre_parse.py", line 420, in _parse_sub
+    not nested and not items))
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/sre_parse.py", line 485, in _parse
+    if this in "|)":
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "vnn.py", line 1, in <module>
+    from solver import *
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 8, in <module>
+    from NeuralNetwork import *
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 1, in <module>
+    import numpy as np
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/numpy/__init__.py", line 142, in <module>
+    from . import core
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/numpy/core/__init__.py", line 82, in <module>
+    from . import defchararray as char
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/numpy/core/defchararray.py", line 1010, in <module>
+    @array_function_dispatch(_unary_op_dispatcher)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/site-packages/numpy/core/overrides.py", line 181, in decorator
+    source, filename='<__array_function__ internals>', mode='exec')
+KeyboardInterrupt
+Using TensorFlow backend.
+Traceback (most recent call last):
+  File "vnn.py", line 122, in <module>
+    status = run_instance(network, input_bounds, check_property, target,adv_found)
+  File "vnn.py", line 53, in run_instance
+    vars,status = solver.solve()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 170, in solve
+    self.__prepare_problem(model,self.nn)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 718, in __prepare_problem
+    vars = [model.getVarByName(var_name) for var_name in constraint['x']]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 718, in <listcomp>
+    vars = [model.getVarByName(var_name) for var_name in constraint['x']]
+KeyboardInterrupt
+  File "vnn.py", line 130
+    if(result != 'SolFound')
+                           ^
+SyntaxError: invalid syntax
+  File "vnn.py", line 130
+    if(result != 'SolFound')
+                           ^
+SyntaxError: invalid syntax
+  File "vnn.py", line 130
+    if(result != 'SolFound')
+                           ^
+SyntaxError: invalid syntax
+  File "vnn.py", line 130
+    if(result != 'SolFound')
+                           ^
+SyntaxError: invalid syntax
+  File "vnn.py", line 130
+    if(result != 'SolFound')
+                           ^
+SyntaxError: invalid syntax
+  File "vnn.py", line 130
+    if(result != 'SolFound')
+                           ^
+SyntaxError: invalid syntax
+  File "vnn.py", line 130
+    if(result != 'SolFound')
+                           ^
+SyntaxError: invalid syntax
+  File "vnn.py", line 130
+    if(result != 'SolFound')
+                           ^
+SyntaxError: invalid syntax
+  File "vnn.py", line 130
+    if(result != 'SolFound')
+                           ^
+SyntaxError: invalid syntax
+  File "vnn.py", line 130
+    if(result != 'SolFound')
+                           ^
+SyntaxError: invalid syntax
+  File "vnn.py", line 130
+    if(result != 'SolFound')
+                           ^
+SyntaxError: invalid syntax
+  File "vnn.py", line 130
+    if(result != 'SolFound')
+                           ^
+SyntaxError: invalid syntax
+Using TensorFlow backend.
+Using TensorFlow backend.
+Traceback (most recent call last):
+  File "vnn.py", line 123, in <module>
+    result = run_instance(network, input_bounds, check_property, target,adv_found)
+  File "vnn.py", line 53, in run_instance
+    vars,status = solver.solve()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 170, in solve
+    self.__prepare_problem(model,self.nn)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 719, in __prepare_problem
+    model.addConstr(LinExpr(constraint['A'],vars), sense = constraint['sense'], rhs = constraint['rhs'])
+KeyboardInterrupt
+Using TensorFlow backend.
+Using TensorFlow backend.
+Process Process-1:
+Traceback (most recent call last):
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+    self.run()
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/multiprocessing/process.py", line 99, in run
+    self._target(*self._args, **self._kwargs)
+  File "vnn.py", line 37, in run_instance
+    solver = Solver(network = network,property_check=check_property,target = target)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 24, in __init__
+    self.nn        = deepcopy(network)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/copy.py", line 180, in deepcopy
+    y = _reconstruct(x, memo, *rv)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/copy.py", line 281, in _reconstruct
+    state = deepcopy(state, memo)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/copy.py", line 150, in deepcopy
+    y = copier(x, memo)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/copy.py", line 241, in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/copy.py", line 150, in deepcopy
+    y = copier(x, memo)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/copy.py", line 216, in _deepcopy_list
+    append(deepcopy(a, memo))
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/copy.py", line 150, in deepcopy
+    y = copier(x, memo)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/copy.py", line 241, in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/copy.py", line 180, in deepcopy
+    y = _reconstruct(x, memo, *rv)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/copy.py", line 281, in _reconstruct
+    state = deepcopy(state, memo)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/copy.py", line 150, in deepcopy
+    y = copier(x, memo)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/copy.py", line 241, in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+  File "/home/hkhedr/.conda/envs/myenv/lib/python3.7/copy.py", line 161, in deepcopy
+    y = copier(memo)
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "vnn.py", line 120, in <module>
+    network = deepcopy(nn)
+KeyboardInterrupt
+Using TensorFlow backend.
+Traceback (most recent call last):
+  File "vnn.py", line 87, in <module>
+    nn.parse_network(nnet,type = 'mnist')
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 333, in parse_network
+    weights = np.array(list(map(float,model_fmt_file[start_idx].split(',')[:-1])))
+KeyboardInterrupt
+Using TensorFlow backend.
+Using TensorFlow backend.
+Traceback (most recent call last):
+  File "vnn.py", line 122, in <module>
+    result = run_instance(network, input_bounds, check_property, target,adv_found)
+  File "vnn.py", line 53, in run_instance
+    vars,status = solver.solve()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 213, in solve
+    status = self.dfs(model, deepcopy(self.nn), infeasible_relus,[],layers_masks,undecided_relus=copy(sorted(non_lin_relus)),paths = paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 6 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 675, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 8 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 675, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 675, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 4 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 675, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 663, in dfs
+    self.set_neuron_bounds(model1, network, layer_idx,neuron_idx,phase,layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 278, in set_neuron_bounds
+    nn.recompute_bounds(layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 87, in recompute_bounds
+    layer_sym,error_vec = layer_sym.forward_relu(layer = layer_idx,nonlin_relus = self.nonlin_relus,inact_relus=self.inactive_relus,act_relus= self.active_relus)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 412, in forward_relu
+    lower_ub = self.concrete_upper_bound(relu_lower_eq, self.interval)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 449, in concrete_upper_bound
+    n_idx = np.where(equation[:-1] <= 0)[0]       
+  File "<__array_function__ internals>", line 6, in where
+KeyboardInterrupt
+Using TensorFlow backend.
+Traceback (most recent call last):
+  File "vnn.py", line 122, in <module>
+    result = run_instance(network, input_bounds, check_property, target,adv_found)
+  File "vnn.py", line 53, in run_instance
+    vars,status = solver.solve()
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 213, in solve
+    status = self.dfs(model, deepcopy(self.nn), infeasible_relus,[],layers_masks,undecided_relus=copy(sorted(non_lin_relus)),paths = paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 8 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 675, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 675, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 2 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 675, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 675, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 640, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  [Previous line repeated 2 more times]
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 675, in dfs
+    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 663, in dfs
+    self.set_neuron_bounds(model1, network, layer_idx,neuron_idx,phase,layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/solver.py", line 278, in set_neuron_bounds
+    nn.recompute_bounds(layers_masks)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 87, in recompute_bounds
+    layer_sym,error_vec = layer_sym.forward_relu(layer = layer_idx,nonlin_relus = self.nonlin_relus,inact_relus=self.inactive_relus,act_relus= self.active_relus)
+  File "/home/hkhedr/Haitham/projects/MLReluVerify/NeuralNetwork.py", line 410, in forward_relu
+    relu_upper_eq = relu_upper_equations[row]
+KeyboardInterrupt
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.

@@ -20,6 +20,7 @@ def alarm_handler(signum, frame):
     raise TimeOutException()
 
 def check_potential_CE(nn,x):
+    # return False
     u = nn.evaluate(x)
     if(np.argmax(u) == 0 ):
         # print("Potential CE success")
@@ -31,12 +32,12 @@ def check_prop_samples(nn,samples):
     outs = np.argmax(outs,axis = 1)
     return np.any(outs  == 0)
 
-def run_instance(nn, input_bounds, check_property, adv_found,constraints = None):
+def run_instance(nn, input_bounds, check_property, adv_found,constraints = None, check_prop_samples = None):
     nn.set_bounds(input_bounds)
     if np.max(nn.layers[7]['conc_lb'][1:]) > nn.layers[7]['conc_ub'][0]:
         # print("Problem Infeasible")
         return
-    solver = Solver(network = nn,property_check=check_property, samples = samples)
+    solver = Solver(network = nn,property_check=check_property, samples = samples,check_prop_samples = check_prop_samples)
     #Add Input bounds as constraints in the solver
     #TODO: Make the solver apply the bound directly from the NN object
     A = np.eye(nn.image_size)
@@ -77,7 +78,7 @@ if __name__ == "__main__":
     # networks = [networks[-1]]
     raw_lower_bounds = np.array([55947.691, -3.141592, -3.141592, 1145, 0]).reshape((-1,1))
     raw_upper_bounds = np.array([62000, 3.141592, 3.141592, 1200, 60]).reshape((-1,1))
-    for network in networks[1:]:
+    for network in networks:
         instance_start = time()
         # print("Checking property 2 on %s"%network[5:])
         nnet = NeuralNetworkStruct()
@@ -90,11 +91,11 @@ if __name__ == "__main__":
             # print("Problem Infeasible")
             print_summary(network,2,'safe',time()-instance_start)
             continue
-        samples = sample_network(nnet,input_bounds,15000)
-        # SAT = check_prop_samples(nnet,samples)
-        # if(SAT):
-        #     print_summary(network,2,'unsafe using samples',time()-instance_start)
-        #     continue
+        samples = sample_network(nnet,input_bounds,150000)
+        SAT = check_prop_samples(nnet,samples)
+        if(SAT):
+            print_summary(network,2,'unsafe/samples',time()-instance_start)
+            continue
         splitting_time = time()
         problems = split_input(nnet,input_bounds,512)
         #print('Splitting time',time() - splitting_time)
@@ -110,7 +111,7 @@ if __name__ == "__main__":
                 # samples = sample_network(nnet,input_bounds,15000)
                 # input_bounds = problems[k]
                 # run_instance(nn, input_bounds, check_potential_CE,adv_found)
-                p = Process(target=run_instance, args=(nnet, input_bounds, check_potential_CE,adv_found,None))
+                p = Process(target=run_instance, args=(nnet, input_bounds, check_potential_CE,adv_found,None,check_prop_samples))
                 p.start()
                 processes.append(p)
             prev_n_alive = -1        

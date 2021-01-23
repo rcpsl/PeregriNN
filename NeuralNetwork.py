@@ -31,7 +31,7 @@ class NeuralNetworkStruct(object):
             self.input_bound[:-1,0] = -1E10
             self.input_bound[:-1,1] = 1E10
         
-        self.layers = {}
+        self.layers = [None]*self.num_layers
         if(load_weights):
             self.model = load_model("model/my_model.h5")
 
@@ -59,6 +59,7 @@ class NeuralNetworkStruct(object):
         # self.__compute_IA_bounds()
         # self.__compute_sym_bounds()
         self.layers[self.num_layers-1]['type'] = 'output'
+        
     def recompute_bounds(self,layers_mask):
         self.nonlin_relus = []
         self.active_relus = []
@@ -75,18 +76,28 @@ class NeuralNetworkStruct(object):
             layer['in_lb'] = layer_sym.concrete_Mlower_bound(layer_sym.lower,layer_sym.interval)
             layer['in_ub'] = layer_sym.concrete_Mupper_bound(layer_sym.upper,layer_sym.interval)
             if(layer['type'] == 'hidden'):
-                layer_mask = layers_mask[layer_idx-1]
-                active_neurons = np.where(layer_mask == 1)[0]
-                self.active_relus += [[layer_idx,idx] for idx in active_neurons]
-                inactive_neurons = np.where(layer_mask == 0)[0]
-                self.inactive_relus += [[layer_idx,idx] for idx in inactive_neurons]
+                active_neurons = []
+                inactive_neurons = []
+                if(layers_mask is not None):
+                    layer_mask = layers_mask[layer_idx-1]
+                    active_neurons = np.where(layer_mask == 1)[0]
+                    inactive_neurons = np.where(layer_mask == 0)[0]
+                    self.active_relus += [[layer_idx,idx] for idx in active_neurons]
+                    self.inactive_relus += [[layer_idx,idx] for idx in inactive_neurons]
                 layer_sym,error_vec = layer_sym.forward_relu(layer = layer_idx,nonlin_relus = self.nonlin_relus,inact_relus=self.inactive_relus,act_relus= self.active_relus)
-                layer_sym.lower[active_neurons]  = layer_sym.upper[active_neurons] =  layer['in_sym'].upper[active_neurons]
-                layer_sym.upper[inactive_neurons] = layer_sym.lower[inactive_neurons] = 0      
+                # layer_sym.lower[active_neurons]  = layer_sym.upper[active_neurons] =  layer['in_sym'].upper[active_neurons]
+                layer_sym.lower[active_neurons]  = copy(layer['in_sym'].upper[active_neurons])
+                layer_sym.upper[active_neurons]  = copy(layer['in_sym'].upper[active_neurons])
+                layer_sym.upper[inactive_neurons] = 0
+                layer_sym.lower[inactive_neurons] = 0  
+                layer['conc_lb'] = np.maximum(0,layer_sym.concrete_Mlower_bound(layer_sym.lower,layer_sym.interval))
+                layer['conc_ub'] = np.maximum(0,layer_sym.concrete_Mupper_bound(layer_sym.upper,layer_sym.interval))
+    
+            else:
+                layer['conc_lb'] =   layer['in_lb']
+                layer['conc_ub'] =   layer['in_ub']
                 
             layer['Relu_sym'] = layer_sym
-            layer['conc_lb'] = layer_sym.concrete_Mlower_bound(layer_sym.lower,layer_sym.interval)
-            layer['conc_ub'] = layer_sym.concrete_Mupper_bound(layer_sym.upper,layer_sym.interval)
 
     def __compute_sym_bounds(self):
         #first layer Symbolic interval
@@ -106,7 +117,7 @@ class NeuralNetworkStruct(object):
         self.layers[1]['conc_lb'] = input_sym.concrete_Mlower_bound(input_sym.lower,input_sym.interval)
         self.layers[1]['conc_ub'] = input_sym.concrete_Mupper_bound(input_sym.upper,input_sym.interval)
         self.layers[1]['Relu_sym'] = input_sym
-        for layer_idx,layer in self.layers.items():
+        for layer_idx,layer in enumerate(self.layers):
             if(layer_idx < 2):
                 continue
             weights = (layer['weights'],layer['bias'])
@@ -222,6 +233,42 @@ class NeuralNetworkStruct(object):
             else:
                 prev = np.maximum(0,net)
         return phases, prev
+    
+    def eval_and_update_Lip(self, input):
+
+        #input shapes N*D where N is the batch size and D is the dim of input point
+        # phases = []
+        prev = input
+        max_diff = (self.input_bound[:,1] - self.input_bound[:,0]).flatten()
+        vol = np.prod(max_diff)
+        dims = self.image_size
+        radius = 0.5 * (dims**0.5) * (vol/len(input))**(1/dims)
+        L = np.eye(self.layers[1]['weights'].shape[1])
+        for index in range(self.num_layers):
+            if(index == 0):
+                continue
+            W = self.layers[index]['weights']
+            b = self.layers[index]['bias']
+            W_ = copy(W)
+            relu_ub = self.layers[index]['conc_ub']
+            in_active = np.where(relu_ub <= 0)[0]
+            W_[in_active] = 0 
+            L = np.matmul(W_,L)
+            net = prev @ W.T + b.T
+            # phases.append(net > 1E-5)
+            if(self.layers[index]['type'] == 'output'):
+                prev =  net
+            else:
+                prev = np.maximum(0,net)
+
+            f_max = np.max(net,axis = 0)
+            f_min = np.min(net,axis = 0)
+           
+            L_LB = np.linalg.norm(L,ord = 2)
+            self.layers[index]['L_ub'] = f_max + L_LB * radius
+            self.layers[index]['L_lb'] = f_min - L_LB * radius
+
+        return prev
 
     def evaluate(self,input):
         prev = input
@@ -303,7 +350,36 @@ class NeuralNetworkStruct(object):
         self.set_weights(W,biases)
         self.__set_stats(stats)  
         # return layers_sizes,W,biases,stats
+        
+    def compute_L_LB(self):
 
+        norm  = copy(self.layers[1]['weights'])
+        relu_ub = self.layers[1]['conc_ub']
+        in_active = np.where(relu_ub <= 0)[0]
+        norm[in_active] = 0
+        for i in range(2,self.num_layers):
+            relu_ub = self.layers[i]['conc_ub']
+            in_active = np.where(relu_ub <=0)[0]
+            W = copy(self.layers[i]['weights'])
+            W[in_active] = 0
+            norm = np.matmul(W,norm)
+        L = np.linalg.norm(norm,ord = 2)
+        return L 
+
+    def compute_L_UB(self):
+        W  = np.copy(self.layers[1]['weights'])
+        relu_ub = self.layers[1]['conc_ub']
+        in_active = np.where(relu_ub <= 0)[0]
+        W[in_active] = 0
+        L = np.linalg.norm(W,ord = 2)
+        for i in range(2,self.num_layers):
+            relu_ub = self.layers[i]['conc_ub']
+            in_active = np.where(relu_ub <=0)[0]
+            W = np.copy(self.layers[i]['weights'])
+            W[in_active] = 0
+            L = L * np.linalg.norm(W,ord = 2)
+        
+        return L     
         
 class SymbolicInterval(object):
     
@@ -346,11 +422,12 @@ class SymbolicInterval(object):
                 inact_relus.append([layer,row])
             else:
                 nonlin_relus.append([layer,row])
-                if(lower_ub >eps):
+                if(abs(lower_lb) > abs(upper_ub) or lower_ub <= eps):
+                    relu_lower_eq[:] = 0
+                elif(lower_ub > eps):
                     relu_lower_eq[:]    =  lower_ub * (relu_lower_eq) / (lower_ub - lower_lb)
                 else:
-                    relu_lower_eq[:] = 0
-
+                    relu_lower_eq[:]    = 0
                 if(upper_lb < eps):
                     relu_upper_eq[:]   = upper_ub * (relu_upper_eq) / (upper_ub - upper_lb)
                     relu_upper_eq[-1]  -= upper_ub* upper_lb / (upper_ub - upper_lb)

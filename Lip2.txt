@@ -1,0 +1,155 @@
+Using TensorFlow backend.
+Progress 466/512
+Progress 472/512
+Progress 473/512
+1_1,2,timeout,300.407329
+Progress 405/512
+Progress 428/512
+Progress 429/512
+Progress 431/512
+Progress 432/512
+Progress 433/512
+1_2,2,unsafe,148.480635
+Progress 321/512
+Progress 338/512
+Progress 352/512
+Progress 381/512
+Progress 382/512
+Progress 383/512
+Progress 384/512
+Progress 385/512
+1_3,2,timeout,300.167933
+1_4,2,unsafe,94.196452
+Progress 366/512
+Progress 390/512
+Progress 427/512
+Progress 428/512
+Progress 429/512
+Progress 430/512
+Progress 431/512
+Progress 432/512
+Progress 433/512
+Progress 434/512
+Progress 435/512
+Progress 436/512
+Progress 437/512
+Progress 438/512
+Progress 439/512
+1_5,2,timeout,300.193870
+Progress 340/512
+Progress 351/512
+Progress 369/512
+Progress 395/512
+Progress 398/512
+Progress 399/512
+Progress 400/512
+Progress 401/512
+Progress 402/512
+Progress 403/512
+1_6,2,timeout,300.255374
+Progress 374/512
+Progress 409/512
+Progress 440/512
+Progress 444/512
+Progress 446/512
+Progress 447/512
+Progress 449/512
+Progress 450/512
+1_7,2,timeout,300.362819
+Progress 342/512
+Progress 355/512
+Progress 379/512
+Progress 390/512
+Progress 401/512
+1_8,2,timeout,300.259649
+Progress 351/512
+Progress 381/512
+Progress 409/512
+Progress 427/512
+Progress 428/512
+Progress 429/512
+Progress 430/512
+Progress 431/512
+Progress 432/512
+Progress 433/512
+Progress 434/512
+Progress 435/512
+Progress 436/512
+Progress 437/512
+1_9,2,timeout,300.298972
+2_1,2,unsafe,83.298660
+2_2,2,unsafe,102.925637
+2_3,2,unsafe,81.844519
+2_4,2,unsafe,76.893445
+2_5,2,unsafe,92.692753
+2_6,2,unsafe,110.898097
+2_7,2,unsafe,113.233902
+2_8,2,unsafe,113.701342
+2_9,2,unsafe,115.880206
+3_1,2,unsafe,92.958039
+3_2,2,unsafe,76.858876
+Progress 310/512
+Progress 326/512
+Progress 342/512
+Progress 354/512
+Progress 357/512
+Progress 358/512
+Progress 359/512
+Progress 360/512
+Progress 361/512
+Progress 362/512
+3_3,2,timeout,300.333009
+3_4,2,unsafe,76.017644
+3_5,2,unsafe,79.455370
+3_6,2,unsafe,120.359553
+3_7,2,unsafe,112.056567
+3_8,2,unsafe,117.808756
+3_9,2,unsafe,99.474410
+4_1,2,unsafe,143.252322
+Progress 226/512
+Progress 236/512
+Progress 239/512
+Progress 241/512
+Progress 244/512
+Progress 245/512
+Progress 246/512
+Progress 249/512
+Progress 250/512
+Progress 251/512
+Progress 253/512
+Progress 254/512
+Progress 255/512
+Progress 257/512
+Progress 259/512
+Progress 262/512
+Progress 263/512
+4_2,2,timeout,300.404156
+4_3,2,unsafe,87.040280
+4_4,2,unsafe,61.348682
+4_5,2,unsafe,106.457535
+4_6,2,unsafe,94.414231
+4_7,2,unsafe,123.685546
+4_8,2,unsafe,89.476346
+Progress 228/512
+Progress 232/512
+Progress 242/512
+Progress 263/512
+Progress 272/512
+Progress 280/512
+Progress 281/512
+4_9,2,timeout,300.211970
+5_1,2,unsafe,81.645527
+5_2,2,unsafe,94.522141
+Progress 377/512
+Progress 404/512
+Progress 430/512
+Progress 435/512
+Progress 436/512
+Progress 437/512
+5_3,2,timeout,300.364348
+5_4,2,unsafe,75.115747
+5_5,2,unsafe,91.557684
+5_6,2,unsafe,130.964398
+5_7,2,unsafe,100.738832
+5_8,2,unsafe,121.087800
+5_9,2,unsafe,117.166456

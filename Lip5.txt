@@ -1,0 +1,282 @@
+Using TensorFlow backend.
+Progress 417/512
+Progress 459/512
+Progress 482/512
+Progress 493/512
+Progress 496/512
+Progress 497/512
+Progress 499/512
+Progress 500/512
+Progress 501/512
+Progress 502/512
+Progress 503/512
+Progress 504/512
+Progress 505/512
+Progress 507/512
+Progress 508/512
+Progress 509/512
+Progress 510/512
+Progress 511/512
+Progress 512/512
+1_1,2,safe,267.597743
+1_2,2,unsafe/samples,0.210358
+Progress 351/512
+Progress 377/512
+Progress 404/512
+Progress 434/512
+Progress 469/512
+Progress 487/512
+Progress 495/512
+Progress 500/512
+Progress 502/512
+Progress 503/512
+Progress 505/512
+Progress 506/512
+Progress 508/512
+Progress 512/512
+1_3,2,safe,206.204983
+1_4,2,unsafe/samples,0.201066
+Progress 340/512
+Progress 366/512
+Progress 386/512
+Progress 411/512
+Progress 438/512
+Progress 467/512
+Progress 477/512
+Progress 480/512
+Progress 481/512
+Progress 483/512
+Progress 484/512
+Progress 487/512
+Progress 488/512
+Progress 489/512
+Progress 491/512
+Progress 493/512
+Progress 494/512
+Progress 495/512
+Progress 496/512
+Progress 497/512
+Progress 499/512
+Progress 500/512
+Progress 501/512
+1_5,2,timeout,300.214481
+Progress 340/512
+Progress 361/512
+Progress 370/512
+Progress 389/512
+Progress 407/512
+Progress 443/512
+Progress 459/512
+Progress 462/512
+Progress 463/512
+Progress 468/512
+Progress 470/512
+Progress 471/512
+Progress 473/512
+Progress 474/512
+Progress 475/512
+Progress 477/512
+Progress 478/512
+Progress 479/512
+Progress 480/512
+1_6,2,timeout,300.276713
+Progress 329/512
+Progress 342/512
+Progress 370/512
+Progress 420/512
+Progress 441/512
+Progress 476/512
+Progress 487/512
+Progress 492/512
+Progress 494/512
+Progress 496/512
+Progress 498/512
+Progress 499/512
+Progress 501/512
+Progress 504/512
+Progress 505/512
+Progress 507/512
+Progress 508/512
+Progress 509/512
+Progress 510/512
+Progress 511/512
+Progress 512/512
+1_7,2,safe,233.661089
+Progress 341/512
+Progress 360/512
+Progress 370/512
+Progress 392/512
+Progress 426/512
+Progress 445/512
+Progress 466/512
+Progress 470/512
+Progress 474/512
+Progress 478/512
+Progress 480/512
+Progress 481/512
+Progress 482/512
+Progress 483/512
+Progress 484/512
+Progress 486/512
+Progress 487/512
+Progress 488/512
+Progress 489/512
+1_8,2,timeout,300.269322
+Progress 347/512
+Progress 373/512
+Progress 397/512
+Progress 440/512
+Progress 462/512
+Progress 496/512
+Progress 502/512
+Progress 504/512
+Progress 505/512
+Progress 506/512
+Progress 507/512
+Progress 508/512
+Progress 509/512
+Progress 510/512
+Progress 511/512
+1_9,2,timeout,300.215862
+2_1,2,unsafe/samples,0.247322
+2_2,2,unsafe/samples,0.274739
+2_3,2,unsafe/samples,0.262632
+2_4,2,unsafe/samples,0.251034
+2_5,2,unsafe/samples,0.243138
+2_6,2,unsafe/samples,0.240787
+2_7,2,unsafe/samples,0.255431
+2_8,2,unsafe/samples,0.241362
+2_9,2,unsafe/samples,0.246421
+3_1,2,unsafe/samples,0.248639
+Progress 343/512
+Progress 365/512
+Progress 380/512
+Progress 422/512
+Progress 441/512
+Progress 472/512
+Progress 478/512
+Progress 479/512
+Progress 482/512
+Progress 486/512
+Progress 488/512
+Progress 492/512
+Progress 494/512
+Progress 495/512
+Progress 496/512
+Progress 497/512
+Progress 498/512
+Progress 499/512
+Progress 500/512
+Progress 501/512
+3_2,2,timeout,300.265466
+Progress 344/512
+Progress 352/512
+Progress 374/512
+Progress 382/512
+Progress 401/512
+Progress 427/512
+Progress 435/512
+Progress 437/512
+Progress 439/512
+Progress 440/512
+Progress 441/512
+Progress 446/512
+Progress 449/512
+Progress 450/512
+Progress 452/512
+Progress 453/512
+Progress 454/512
+Progress 456/512
+Progress 458/512
+Progress 460/512
+Progress 462/512
+Progress 463/512
+Progress 464/512
+Progress 465/512
+Progress 466/512
+Progress 468/512
+Progress 469/512
+Progress 471/512
+Progress 472/512
+Progress 473/512
+3_3,2,timeout,300.397549
+3_4,2,unsafe/samples,0.342532
+3_5,2,unsafe/samples,0.232379
+3_6,2,unsafe/samples,0.271670
+3_7,2,unsafe/samples,0.264218
+3_8,2,unsafe/samples,0.235513
+3_9,2,unsafe/samples,0.252469
+4_1,2,unsafe/samples,0.254389
+Progress 273/512
+Progress 276/512
+Progress 285/512
+Progress 289/512
+Progress 291/512
+Progress 295/512
+Progress 301/512
+Progress 310/512
+Progress 333/512
+Progress 346/512
+Progress 353/512
+Progress 366/512
+Progress 376/512
+Progress 390/512
+Progress 400/512
+Progress 410/512
+Progress 415/512
+Progress 420/512
+Progress 432/512
+Progress 442/512
+Progress 443/512
+Progress 450/512
+Progress 456/512
+Progress 459/512
+Progress 462/512
+Progress 466/512
+Progress 468/512
+Progress 474/512
+Progress 477/512
+Progress 480/512
+Progress 481/512
+4_2,2,timeout,300.242025
+4_3,2,unsafe/samples,0.223594
+4_4,2,unsafe/samples,0.229289
+4_5,2,unsafe/samples,0.222713
+4_6,2,unsafe/samples,0.191939
+4_7,2,unsafe/samples,0.231792
+4_8,2,unsafe/samples,0.200424
+4_9,2,unsafe/samples,0.199770
+5_1,2,unsafe/samples,0.223533
+5_2,2,unsafe/samples,0.219029
+Progress 351/512
+Progress 369/512
+Progress 389/512
+Progress 420/512
+Progress 444/512
+Progress 468/512
+Progress 473/512
+Progress 475/512
+Progress 478/512
+Progress 479/512
+Progress 480/512
+Progress 482/512
+Progress 485/512
+Progress 489/512
+Progress 491/512
+Progress 492/512
+Progress 494/512
+Progress 496/512
+Progress 497/512
+Progress 498/512
+Progress 499/512
+Progress 500/512
+Progress 501/512
+Progress 502/512
+Progress 503/512
+5_3,2,timeout,300.242774
+5_4,2,unsafe/samples,0.255958
+5_5,2,unsafe/samples,0.312629
+5_6,2,unsafe/samples,0.307244
+5_7,2,unsafe/samples,0.292745
+5_8,2,unsafe/samples,0.299263
+5_9,2,unsafe/samples,0.324669

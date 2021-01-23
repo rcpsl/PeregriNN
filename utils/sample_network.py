@@ -90,7 +90,8 @@ def split_interval(interval_bound,dim_to_split):
     int1 = np.copy(interval_bound)
     int2 = np.copy(interval_bound)
     mid = (interval_bound[dim_to_split,0] + interval_bound[dim_to_split,1]) /2.0 
-    int1[dim_to_split,1] = int2[dim_to_split,0] = mid
+    int1[dim_to_split,1] = mid 
+    int2[dim_to_split,0] = mid
     return int1,int2
 
 def split_input_space(nn,bounds,MAX_SPLITS = 128):
@@ -101,6 +102,7 @@ def split_input_space(nn,bounds,MAX_SPLITS = 128):
         new_splits = []
         for interval_bound in splits:
             dim_to_split = np.argmax(interval_bound[:,1] - interval_bound[:,0])
+            # dim_to_split = np.random.randint(0, high=nn.image_size)
             int1,int2 = split_interval(interval_bound,dim_to_split)
             disp1 = disp2 = 1
             new_splits.append(int1)
