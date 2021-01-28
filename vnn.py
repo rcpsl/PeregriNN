@@ -14,8 +14,11 @@ class TimeOutException(Exception):
     def __init__(self, *args, **kwargs):
         pass
 
-def print_summary(network,prop, safety, time):
-    print(network[14:19],prop,safety,time)
+def print_summary(network,prop, safety, time, extra = None):
+    if(extra is not None):
+        print(network[14:19],prop,safety,time,extra)
+    else:
+        print(network[14:19],prop,safety,time)
 def alarm_handler(signum, frame):
     raise TimeOutException()
 
@@ -53,7 +56,7 @@ def run_instance(network, input_bounds, check_property, target,adv_found):
         vars,status = solver.solve()
         if(status == 'SolFound'):
             adv_found.value = 1
-        return status
+        return (status,solver.convex_calls)
         # print('Terminated')
     except Exception as e:
         raise e
@@ -66,6 +69,7 @@ if __name__ == "__main__":
         sys.exit()
     
     TIMEOUT= 300
+    INSTRUMENT = True
     adv = non_adv = timed_out = 0
 
     #init Neural network
@@ -91,7 +95,7 @@ if __name__ == "__main__":
             target = np.argmax(output)
             nn.set_target(target)
             other_ouputs = [i for i in range(nn.output_size) if i != target]
-            # print('Testing',image_file)
+            print('Testing',image_file)
             # print('Output:',output,'\nTarget-->',target)
         signal.signal(signal.SIGALRM, alarm_handler)
         signal.alarm(TIMEOUT)
@@ -103,24 +107,27 @@ if __name__ == "__main__":
             lb = np.maximum(image-delta,0.0)
             ub = np.minimum(image+delta,1.0)
             input_bounds = np.concatenate((lb,ub),axis = 1)
-            samples = sample_network(nn,input_bounds,15000)
-            SAT = check_prop_samples(nn,samples)
-            if(SAT):
-                adv +=1
-                print_summary(nnet,im_idx+1,'unsafe/samples',time()-start_time)
-                signal.alarm(0)
-                continue
+            #samples = sample_network(nn,input_bounds,15000)
+            #SAT = check_prop_samples(nn,samples)
+            #if(SAT):
+            #    adv +=1
+            #    print_summary(nnet,im_idx+1,'unsafe/samples',time()-start_time)
+            #    signal.alarm(0)
+            #    continue
             nn.set_bounds(input_bounds)
             out_list_ub = copy(nn.layers[nn.num_layers-1]['conc_ub'])
             other_ouputs = np.flip(np.argsort(out_list_ub,axis = 0)).flatten().tolist()
             other_ouputs = [idx for idx in other_ouputs if idx!= target and out_list_ub[idx] > 0]
             adv_found = Value('i',0)
             result = ''
+            convex_calls = 0
             for out_idx in other_ouputs:
                 if 0 > nn.layers[len(nn.layers)-1]['conc_ub'][out_idx]:
                     continue
+                #print('Testing Adversarial with label', out_idx)
                 network = deepcopy(nn)
-                result = run_instance(network, input_bounds, check_property, target,adv_found)
+                result,calls = run_instance(network, input_bounds, check_property, target,adv_found)
+                convex_calls += calls
                 if(result == 'SolFound'):
                     break
                 # p = Process(target=run_instance, args=(network, input_bounds, check_property, target,adv_found))
@@ -131,11 +138,11 @@ if __name__ == "__main__":
                 #print("Adv found")
                 adv +=1
                 results.append("UNSAFE")
-                print_summary(nnet,im_idx+1,'unsafe',time() - start_time)
+                print_summary(nnet,im_idx+1,'unsafe',time() - start_time ,  convex_calls)
             else:
                 results.append("Safe")
                 non_adv +=1
-                print_summary(nnet,im_idx+1,'safe',time()-start_time)
+                print_summary(nnet,im_idx+1,'safe',time()-start_time, convex_calls)
             continue
 
             prev_n_alive = -1
@@ -158,9 +165,9 @@ if __name__ == "__main__":
                 non_adv +=1
                 print_summary(nnet,im_idx+1,'safe',time()-start_time)
 
-        except Exception as e:
+        except TimeOutException as e:
             timed_out += 1
-            print_summary(nnet,im_idx+1,'timeout',TIMEOUT)
+            print_summary(nnet,im_idx+1,'timeout',TIMEOUT,convex_calls)
             results.append("Timeout") 
             continue
         for p in processes:

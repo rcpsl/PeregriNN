@@ -11,7 +11,7 @@ import re
 import cdd
 from poset import *
 from utils.sample_network import *
-from volestipy import *
+#from volestipy import *
 from polytope import *
 eps = 1E-5
 np.seterr(all='raise')
@@ -19,7 +19,7 @@ np.seterr(all='raise')
 
 class Solver():
 
-    def __init__(self, network = None, target = -1,maxIter = 100000,property_check=None, samples = None,check_prop_samples = None):
+    def __init__(self, network = None, target = -1,maxIter = 100000,property_check=None, samples = None,check_prop_samples = None, INSTR=True):
         self.maxNumberOfIterations = maxIter
         self.nn        = deepcopy(network)
         self.orig_net = deepcopy(self.nn)
@@ -58,6 +58,8 @@ class Solver():
         self.samples = samples
         self.check_prop_samples = check_prop_samples
         # self.phases,self.samples_outs = self.nn.get_phases(self.samples)
+        self.convex_calls = 0
+        self.INSTRUMENT = INSTR
 
         #Layer index 
         self.model.update()
@@ -170,6 +172,9 @@ class Solver():
         model = self.__create_init_model()
         self.__prepare_problem(model,self.nn)
         # self.model.write('model.lp')
+        self.convex_calls +=1
+        if(self.INSTRUMENT):
+            print('Instrumenting a new instance')
         model.optimize()
         if(model.Status == 3): #Infeasible
             # IIS_slack = []
@@ -647,11 +652,17 @@ class Solver():
         # if(network.layers[network.num_layers-1]['L_ub'] is None):
         #     return
         self.set_neuron_bounds(model1,network,layer_idx,neuron_idx,phase,layers_masks)
-        valid = self.test_decision_validity(network,fixed_relus)
+        #valid = self.test_decision_validity(network,fixed_relus)
+        
+
+        valid = True
         # self.__prepare_problem()
         if(valid):
             self.fix_relu(model1, network, fixed_relus)
             # print('time of iteration',time() - s)
+            self.convex_calls +=1
+            if(self.INSTRUMENT):
+                print('Neurons fixed by solver:',self.nn.num_hidden_neurons - len(infeasible_relus),', Convex calls:',self.convex_calls)
             model1.optimize()
             if(model1.Status != 3): #Feasible solution
                 self.layer_stats[layer_idx-1][0] +=  1
@@ -685,10 +696,13 @@ class Solver():
             # if(network.layers[network.num_layers-1]['L_ub'] is None):
             #     return
             self.set_neuron_bounds(model1, network, layer_idx,neuron_idx,phase,layers_masks)
-            valid = self.test_decision_validity(network,fixed_relus)
+            #valid = self.test_decision_validity(network,fixed_relus)
             # self.__prepare_problem()
             if(valid):
                 self.fix_relu(model1,network,fixed_relus)
+                self.convex_calls +=1
+                # if(self.INSTRUMENT):
+                #     print('Neurons fixed by solver:',self.nn.num_hidden_neurons - len(infeasible_relus),', Convex calls:',self.convex_calls)
                 model1.optimize()
                 if(model1.Status != 3): #Feasible solution
                     self.layer_stats[layer_idx-1][0] += 1
