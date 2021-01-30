@@ -19,7 +19,7 @@ np.seterr(all='raise')
 
 class Solver():
 
-    def __init__(self, network = None, target = -1,maxIter = 100000,property_check=None, samples = None,check_prop_samples = None, INSTR=True):
+    def __init__(self, network = None, target = -1,maxIter = 100000,property_check=None, samples = None,check_prop_samples = None, INSTR=False,convex_calls =0):
         self.maxNumberOfIterations = maxIter
         self.nn        = deepcopy(network)
         self.orig_net = deepcopy(self.nn)
@@ -58,7 +58,7 @@ class Solver():
         self.samples = samples
         self.check_prop_samples = check_prop_samples
         # self.phases,self.samples_outs = self.nn.get_phases(self.samples)
-        self.convex_calls = 0
+        self.convex_calls = convex_calls
         self.INSTRUMENT = INSTR
 
         #Layer index 
@@ -172,7 +172,7 @@ class Solver():
         model = self.__create_init_model()
         self.__prepare_problem(model,self.nn)
         # self.model.write('model.lp')
-        self.convex_calls +=1
+        self.convex_calls.val +=1
         if(self.INSTRUMENT):
             print('Instrumenting a new instance')
         model.optimize()
@@ -660,9 +660,17 @@ class Solver():
         if(valid):
             self.fix_relu(model1, network, fixed_relus)
             # print('time of iteration',time() - s)
-            self.convex_calls +=1
+            self.convex_calls.val +=1
             if(self.INSTRUMENT):
-                print('Neurons fixed by solver:',self.nn.num_hidden_neurons - len(infeasible_relus),', Convex calls:',self.convex_calls)
+                # print('Neurons fixed by solver:',self.nn.num_hidden_neurons - len(infeasible_relus),', Convex calls:',self.convex_calls.val)
+                fixed = self.nn.num_hidden_neurons - len(infeasible_relus)
+                print(len(infeasible_relus))
+                ratio = fixed/ self.nn.num_hidden_neurons
+                model_temp = model1.copy()
+                model_temp.setObjective(1)
+                model_temp.optimize()
+                _,non_fixed = self.check_SAT(model_temp)
+                print('ratio1:',ratio,'ratio2:',(self.nn.num_hidden_neurons-len(non_fixed))/self.nn.num_hidden_neurons)
             model1.optimize()
             if(model1.Status != 3): #Feasible solution
                 self.layer_stats[layer_idx-1][0] +=  1
@@ -700,9 +708,9 @@ class Solver():
             # self.__prepare_problem()
             if(valid):
                 self.fix_relu(model1,network,fixed_relus)
-                self.convex_calls +=1
+                self.convex_calls.val +=1
                 # if(self.INSTRUMENT):
-                #     print('Neurons fixed by solver:',self.nn.num_hidden_neurons - len(infeasible_relus),', Convex calls:',self.convex_calls)
+                #     print('Neurons fixed by solver:',self.nn.num_hidden_neurons - len(infeasible_relus),', Convex calls:',self.convex_calls.val)
                 model1.optimize()
                 if(model1.Status != 3): #Feasible solution
                     self.layer_stats[layer_idx-1][0] += 1
@@ -771,7 +779,7 @@ class Solver():
             ub = np.maximum(0,self.nn.layers[layer_idx+1]['in_ub'])
             ub[ub > 0] = 1
             weights += list(init_weight * ub)
-            # weights += [1] * layer_size
+            #weights += [1] * layer_size
             init_weight *= 10000
 
         obj = LinExpr()

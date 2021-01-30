@@ -34,10 +34,10 @@ def check_prop_samples(nn,samples):
     outs = np.argmax(outs,axis = 1)
     return np.any(outs  != target)
 
-def run_instance(network, input_bounds, check_property, target,adv_found):
+def run_instance(network, input_bounds, check_property, target,adv_found,convex_calls = 0):
 
     try:
-        solver = Solver(network = network,property_check=check_property,target = target)
+        solver = Solver(network = network,property_check=check_property,target = target,convex_calls=convex_calls)
         # input_vars = [solver.state_vars[i] for i in range(len(solver.state_vars))]
         A = np.eye(network.image_size)
         lower_bound = input_bounds[:,0]
@@ -56,19 +56,22 @@ def run_instance(network, input_bounds, check_property, target,adv_found):
         vars,status = solver.solve()
         if(status == 'SolFound'):
             adv_found.value = 1
-        return (status,solver.convex_calls)
+        return status
         # print('Terminated')
     except Exception as e:
         raise e
 
 
+class INT:
+    def __init__(self,val = 0):
+        self.val = val
 if __name__ == "__main__":
 
     if(len(sys.argv) < 3):
         print("Arguments missing vnn.py network epsilon")
         sys.exit()
     
-    TIMEOUT= 300
+    TIMEOUT= 600
     INSTRUMENT = True
     adv = non_adv = timed_out = 0
 
@@ -81,7 +84,7 @@ if __name__ == "__main__":
 
     # image_files = sorted(glob.glob('images/*'))
     
-    num_test = 25
+    num_test = 50
     image_files = ['VNN/mnist_images/image%d'%idx for idx in range(1,num_test+1)]
     delta = float(sys.argv[-1])
     begin_time = time()
@@ -95,7 +98,7 @@ if __name__ == "__main__":
             target = np.argmax(output)
             nn.set_target(target)
             other_ouputs = [i for i in range(nn.output_size) if i != target]
-            print('Testing',image_file)
+            # print('Testing',image_file)
             # print('Output:',output,'\nTarget-->',target)
         signal.signal(signal.SIGALRM, alarm_handler)
         signal.alarm(TIMEOUT)
@@ -120,14 +123,13 @@ if __name__ == "__main__":
             other_ouputs = [idx for idx in other_ouputs if idx!= target and out_list_ub[idx] > 0]
             adv_found = Value('i',0)
             result = ''
-            convex_calls = 0
+            convex_calls = INT(0) 
             for out_idx in other_ouputs:
                 if 0 > nn.layers[len(nn.layers)-1]['conc_ub'][out_idx]:
                     continue
                 #print('Testing Adversarial with label', out_idx)
                 network = deepcopy(nn)
-                result,calls = run_instance(network, input_bounds, check_property, target,adv_found)
-                convex_calls += calls
+                result = run_instance(network, input_bounds, check_property, target,adv_found,convex_calls)
                 if(result == 'SolFound'):
                     break
                 # p = Process(target=run_instance, args=(network, input_bounds, check_property, target,adv_found))
@@ -138,11 +140,11 @@ if __name__ == "__main__":
                 #print("Adv found")
                 adv +=1
                 results.append("UNSAFE")
-                print_summary(nnet,im_idx+1,'unsafe',time() - start_time ,  convex_calls)
+                print_summary(nnet,im_idx+1,'unsafe',time() - start_time ,  convex_calls.val)
             else:
                 results.append("Safe")
                 non_adv +=1
-                print_summary(nnet,im_idx+1,'safe',time()-start_time, convex_calls)
+                print_summary(nnet,im_idx+1,'safe',time()-start_time, convex_calls.val)
             continue
 
             prev_n_alive = -1
@@ -167,7 +169,7 @@ if __name__ == "__main__":
 
         except TimeOutException as e:
             timed_out += 1
-            print_summary(nnet,im_idx+1,'timeout',TIMEOUT,convex_calls)
+            print_summary(nnet,im_idx+1,'timeout',TIMEOUT,convex_calls.val)
             results.append("Timeout") 
             continue
         for p in processes:
