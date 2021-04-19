@@ -9,10 +9,8 @@ from NeuralNetwork import *
 from copy import copy,deepcopy
 import re
 import cdd
-from poset import *
 from utils.sample_network import *
 #from volestipy import *
-from polytope import *
 from functools import cmp_to_key
 eps = 1E-5
 np.seterr(all='raise')
