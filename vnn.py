@@ -71,7 +71,7 @@ if __name__ == "__main__":
         print("Arguments missing vnn.py network epsilon")
         sys.exit()
     
-    TIMEOUT= 600
+    TIMEOUT= 300
     INSTRUMENT = True
     adv = non_adv = timed_out = 0
 

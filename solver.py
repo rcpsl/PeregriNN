@@ -1,4 +1,4 @@
-from random import random,seed
+from random import random,seed,choice
 from time import time
 import pickle
 import math
@@ -13,6 +13,7 @@ from poset import *
 from utils.sample_network import *
 #from volestipy import *
 from polytope import *
+from functools import cmp_to_key
 eps = 1E-5
 np.seterr(all='raise')
 
@@ -745,6 +746,33 @@ class Solver():
         inactive = np.sort(np.where(inactive_infeas == True)[0])
         slacks[active] = y[active] - net[active]
         slacks[inactive] = y[inactive]
+        layer_slacks = []
+        for idx in active:
+            abs_idx = self.__input_dim + idx
+            layer,_ = self.abs2d[abs_idx]
+            layer_slacks.append((layer,slacks[idx],abs_idx,1))
+        for idx in inactive:
+            abs_idx = self.__input_dim + idx
+            layer,_ = self.abs2d[abs_idx]
+            layer_slacks.append((layer,slacks[idx],abs_idx,0))
+
+        def compare(l1,l2):
+            if(l1[0] < l2[0]):
+                return -1
+            if(l2[0] < l1[0]):
+                return 1
+            if(l1[2] < l2[2]):
+                return -1
+            else:
+                return 1
+            #return choice([-1,1])
+            
+        layer_slacks = sorted(layer_slacks,key = cmp_to_key(compare))
+        if(len(layer_slacks) is not 0):
+            infeas_relus = [(idx,phase) for _,_,idx,phase in layer_slacks]
+            return False, infeas_relus
+        return True, None
+
         offset = 0
         infeas_relus=[]
        
