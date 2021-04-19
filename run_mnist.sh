@@ -1,14 +1,25 @@
 #!/bin/bash
 
-fname="mnist_random_slack.txt"
-# python -u vnn.py VNN/mnist-net_256x2.nnet 0.01 >> $fname
-python -u vnn.py VNN/mnist-net_256x2.nnet 0.02 >  $fname 
-python -u vnn.py VNN/mnist-net_256x4.nnet 0.02 >> $fname 
-python -u vnn.py VNN/mnist-net_256x6.nnet 0.02 >> $fname 
-python -u vnn.py VNN/mnist-net_256x2.nnet 0.05 >> $fname 
 
-# python -u vnn.py VNN/mnist-net_256x4.nnet 0.01 >> mnist_results.txt
-#python -u vnn.py VNN/mnist-net_256x4.nnet 0.05 >> mnist_results.txt
+#Timeout in seconds
+TIMEOUT=300
 
-# python -u vnn.py VNN/mnist-net_256x6.nnet 0.01 >> mnist_results.txt
-#python -u vnn.py VNN/mnist-net_256x6.nnet 0.05 >> mnist_results.txt
+# make results folder and clear results
+mkdir -p ./results
+rm ./results/*
+
+for net in 2 4 6
+do 
+    net_dir="VNN/mnist-net_256x${net}.nnet"
+	# 2 epsilon values
+	for ep in 0.02 0.05
+    do 
+        printf "\n===========\nChecking network mnist-net_256x${net}.nnet with epsilon ${ep} and timeout ${TIMEOUT}\n"
+        for im_idx in {1..50}
+        do
+            image="VNN/mnist_images/image${im_idx}"
+            #use >> instead of | tee if you don't want the results to print on the terminal too
+            python3 -u peregriNN.py $net_dir $image $ep --timeout $TIMEOUT | tee -a results/result_256X${net}_${ep}.txt || { echo "Exiting script"; exit 1; }
+        done
+	done
+done

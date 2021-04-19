@@ -59,6 +59,7 @@ class Solver():
         # self.phases,self.samples_outs = self.nn.get_phases(self.samples)
         self.convex_calls = convex_calls
         self.INSTRUMENT = INSTR
+        self.target = target
 
         #Layer index 
         self.model.update()
@@ -171,7 +172,7 @@ class Solver():
         model = self.__create_init_model()
         self.__prepare_problem(model,self.nn)
         # self.model.write('model.lp')
-        self.convex_calls.val +=1
+        self.convex_calls +=1
         if(self.INSTRUMENT):
             print('Instrumenting a new instance')
         model.optimize()
@@ -659,7 +660,6 @@ class Solver():
         if(valid):
             self.fix_relu(model1, network, fixed_relus)
             # print('time of iteration',time() - s)
-            self.convex_calls.val +=1
             if(self.INSTRUMENT):
                 # print('Neurons fixed by solver:',self.nn.num_hidden_neurons - len(infeasible_relus),', Convex calls:',self.convex_calls.val)
                 fixed = self.nn.num_hidden_neurons - len(infeasible_relus)
@@ -674,7 +674,7 @@ class Solver():
             if(model1.Status != 3): #Feasible solution
                 self.layer_stats[layer_idx-1][0] +=  1
                 SAT,infeasible_set = self.check_SAT(model1)
-                valid = self.check_potential_CE(network, np.array([model1.getVarByName(var_name).X for var_name in self.in_vars_names]).reshape((-1,1)))
+                valid = self.check_potential_CE(network, np.array([model1.getVarByName(var_name).X for var_name in self.in_vars_names]).reshape((-1,1)),self.target)
                 if(SAT or valid):
                     #print('Solution found')
                     status = 'SolFound'  
@@ -707,14 +707,13 @@ class Solver():
             # self.__prepare_problem()
             if(valid):
                 self.fix_relu(model1,network,fixed_relus)
-                self.convex_calls.val +=1
                 # if(self.INSTRUMENT):
                 #     print('Neurons fixed by solver:',self.nn.num_hidden_neurons - len(infeasible_relus),', Convex calls:',self.convex_calls.val)
                 model1.optimize()
                 if(model1.Status != 3): #Feasible solution
                     self.layer_stats[layer_idx-1][0] += 1
                     SAT,infeasible_set = self.check_SAT(model1)
-                    valid = self.check_potential_CE(network, np.array([model1.getVarByName(var_name).X for var_name in self.in_vars_names]).reshape((-1,1)))
+                    valid = self.check_potential_CE(network, np.array([model1.getVarByName(var_name).X for var_name in self.in_vars_names]).reshape((-1,1)),self.target)
                     if(SAT or valid):
                         #print('Solution found')
                         status = 'SolFound'  
