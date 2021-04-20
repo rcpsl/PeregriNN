@@ -15,7 +15,7 @@ Install the latest version of [Anaconda](https://docs.anaconda.com/anaconda/inst
 
 Create a conda environment with all the dependencies by running
 
-`conda env create --name envname --file=environments.yml`
+`conda env create --name envname --file=requirements.yml`
 
 make sure to replace `envname` with the environment name you'd like. Make sure the environment was created without errors.
 
