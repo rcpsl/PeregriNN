@@ -119,7 +119,7 @@ def main(args):
             result = run_instance(network, input_bounds, check_property, target, out_idx,adv_found)
             if(result == 'SolFound'):
                 break
-        signal.alarm(0)
+        #signal.alarm(0)
         if(result == 'SolFound'):
             print_summary(nnet,img_name,'unsafe',time() - start_time)
         else:
