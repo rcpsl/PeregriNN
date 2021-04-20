@@ -19,8 +19,10 @@ Create a conda environment with all the dependencies by running
 
 make sure to replace `envname` with the environment name you'd like. Make sure the environment was created without errors.
 
+## License 
+PeregriNN relies on Gurobi commercial solver which isn't open source. However, they provide a free academic license. Please request an academic license from [here](https://www.gurobi.com/academia/academic-program-and-licenses/)
 ## Test installation
-Run
+After installing Gurboi license, we can test the installation by running
 ```
 conda activate envname
 python -u peregriNN.py VNN/mnist-net_256X2.nnet VNN/mnist_images/image1 0.02
