@@ -72,6 +72,7 @@ def main(args):
     #Parse args
     nnet = args.network
     image_file = args.image
+    img_name = image_file.split('/')[-1]
     delta = float(args.eps)
     TIMEOUT = int(args.timeout)
 
@@ -102,7 +103,7 @@ def main(args):
         SAT = check_prop_samples(nn,samples,target)
         if(SAT):
         #    adv +=1
-           print_summary(nnet,image_file[-6:],'unsafe',time()-start_time)
+           print_summary(nnet,img_name,'unsafe',time()-start_time)
            return
         nn.set_bounds(input_bounds)
         out_list_ub = copy(nn.layers[nn.num_layers-1]['conc_ub'])
@@ -120,12 +121,12 @@ def main(args):
                 break
         signal.alarm(0)
         if(result == 'SolFound'):
-            print_summary(nnet,image_file[-6:],'unsafe',time() - start_time)
+            print_summary(nnet,img_name,'unsafe',time() - start_time)
         else:
-            print_summary(nnet,image_file[-6:],'safe',time()-start_time)
+            print_summary(nnet,img_name,'safe',time()-start_time)
 
     except TimeOutException:
-        print_summary(nnet,image_file[-6:],'timeout',TIMEOUT)
+        print_summary(nnet,img_name,'timeout',TIMEOUT)
     
 
 if __name__ == "__main__":
