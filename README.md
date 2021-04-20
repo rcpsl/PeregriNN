@@ -20,6 +20,7 @@ Create a conda environment with all the dependencies by running
 make sure to replace `envname` with the environment name you'd like. Make sure the environment was created without errors.
 
 ## Test installation
+Run
 ```
 conda activate envname
 python -u peregriNN.py VNN/mnist-net_256X2.nnet VNN/mnist_images/image1 0.02
