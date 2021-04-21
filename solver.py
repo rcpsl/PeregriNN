@@ -53,7 +53,7 @@ class Solver():
         self.abs2d              = [[0,i] for i in range(self.__input_dim)]
         self._2dabs              = {}
         self.fixed_relus = set()
-        self.MAX_DEPTH = 50
+        self.MAX_DEPTH = 30
         self.samples = samples
         self.check_prop_samples = check_prop_samples
         # self.phases,self.samples_outs = self.nn.get_phases(self.samples)
