@@ -36,4 +36,4 @@ and make sure there is no error.
 PeregriNN expects three positional arguments and one optional argument. The first two arguments `network` and `image` are the relative paths to the Neural network and the image files, the third arguments is the `epsilon` perturbation. The running timeout can be set by providing an optional arg `--timeout` which defaults to 300 seconds.
 
 ## Evaluation
-Execute the script `./testbench` which runs a subset of the testcases of the MNIST dataset and finishes in 2-3 hours on an off-the-shelf CPU. However, To generate the full results in the CAV21' paper, run the script `run_mnist` (This will take a long time). Executing any of those scripts will clear the `results` directory and create a new log file for each (network, eps) pair.
+Execute the script `./testbench` which runs a subset of the testcases of the MNIST dataset and finishes in about 1-2 hours on an off-the-shelf CPU. However, To generate the full results in the CAV21' paper, run the script `run_mnist` (This will take a long time). Executing any of those scripts will clear the `results` directory and create a new log file for each (network, eps) pair.
