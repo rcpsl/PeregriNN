@@ -9,7 +9,7 @@ PeregriNN is tested on a fresh installation of Ubuntu 20.04.2 LTS. We recommend 
 
 ## Installation
 
-We recommend using `conda` for installing PeregriNN and we'll provide a step by step guide for the setup of conda environment on a linux OS.
+We recommend using `conda` for installing PeregriNN and we'll provide a step by step guide for the setup of conda environment on a Ubuntu.
 
 Install some packages required for the build.
 
