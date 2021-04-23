@@ -5,7 +5,7 @@ This repository contains the implementation of PeregriNN and evalutations of adv
 
 ## System requirements
 
-PeregriNN is tested on a fresh installation of Ubuntu 20.04.2 LTS. We recommend a single core machine with 32 GB of memory
+PeregriNN is tested on a fresh installation of Ubuntu 20.04.2 LTS. We recommend a single core machine with 32 GB of memory.
 
 ## Installation
 
