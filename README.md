@@ -1,7 +1,7 @@
 # PeregriNN (CAV 21')
 PeregriNN is an efficient model checker that verifies the input/output behaviour of ReLU Neural networks using search and optimization tecnhiques. It uses a unique convex objective to identify the most "problematic" neurons and use them as a heursitic to guide the search aspect. Detailed information about the solver can be found in the paper [PEREGRiNN: Penalized-Relaxation Greedy Neural Network Verifier](https://arxiv.org/abs/2006.10864).
 
-This repository contains the implementation of PeregriNN and evalutations of adversarial robustness of Neural Networks trained on the MNIST dataset. The networks and data are the same as the ones used in [VNN 20'](https://sites.google.com/view/vnn20/vnncomp) and are in the `nnet` format.
+This repository contains the implementation of PeregriNN and evalutations of adversarial robustness of Neural Networks trained on the MNIST dataset. The networks and images are the same as the ones used in [VNN 20'](https://sites.google.com/view/vnn20/vnncomp). We support `nnet` format for Neural Network files, and accept unnormalized images (check VNN directory for examples)
 
 ## System requirements
 
