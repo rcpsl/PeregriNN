@@ -18,7 +18,7 @@ np.seterr(all='raise')
 
 class Solver():
 
-    def __init__(self, network = None, target = -1,maxIter = 100000,property_check=None, samples = None,check_prop_samples = None, INSTR=False,convex_calls =0):
+    def __init__(self, network = None, target = -1,maxIter = 100000,property_check=None, samples = None,check_prop_samples = None, INSTR=False,convex_calls =0,MAX_DEPTH=30):
         self.maxNumberOfIterations = maxIter
         self.nn        = deepcopy(network)
         self.orig_net = deepcopy(self.nn)
@@ -53,7 +53,7 @@ class Solver():
         self.abs2d              = [[0,i] for i in range(self.__input_dim)]
         self._2dabs              = {}
         self.fixed_relus = set()
-        self.MAX_DEPTH = 30
+        self.MAX_DEPTH = MAX_DEPTH
         self.samples = samples
         self.check_prop_samples = check_prop_samples
         # self.phases,self.samples_outs = self.nn.get_phases(self.samples)

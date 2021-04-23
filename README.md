@@ -3,6 +3,10 @@ PeregriNN is an efficient model checker that verifies the input/output behaviour
 
 This repository contains the implementation of PeregriNN and evalutations of adversarial robustness of Neural Networks trained on the MNIST dataset. The networks and data are the same as the ones used in [VNN 20'](https://sites.google.com/view/vnn20/vnncomp) and are in the `nnet` format.
 
+## System requirements
+
+PeregriNN is tested on a fresh installation of Ubuntu 20.04.2 LTS. We recommend a single core machine with 32 GB of memory
+
 ## Installation
 
 We recommend using `conda` for installing PeregriNN and we'll provide a step by step guide for the setup of conda environment on a linux OS.
@@ -32,4 +36,4 @@ and make sure there is no error.
 PeregriNN expects three positional arguments and one optional argument. The first two arguments `network` and `image` are the full paths to the Neural network and the image files, the third arguments is the `epsilon` perturbation. The running timeout can be set by providing an optional arg `--timeout` which defaults to 300 seconds.
 
 ## Evaluation
-To generate the results in the CAV21' paper, run the script `run_mnist`. However, this will take a long time, so we provided another script `testbench` which runs a subset of the testcases in 2-3 hours. Executing any of those scripts will clear the `results` directory and create a new log file for each (network, eps) pair.
+We provided a script `testbench` which runs a subset of the testcases of the MNIST dataset and finishes in 2-3 hours on an off-the-shelf CPU. However, To generate the full results in the CAV21' paper, run the script `run_mnist` (This will take a long time). Executing any of those scripts will clear the `results` directory and create a new log file for each (network, eps) pair.

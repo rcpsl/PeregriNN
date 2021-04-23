@@ -8,6 +8,7 @@ import glob
 from NeuralNetwork import *
 from multiprocessing import Process, Value
 import argparse
+from os import path
 
 eps = 1E-10
 
@@ -37,10 +38,10 @@ def check_prop_samples(nn,samples,target):
     return np.any(outs  != target)
 
 
-def run_instance(network, input_bounds, check_property, target, out_idx, adv_found,convex_calls = 0):
+def run_instance(network, input_bounds, check_property, target, out_idx, adv_found,convex_calls = 0, max_depth =30):
 
     try:
-        solver = Solver(network = network,property_check=check_property,target = target,convex_calls=convex_calls)
+        solver = Solver(network = network,property_check=check_property,target = target,convex_calls=convex_calls,MAX_DEPTH=max_depth)
         # input_vars = [solver.state_vars[i] for i in range(len(solver.state_vars))]
         A = np.eye(network.image_size)
         lower_bound = input_bounds[:,0]
@@ -75,7 +76,7 @@ def main(args):
     img_name = image_file.split('/')[-1]
     delta = float(args.eps)
     TIMEOUT = int(args.timeout)
-
+    MAX_DEPTH = int(args.timeout)
     #Init NN structure
     nn = NeuralNetworkStruct()
     nn.parse_network(nnet,type = 'mnist')
@@ -116,7 +117,7 @@ def main(args):
                 continue
             #print('Testing Adversarial with label', out_idx)
             network = deepcopy(nn)
-            result = run_instance(network, input_bounds, check_property, target, out_idx,adv_found)
+            result = run_instance(network, input_bounds, check_property, target, out_idx,adv_found,max_depth = MAX_DEPTH)
             if(result == 'SolFound'):
                 break
         #signal.alarm(0)
@@ -135,6 +136,7 @@ if __name__ == "__main__":
     parser.add_argument('image',help="path to image file")
     parser.add_argument('eps',help="eps perturbation")
     parser.add_argument('--timeout',default=300,help="timeout value")
+    parser.add_argument('--max_depth',default=30,help="Maximum exploration depth")
     args = parser.parse_args()
 
     main(args)
