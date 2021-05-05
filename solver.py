@@ -411,36 +411,31 @@ class Solver():
         # if(network.layers[network.num_layers-1]['L_ub'] is None):
         #     return
         self.set_neuron_bounds(model1,network,layer_idx,neuron_idx,phase,layers_masks)
-        #valid = self.test_decision_validity(network,fixed_relus)
-        
 
-        valid = True
-        # self.__prepare_problem()
-        if(valid):
-            self.fix_relu(model1, network, fixed_relus)
-            # print('time of iteration',time() - s)
-            if(self.INSTRUMENT):
-                # print('Neurons fixed by solver:',self.nn.num_hidden_neurons - len(infeasible_relus),', Convex calls:',self.convex_calls.val)
-                fixed = self.nn.num_hidden_neurons - len(infeasible_relus)
-                print(len(infeasible_relus))
-                ratio = fixed/ self.nn.num_hidden_neurons
-                model_temp = model1.copy()
-                model_temp.setObjective(1)
-                model_temp.optimize()
-                _,non_fixed = self.check_SAT(model_temp)
-                print('ratio1:',ratio,'ratio2:',(self.nn.num_hidden_neurons-len(non_fixed))/self.nn.num_hidden_neurons)
-            model1.optimize()
-            if(model1.Status != 3): #Feasible solution
-                self.layer_stats[layer_idx-1][0] +=  1
-                SAT,infeasible_set = self.check_SAT(model1)
-                valid = self.check_potential_CE(network, np.array([model1.getVarByName(var_name).X for var_name in self.in_vars_names]).reshape((-1,1)),self.target)
-                if(SAT or valid):
-                    #print('Solution found')
-                    status = 'SolFound'  
-                else:
-                    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+        self.fix_relu(model1, network, fixed_relus)
+        # print('time of iteration',time() - s)
+        if(self.INSTRUMENT):
+            # print('Neurons fixed by solver:',self.nn.num_hidden_neurons - len(infeasible_relus),', Convex calls:',self.convex_calls.val)
+            fixed = self.nn.num_hidden_neurons - len(infeasible_relus)
+            print(len(infeasible_relus))
+            ratio = fixed/ self.nn.num_hidden_neurons
+            model_temp = model1.copy()
+            model_temp.setObjective(1)
+            model_temp.optimize()
+            _,non_fixed = self.check_SAT(model_temp)
+            print('ratio1:',ratio,'ratio2:',(self.nn.num_hidden_neurons-len(non_fixed))/self.nn.num_hidden_neurons)
+        model1.optimize()
+        if(model1.Status != 3): #Feasible solution
+            self.layer_stats[layer_idx-1][0] +=  1
+            SAT,infeasible_set = self.check_SAT(model1)
+            valid = self.check_potential_CE(network, np.array([model1.getVarByName(var_name).X for var_name in self.in_vars_names]).reshape((-1,1)),self.target)
+            if(SAT or valid):
+                #print('Solution found')
+                status = 'SolFound'  
             else:
-                self.layer_stats[layer_idx-1][1] += 1
+                status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+        else:
+            self.layer_stats[layer_idx-1][1] += 1
         if(status != 'SolFound'):
             paths[0] += 1 
             # if(self.model.Status == 3):
@@ -464,23 +459,23 @@ class Solver():
             self.set_neuron_bounds(model1, network, layer_idx,neuron_idx,phase,layers_masks)
             #valid = self.test_decision_validity(network,fixed_relus)
             # self.__prepare_problem()
-            if(valid):
-                self.fix_relu(model1,network,fixed_relus)
-                # if(self.INSTRUMENT):
-                #     print('Neurons fixed by solver:',self.nn.num_hidden_neurons - len(infeasible_relus),', Convex calls:',self.convex_calls.val)
-                model1.optimize()
-                if(model1.Status != 3): #Feasible solution
-                    self.layer_stats[layer_idx-1][0] += 1
-                    SAT,infeasible_set = self.check_SAT(model1)
-                    valid = self.check_potential_CE(network, np.array([model1.getVarByName(var_name).X for var_name in self.in_vars_names]).reshape((-1,1)),self.target)
-                    if(SAT or valid):
-                        #print('Solution found')
-                        status = 'SolFound'  
-                    else:
-                        status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+
+            self.fix_relu(model1,network,fixed_relus)
+            # if(self.INSTRUMENT):
+            #     print('Neurons fixed by solver:',self.nn.num_hidden_neurons - len(infeasible_relus),', Convex calls:',self.convex_calls.val)
+            model1.optimize()
+            if(model1.Status != 3): #Feasible solution
+                self.layer_stats[layer_idx-1][0] += 1
+                SAT,infeasible_set = self.check_SAT(model1)
+                valid = self.check_potential_CE(network, np.array([model1.getVarByName(var_name).X for var_name in self.in_vars_names]).reshape((-1,1)),self.target)
+                if(SAT or valid):
+                    #print('Solution found')
+                    status = 'SolFound'  
                 else:
-                    status = 'UNSAT'
-                    self.layer_stats[layer_idx-1][1] += 1
+                    status = self.dfs(model1, network, infeasible_set,copy(fixed_relus),layers_masks,depth+1,nonlin_relus,paths)
+            else:
+                status = 'UNSAT'
+                self.layer_stats[layer_idx-1][1] += 1
 
             #if(status != 'SolFound'):
             #    status = 'UNSAT'
