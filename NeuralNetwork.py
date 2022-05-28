@@ -212,7 +212,7 @@ class NeuralNetworkStruct(object):
         self.layers[0]['ub'] = input_bounds[:,1].reshape((-1,1))
         self.layers[0]['Relu_lb'] = input_bounds[:,0].reshape((-1,1))
         self.layers[0]['Relu_ub'] = input_bounds[:,1].reshape((-1,1))
-        self.__compute_IA_bounds()
+        # self.__compute_IA_bounds()
         self.__compute_sym_bounds()
 
 
@@ -480,6 +480,25 @@ class KerasNN(NeuralNetworkStruct):
         #Read min and max for inputs
         self.__init__(layers_sizes)
         self.set_weights(Weights,biases)
+
+class PytorchNN(NeuralNetworkStruct):
+    def parse_network(self, model, input_size):
+        Weights = []
+        biases = []
+        layers = list(model.modules())[1:]
+        layers_sizes = [input_size]
+        for layer in layers:
+            op = str(layer).split('(')[0]
+            if(op == 'Linear'):
+                W = np.array(layer.weight.data)
+                b = np.array(layer.bias.data)
+                layers_sizes.append(W.shape[0])
+                Weights.append(W)
+                biases.append(b)
+
+        self.__init__(layers_sizes)
+        self.set_weights(Weights,biases)
+        
         
 if __name__ == "__main__":
 

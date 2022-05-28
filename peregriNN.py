@@ -1,3 +1,4 @@
+from parsers.onnx_parser import ONNX_Parser
 from solver import *
 from time import time,sleep
 from random import random, seed
@@ -9,7 +10,17 @@ from NeuralNetwork import *
 from multiprocessing import Process, Value
 import argparse
 from os import path
+import logging
+from utils.config import Settings 
+from utils.vnnlib import read_vnnlib_simple
+from intervals.symbolic_interval import SymbolicInterval
+from intervals.interval_network import IntervalNetwork
+import torch
 
+#TODO: DO BETTER :D  (find a way that is more flexible that just importing those operators)
+from operators.linear import * 
+from operators.flatten import *
+from operators.activations import *
 eps = 1E-10
 
 class TimeOutException(Exception):
@@ -71,7 +82,49 @@ def main(args):
 
 
     #Parse args
-    nnet = args.network
+    op_dict ={"Flatten":Flatten, "ReLU": ReLU, "Linear": Linear }
+    model_path = args.model
+    vnnlib_filename = args.spec
+
+    onnx_parser = ONNX_Parser(model_path)
+
+    vnnlib_spec = read_vnnlib_simple(vnnlib_filename, 784, 10)
+    device = torch.device('cuda')
+    input_bounds = torch.tensor(vnnlib_spec[0][0],dtype = torch.float32)
+    torch_model = onnx_parser.to_pytorch()
+    s = time()
+    torch_model = torch_model.to(device)
+    print("Time to move the model to GPU", time()-s)
+    int_net = IntervalNetwork(torch_model, input_bounds, operators_dict=op_dict)
+    n= input_bounds.shape[0]
+    I = np.zeros((n, n+ 1), dtype = np.float32)
+    np.fill_diagonal(I,1)
+    I = torch.tensor(I).unsqueeze(0)
+    # I = I.repeat(50,1,1)
+    input_bounds = input_bounds.unsqueeze(0).unsqueeze(1)
+    layer_sym = SymbolicInterval(input_bounds.to(device),I,I, device = device)
+    layer_sym.concretize()
+    steps = 100
+    s = time()
+    # int_net = int_net.cuda()
+    for iter in range(steps):
+        int_net(layer_sym)
+    e = time()
+    print("Sym analysis with torch:", (e-s)/ steps)
+    sys.exit()
+    nnet = PytorchNN()
+    nnet.parse_network(torch_model, 784)
+    s = time()
+    for iter in range(steps):
+        nnet.set_bounds(input_bounds)
+    e = time()
+    print("Old Sym analysis with np:", (e-s)/ steps)
+
+    # print(nnet.layers[-1]['conc_lb'])
+    # print(int_net.layers[-1].post_symbolic.conc_lb)
+    
+    pass    
+    
     image_file = args.image
     img_name = image_file.split('/')[-1]
     delta = float(args.eps)
@@ -131,12 +184,14 @@ def main(args):
     
 
 if __name__ == "__main__":
+    
+    
     parser = argparse.ArgumentParser(description="PeregriNN model checker")
-    parser.add_argument('network',help="path to neural network nnet file")
-    parser.add_argument('image',help="path to image file")
-    parser.add_argument('eps',help="eps perturbation")
+    parser.add_argument('model',help="path to neural network ONNX file")
+    parser.add_argument('spec',help="path to vnnlib specification file")
     parser.add_argument('--timeout',default=300,help="timeout value")
     parser.add_argument('--max_depth',default=30,help="Maximum exploration depth")
     args = parser.parse_args()
+
 
     main(args)
