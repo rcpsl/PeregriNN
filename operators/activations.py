@@ -48,7 +48,10 @@ class ReLU(nn.Module):
             mostly_active = (unstable_relus_idx[0][mostly_active],unstable_relus_idx[1][mostly_active])
             # mostly_active = unstable_relus_idx[mostly_active]
             a = x.max_lb[mostly_active] /  (x.max_lb[mostly_active] - x.conc_lb[mostly_active])
-            post_interval.l[mostly_active] = a.unsqueeze(1) * x.l[mostly_active]
+            a[x.max_lb[mostly_active] < 0] = 0.
+            if(len(a.shape) > 0):
+                a = a.unsqueeze(1)
+            post_interval.l[mostly_active] = a * x.l[mostly_active]
 
 
             #Upper bound approximation
@@ -57,8 +60,10 @@ class ReLU(nn.Module):
             zero_crossing = (unstable_relus_idx[0][zero_crossing],unstable_relus_idx[1][zero_crossing])
             # zero_crossing = unstable_relus_idx[zero_crossing]
             a = x.conc_ub[zero_crossing] / (x.conc_ub[zero_crossing] - x.min_ub[zero_crossing])
-            post_interval.u[zero_crossing] = a.unsqueeze(1) *  x.u[zero_crossing]
-            post_interval.u[...,-1][zero_crossing] -= a * x.min_ub[zero_crossing]
+            if(len(a.shape) > 0):
+                a = a.unsqueeze(1)
+            post_interval.u[zero_crossing] = a *  x.u[zero_crossing]
+            post_interval.u[...,-1][zero_crossing] -= a.squeeze() * x.min_ub[zero_crossing]
 
 
         post_interval.concretize()
