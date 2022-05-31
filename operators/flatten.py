@@ -6,11 +6,16 @@ from copy import deepcopy
 
 
 class Flatten(nn.Module):
-    def __init__(self, torch_layer):
+    def __init__(self, torch_layer, input_shape = None):
         super().__init__()
         self.torch_layer = torch_layer
         self.pre_symbolic = None
         self.post_symbolic = None
+        self.input_shape = input_shape
+        self.output_shape = None
+        if input_shape is not None:
+            self.output_shape = torch.prod(input_shape)
+        
         
 
     def forward(self, x : SymbolicInterval):

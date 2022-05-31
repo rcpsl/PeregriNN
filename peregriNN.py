@@ -1,10 +1,15 @@
+import sys,os
+# os.environ['MKL_NUM_THREADS']="1"
+# os.environ['NUMEXPR_NUM_THREADS']="1"
+os.environ['OMP_NUM_THREADS']="1"
+# os.environ['OPENBLAS_NUM_THREADS']="1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 from parsers.onnx_parser import ONNX_Parser
 from solver import *
 from time import time,sleep
 from random import random, seed
 import numpy as np
 import signal
-import sys,os
 import glob
 from NeuralNetwork import *
 from multiprocessing import Process, Value
@@ -82,20 +87,23 @@ def main(args):
 
 
     #Parse args
-    op_dict ={"Flatten":Flatten, "ReLU": ReLU, "Linear": Linear }
+    op_dict ={"Flatten":Flatten, "ReLU": ReLU, "Linear": Linear, "Conv2d": Conv2d }
     model_path = args.model
     vnnlib_filename = args.spec
 
     onnx_parser = ONNX_Parser(model_path)
 
-    vnnlib_spec = read_vnnlib_simple(vnnlib_filename, 784, 10)
+    vnnlib_spec = read_vnnlib_simple(vnnlib_filename, 3072, 10)
     device = torch.device('cuda')
     input_bounds = torch.tensor(vnnlib_spec[0][0],dtype = torch.float32)
     torch_model = onnx_parser.to_pytorch()
+    torch_model.eval()
+    for name, param in torch_model.named_parameters():
+        param.requires_grad  = False
     s = time()
     torch_model = torch_model.to(device)
-    print("Time to move the model to GPU", time()-s)
-    int_net = IntervalNetwork(torch_model, input_bounds, operators_dict=op_dict)
+    print(f"Time to move the model to {device}", time()-s)
+    int_net = IntervalNetwork(torch_model, input_bounds, operators_dict=op_dict, in_shape = (3,32,32))
     n= input_bounds.shape[0]
     I = np.zeros((n, n+ 1), dtype = np.float32)
     np.fill_diagonal(I,1)
@@ -104,9 +112,8 @@ def main(args):
     input_bounds = input_bounds.unsqueeze(0).unsqueeze(1)
     layer_sym = SymbolicInterval(input_bounds.to(device),I,I, device = device)
     layer_sym.concretize()
-    steps = 100
+    steps = 1
     s = time()
-    # int_net = int_net.cuda()
     for iter in range(steps):
         int_net(layer_sym)
     e = time()

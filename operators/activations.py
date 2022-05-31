@@ -3,7 +3,7 @@ from intervals.symbolic_interval import SymbolicInterval
 import torch
 from copy import deepcopy
 class ReLU(nn.Module):
-    def __init__(self, torch_layer):
+    def __init__(self, torch_layer, input_shape = None):
         super().__init__()
         self.torch_layer = torch_layer
         self.pre_symbolic = None #dummy for JIT
@@ -11,6 +11,9 @@ class ReLU(nn.Module):
         self.active = torch.tensor([])
         self.inactive = torch.tensor([])
         self.unstable = torch.tensor([])
+        self.input_shape = input_shape
+        self.output_shape = input_shape
+
     def forward(self, x: SymbolicInterval) ->SymbolicInterval:
         """
         Parameters
@@ -39,7 +42,7 @@ class ReLU(nn.Module):
             # unstable_pre_max_lb = x.max_lb[unstable_relus_idx]
 
             #The ReLU is inactive for most of the input space
-            mostly_inactive = torch.nonzero( (torch.abs(unstable_pre_conc_lb) > torch.abs(unstable_pre_conc_ub)) + (x.max_lb[unstable_relus_idx] <=0), as_tuple= True)
+            mostly_inactive = torch.nonzero((torch.abs(unstable_pre_conc_lb) > torch.abs(unstable_pre_conc_ub)) + (x.max_lb[unstable_relus_idx] <=0), as_tuple= True)
             mostly_inactive = (unstable_relus_idx[0][mostly_inactive],unstable_relus_idx[1][mostly_inactive])
             # mostly_inactive = unstable_relus_idx[mostly_inactive]
             post_interval.l[mostly_inactive] = 0

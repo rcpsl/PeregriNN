@@ -60,7 +60,7 @@ class SymbolicInterval():
         self.conc_bounds[:,1,:,0] = torch.sum(pos_u[...,:-1] * self.input_interval[...,0] + neg_u[...,:-1] * self.input_interval[...,1], dim = -1) + self.u[...,-1]
         self.conc_bounds[:,1,:,1] = torch.sum(pos_u[...,:-1] * self.input_interval[...,1] + neg_u[...,:-1] * self.input_interval[...,0], dim = -1) + self.u[...,-1]
     
-
+        
     @property
     def conc_lb(self):
         return self.conc_bounds[:,0,:,0]
@@ -76,3 +76,7 @@ class SymbolicInterval():
     @property
     def min_ub(self):
         return self.conc_bounds[:,1,:,0]
+
+    @property
+    def shape(self):
+        return self.l.shape
