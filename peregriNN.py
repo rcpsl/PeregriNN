@@ -1,4 +1,6 @@
 import sys,os
+
+from peregrinn.verifier import Verifier
 # os.environ['MKL_NUM_THREADS']="1"
 # os.environ['NUMEXPR_NUM_THREADS']="1"
 os.environ['OMP_NUM_THREADS']="1"
@@ -20,6 +22,7 @@ from parsers.vnnlib import VNNLib_parser
 from intervals.symbolic_interval import SymbolicInterval
 from intervals.interval_network import IntervalNetwork
 import torch
+from utils.datasets_info import Dataset_MetaData
 
 #TODO: DO BETTER :D  (find a way that is more flexible than just importing those operators)
 from operators.linear import * 
@@ -89,13 +92,15 @@ def main(args):
     op_dict ={"Flatten":Flatten, "ReLU": ReLU, "Linear": Linear, "Conv2d": Conv2d }
     model_path = args.model
     vnnlib_filename = args.spec
+    dataset = args.dataset
 
     onnx_parser = ONNX_Parser(model_path)
     vnnlib_parser = VNNLib_parser(dataset = 'cifar20')
+    in_shape = Dataset_MetaData.input_size[dataset]
     vnnlib_spec = vnnlib_parser.read_vnnlib_simple(vnnlib_filename, 3072, 10)
     device = torch.device('cuda')
     input_bounds = vnnlib_spec.input_bounds
-    in_shape = vnnlib_spec.input_size
+    in_shape = vnnlib_spec.input_shape
     torch_model = onnx_parser.to_pytorch()
     torch_model.eval()
     for name, param in torch_model.named_parameters():
@@ -190,15 +195,35 @@ def main(args):
         print_summary(nnet,img_name,'timeout',TIMEOUT)
     
 
+def test_verifier(args):
+    model_path = args.model
+    vnnlib_filename = args.spec
+    dataset = args.dataset
+    onnx_parser = ONNX_Parser(model_path)
+    vnnlib_parser = VNNLib_parser(dataset = dataset)
+    in_shape = Dataset_MetaData.inout_shapes[dataset]['input']
+    out_shape = Dataset_MetaData.inout_shapes[dataset]['output']
+    vnnlib_spec = vnnlib_parser.read_vnnlib_simple(vnnlib_filename, in_shape.prod().item(),
+                                                    out_shape.prod().item())
+    # device = torch.device('cpu')
+    torch_model = onnx_parser.to_pytorch()
+    torch_model.eval()
+    for name, param in torch_model.named_parameters():
+        param.requires_grad  = False
+
+    verifier = Verifier(torch_model, vnnlib_spec)
+    verifier.verify()
+
 if __name__ == "__main__":
     
     
     parser = argparse.ArgumentParser(description="PeregriNN model checker")
     parser.add_argument('model',help="path to neural network ONNX file")
     parser.add_argument('spec',help="path to vnnlib specification file")
+    parser.add_argument('--dataset', type = str, default = 'mnistfc')
     parser.add_argument('--timeout',default=300,help="timeout value")
     parser.add_argument('--max_depth',default=30,help="Maximum exploration depth")
     args = parser.parse_args()
 
-
+    test_verifier(args)
     main(args)

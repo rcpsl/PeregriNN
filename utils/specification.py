@@ -1,8 +1,7 @@
 import torch
-from utils.Logger import get_logger
 from utils.config import Setting
 from utils.datasets_info import Dataset_MetaData
-
+from utils.Logger import get_logger
 logger = get_logger(__name__)
 
 class Specification:
@@ -17,7 +16,8 @@ class Specification:
             raise
             
         try:
-            self.input_size = Dataset_MetaData.input_size[dataset]
+            self.input_shape = Dataset_MetaData.inout_shapes[dataset]['input']
+            self.output_shape = Dataset_MetaData.inout_shapes[dataset]['output']
         except Exception as e:
             logger.exception(e)
             raise

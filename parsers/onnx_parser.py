@@ -1,6 +1,7 @@
 import onnx2pytorch
 import onnx
 from utils.Logger import get_logger
+import torch.nn as nn
 logger = get_logger(__name__)
 
 class ONNX_Parser():
@@ -21,7 +22,8 @@ class ONNX_Parser():
     def to_pytorch(self) -> None:
 
         try:
-            pytorch_model = onnx2pytorch.ConvertModel(self.onnx_model)
+            pytorch_model = onnx2pytorch.ConvertModel(self.onnx_model, experimental= True)
+            pytorch_model = nn.Sequential(*list(pytorch_model.modules())[1:])
             logger.info("Converted ONNX model to Pytorch model")
             
         except Exception as e:

@@ -13,7 +13,11 @@ class Setting:
     N_VERIF_CORES = 1
     TIMEOUT = 300
     MAX_DEPTH = 300
+    TRY_SAMPLING = True
+    N_SAMPLES = 15000
+
     #Symbolic analysis
     USE_GPU = False
 
+    #Logger
     LOG_LEVEL =  logging.INFO
