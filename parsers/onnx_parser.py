@@ -22,7 +22,7 @@ class ONNX_Parser():
     def to_pytorch(self) -> None:
 
         try:
-            pytorch_model = onnx2pytorch.ConvertModel(self.onnx_model, experimental= True)
+            pytorch_model = onnx2pytorch.ConvertModel(self.onnx_model)
             pytorch_model = nn.Sequential(*list(pytorch_model.modules())[1:])
             logger.info("Converted ONNX model to Pytorch model")
             

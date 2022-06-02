@@ -5,6 +5,7 @@ import time
 from copy import deepcopy,copy
 import torch
 from utils.Logger import get_logger
+
 logger = get_logger(__name__)
 
 def print_summary(network,prop, safety, time):

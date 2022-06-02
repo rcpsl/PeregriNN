@@ -20,4 +20,4 @@ class Setting:
     USE_GPU = False
 
     #Logger
-    LOG_LEVEL =  logging.INFO
+    LOG_LEVEL =  logging.DEBUG

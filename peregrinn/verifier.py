@@ -12,7 +12,11 @@ from operators import registered_ops as OPS
 from utils.sample_network import sample_network
 from utils.specification import Specification
 
+import time
 from enum import Enum
+
+from utils.Logger import get_logger
+logger = get_logger(__name__)
 
 class VerificationResult(Enum):
     SOL_FOUND = 0
@@ -77,6 +81,7 @@ class Verifier:
         return False
     def verify(self) -> VerificationResult:
 
+        start = time.perf_counter()
         if Setting.TRY_SAMPLING:
             #TODO: Sample N_SAMPLES and verify property
             in_bounds_reshaped = self.input_bounds.reshape(*self.spec.input_shape ,2)
@@ -85,6 +90,8 @@ class Verifier:
             violated = self._check_violated(self.spec.objectives, outputs)
             if(violated):
                 return VerificationResult.SOL_FOUND
-            pass
+    
+        end = time.perf_counter()
+        logger.debug(f"Verification time {end-start:.2f}")
 
 

@@ -5,17 +5,8 @@ import sys
 import os
 from utils.config import Setting
 
-#Root logger config
-log_file = '/home/hkhedr/Haitham/projects/dev/PeregriNN/logs/logs.log'
-logging.basicConfig(
-        format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
-        level = Setting.LOG_LEVEL,
-        handlers=[
-            logging.FileHandler(log_file, mode ='w')
-        ]
-    )
     
-def get_logger(name: str, f_path :str = "" , log_level = logging.INFO) -> logging.Logger:
+def get_logger(name: str, f_path :str = "" , log_level = Setting.LOG_LEVEL) -> logging.Logger:
     """
     Constructs a new logger 
     

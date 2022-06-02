@@ -1,6 +1,7 @@
 import sys,os
 
 from peregrinn.verifier import Verifier
+from utils.config import Setting
 # os.environ['MKL_NUM_THREADS']="1"
 # os.environ['NUMEXPR_NUM_THREADS']="1"
 os.environ['OMP_NUM_THREADS']="1"
@@ -224,6 +225,14 @@ if __name__ == "__main__":
     parser.add_argument('--timeout',default=300,help="timeout value")
     parser.add_argument('--max_depth',default=30,help="Maximum exploration depth")
     args = parser.parse_args()
-
+    #Root logger config
+    log_file = '/home/hkhedr/Haitham/projects/dev/PeregriNN/logs/logs.log'
+    logging.basicConfig(
+        format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
+        level = Setting.LOG_LEVEL,
+        handlers=[
+            logging.FileHandler(log_file, mode ='w')
+        ]
+    )
     test_verifier(args)
-    main(args)
+    # main(args)
