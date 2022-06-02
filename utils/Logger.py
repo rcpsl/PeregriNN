@@ -3,19 +3,19 @@ from stat import filemode
 from statistics import mode
 import sys
 import os
-from utils.config import Settings
+from utils.config import Setting
 
 #Root logger config
 log_file = '/home/hkhedr/Haitham/projects/dev/PeregriNN/logs/logs.log'
 logging.basicConfig(
         format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
-        level = Settings.LOG_LEVEL,
+        level = Setting.LOG_LEVEL,
         handlers=[
             logging.FileHandler(log_file, mode ='w')
         ]
     )
     
-def get_logger(name: str, f_path :str = "" , log_level = None) -> logging.Logger:
+def get_logger(name: str, f_path :str = "" , log_level = logging.INFO) -> logging.Logger:
     """
     Constructs a new logger 
     

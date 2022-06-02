@@ -16,8 +16,7 @@ from multiprocessing import Process, Value
 import argparse
 from os import path
 import logging
-from utils.config import Settings 
-from utils.vnnlib import read_vnnlib_simple
+from parsers.vnnlib import VNNLib_parser
 from intervals.symbolic_interval import SymbolicInterval
 from intervals.interval_network import IntervalNetwork
 import torch
@@ -92,10 +91,11 @@ def main(args):
     vnnlib_filename = args.spec
 
     onnx_parser = ONNX_Parser(model_path)
-
-    vnnlib_spec = read_vnnlib_simple(vnnlib_filename, 3072, 10)
+    vnnlib_parser = VNNLib_parser(dataset = 'cifar20')
+    vnnlib_spec = vnnlib_parser.read_vnnlib_simple(vnnlib_filename, 3072, 10)
     device = torch.device('cuda')
-    input_bounds = torch.tensor(vnnlib_spec[0][0],dtype = torch.float32)
+    input_bounds = vnnlib_spec.input_bounds
+    in_shape = vnnlib_spec.input_size
     torch_model = onnx_parser.to_pytorch()
     torch_model.eval()
     for name, param in torch_model.named_parameters():
@@ -103,7 +103,7 @@ def main(args):
     s = time()
     torch_model = torch_model.to(device)
     print(f"Time to move the model to {device}", time()-s)
-    int_net = IntervalNetwork(torch_model, input_bounds, operators_dict=op_dict, in_shape = (3,32,32))
+    int_net = IntervalNetwork(torch_model, input_bounds, operators_dict=op_dict, in_shape = in_shape)
     n= input_bounds.shape[0]
     I = np.zeros((n, n+ 1), dtype = np.float32)
     np.fill_diagonal(I,1)
