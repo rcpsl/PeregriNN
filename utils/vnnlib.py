@@ -10,7 +10,6 @@ import re
 
 import numpy as np
 
-import onnx
 
 def read_statements(vnnlib_filename):
     '''process vnnlib and return a list of strings (statements)

@@ -22,7 +22,7 @@ from intervals.symbolic_interval import SymbolicInterval
 from intervals.interval_network import IntervalNetwork
 import torch
 
-#TODO: DO BETTER :D  (find a way that is more flexible that just importing those operators)
+#TODO: DO BETTER :D  (find a way that is more flexible than just importing those operators)
 from operators.linear import * 
 from operators.flatten import *
 from operators.activations import *
