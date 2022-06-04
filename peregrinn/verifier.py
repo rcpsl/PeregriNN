@@ -63,7 +63,7 @@ class Verifier:
     -------
     '''
 
-    def __init__(self, model: nn.Module, vnnlib_spec: Specification):
+    def __init__(self, model: nn.Module, vnnlib_spec: Specification, timeout = Setting.TIMEOUT):
 
         self.model = model
         self.input_bounds = vnnlib_spec.input_bounds
@@ -73,6 +73,7 @@ class Verifier:
         
         self.init_branch = Branch(self.spec)
         self.verification_result = VerificationResult.UNKNOWN
+        self.timeout = timeout
 
     def _check_violated_bounds(self, objectives : list, bounds : torch.tensor) -> tuple[VerificationResult,torch.tensor]:
         for A,b in objectives:
@@ -97,16 +98,15 @@ class Verifier:
         return (VerificationResult.UNKNOWN, torch.tensor([]))
 
     def verify(self) -> VerificationResult:
-
+        #TODO: Set SIGALARM handler
         start = time.perf_counter()
         if Setting.TRY_SAMPLING:
-            #TODO: Sample N_SAMPLES and verify property
             sampling_timer = time.perf_counter() 
             in_bounds_reshaped = self.input_bounds.reshape(*self.spec.input_shape ,2)
             samples = sample_network(in_bounds_reshaped, Setting.N_SAMPLES).to(Setting.DEVICE)
             outputs = self.model(samples).to('cpu')
             status,ce = self._check_violated_samples(self.spec.objectives, outputs)
-            logger.debug(f"Sampling verification time {time.perf_counter()-sampling_timer:.2f}")
+            logger.debug(f"Sampling verification time: {time.perf_counter()-sampling_timer:.2f} seconds")
             if(status == VerificationResult.SOL_FOUND):
                 #TODO: print counterexample somwhere?
                 return status
@@ -122,14 +122,14 @@ class Verifier:
             output_sym = self.int_net(layer_sym)
             output_bounds = output_sym.concrete_bounds.squeeze().to('cpu')
             status, _ = self._check_violated_bounds(self.spec.objectives, output_bounds)
-            logger.debug(f"Try overapproximation Verification time {time.perf_counter()-overapprox_timer:.2f}")
+            logger.debug(f"Try overapproximation Verification time: {time.perf_counter()-overapprox_timer:.2f} seconds")
             if(status == VerificationResult.NO_SOL):
                 return status
             
             
             pass
         end = time.perf_counter()
-        logger.debug(f"Total Verification time {end-start:.2f}")
+        logger.debug(f"Total Verification time: {end-start:.2f} seconds")
 
 
 

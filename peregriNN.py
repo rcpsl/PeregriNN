@@ -29,6 +29,9 @@ from utils.datasets_info import Dataset_MetaData
 from operators.linear import * 
 from operators.flatten import *
 from operators.activations import *
+
+import warnings
+from utils.Logger import get_logger
 eps = 1E-10
 
 class TimeOutException(Exception):
@@ -234,5 +237,7 @@ if __name__ == "__main__":
             logging.FileHandler(log_file, mode ='w')
         ]
     )
+    logging.captureWarnings(True)
+
     test_verifier(args)
     # main(args)
