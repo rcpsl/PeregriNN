@@ -4,6 +4,7 @@ Propagating an interval through this network computes bounds on all neurons usin
 '''
 import torch.nn as nn
 import torch
+from intervals.symbolic_interval import SymbolicInterval
 from utils.Logger import get_logger
 logger = get_logger(__name__)
 
@@ -28,7 +29,7 @@ class IntervalNetwork(nn.Module):
         self.interval_net = nn.Sequential(*self.layers)
 
     
-    def forward(self, interval):
+    def forward(self, interval : SymbolicInterval) -> SymbolicInterval:
         return self.interval_net(interval)
 
 

@@ -3,8 +3,10 @@ Haitham Khedr
 
 File containing the main code for the NN verifier 
 '''
+from torch import zero_
 import torch.nn as nn
 import torch
+from intervals.symbolic_interval import SymbolicInterval
 
 from utils.config import Setting
 from intervals.interval_network import IntervalNetwork
@@ -67,31 +69,68 @@ class Verifier:
         self.input_bounds = vnnlib_spec.input_bounds
         self.spec = vnnlib_spec
         self.int_net = IntervalNetwork(self.model, self.input_bounds, 
-                            operators_dict=OPS.op_dict, in_shape = self.spec.input_shape)
+                            operators_dict=OPS.op_dict, in_shape = self.spec.input_shape).to(Setting.DEVICE)
         
         self.init_branch = Branch(self.spec)
         self.verification_result = VerificationResult.UNKNOWN
 
-    def _check_violated(self, objectives, outputs):
+    def _check_violated_bounds(self, objectives : list, bounds : torch.tensor) -> tuple[VerificationResult,torch.tensor]:
+        for A,b in objectives:
+            A = torch.from_numpy(A).type(Setting.TORCH_PRECISION)
+            b = torch.from_numpy(b).type(Setting.TORCH_PRECISION)
+            zeros = torch.zeros_like(A)
+            A_pos = torch.maximum(zeros, A)
+            A_neg = torch.minimum(zeros, A)
+            lower_bound = A_pos @ bounds[:,0] + A_neg @ bounds[:,1]
+            if(lower_bound > b):
+                return (VerificationResult.NO_SOL, torch.tensor([]))
+            else:
+                return (VerificationResult.UNKNOWN, torch.tensor([]))
+
+
+    def _check_violated_samples(self, objectives : list, outputs : torch.tensor) -> tuple[VerificationResult,torch.tensor]:
         for A,b in objectives:
             counterexamples = torch.where(outputs @ A.T < torch.from_numpy(b))[0]
             if(len(counterexamples) > 0):
-                return True, outputs[0]
+                return (VerificationResult.SOL_FOUND, outputs[0])
 
-        return False
+        return (VerificationResult.UNKNOWN, torch.tensor([]))
+
     def verify(self) -> VerificationResult:
 
         start = time.perf_counter()
         if Setting.TRY_SAMPLING:
             #TODO: Sample N_SAMPLES and verify property
+            sampling_timer = time.perf_counter() 
             in_bounds_reshaped = self.input_bounds.reshape(*self.spec.input_shape ,2)
-            samples = sample_network(in_bounds_reshaped, Setting.N_SAMPLES)
-            outputs = self.model(samples)
-            violated = self._check_violated(self.spec.objectives, outputs)
-            if(violated):
-                return VerificationResult.SOL_FOUND
-    
+            samples = sample_network(in_bounds_reshaped, Setting.N_SAMPLES).to(Setting.DEVICE)
+            outputs = self.model(samples).to('cpu')
+            status,ce = self._check_violated_samples(self.spec.objectives, outputs)
+            logger.debug(f"Sampling verification time {time.perf_counter()-sampling_timer:.2f}")
+            if(status == VerificationResult.SOL_FOUND):
+                #TODO: print counterexample somwhere?
+                return status
+
+        if Setting.TRY_OVERAPPROX:
+            overapprox_timer = time.perf_counter()
+            I = torch.zeros((self.input_bounds.shape[0], 
+                    self.input_bounds.shape[0]+ 1), dtype = Setting.TORCH_PRECISION)
+            I = I.fill_diagonal_(1).unsqueeze(0)
+            input_bounds = self.input_bounds.unsqueeze(0).unsqueeze(1)
+            layer_sym = SymbolicInterval(input_bounds.to(Setting.DEVICE),I,I, device = Setting.DEVICE)
+            layer_sym.concretize()
+            output_sym = self.int_net(layer_sym)
+            output_bounds = output_sym.concrete_bounds.squeeze().to('cpu')
+            status, _ = self._check_violated_bounds(self.spec.objectives, output_bounds)
+            logger.debug(f"Try overapproximation Verification time {time.perf_counter()-overapprox_timer:.2f}")
+            if(status == VerificationResult.NO_SOL):
+                return status
+            
+            
+            pass
         end = time.perf_counter()
-        logger.debug(f"Verification time {end-start:.2f}")
+        logger.debug(f"Total Verification time {end-start:.2f}")
+
+
 
 

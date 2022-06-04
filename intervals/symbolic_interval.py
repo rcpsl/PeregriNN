@@ -70,6 +70,12 @@ class SymbolicInterval():
         return self.conc_bounds[:,1,:,1]
     
     @property
+    def concrete_bounds(self):
+        lb  = self.conc_bounds[:,0,:,0]
+        ub  = self.conc_bounds[:,1,:,1] 
+        return torch.stack((lb,ub), dim=-1)
+    
+    @property
     def max_lb(self):
         return self.conc_bounds[:,0,:,1]
     
