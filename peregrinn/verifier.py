@@ -178,18 +178,20 @@ class Verifier:
         shared_state = SharedData(self.model, self.int_net, self.spec)
         private_state = WorkerData()
 
+        #Start Monitor thread
+        monitor_thread = threading.Thread(target=monitor_thread, args=(shared_state.log_Q,))
+        monitor_thread.start()
+        
+        #Start all the workers
         for i in range(num_workers):
             workers.append(Worker(f"Worker_{i}", shared_state, private_state))
             workers[-1].start()
         
-        #Start Monitor thread
-        lp = threading.Thread(target=monitor_thread, args=(shared_state.log_Q,))
-        lp.start()
         for worker in workers:
             worker.join()
         #Terminate monitor thread
         shared_state.log_Q.put(None)
-        lp.join()
+        monitor_thread.join()
         
         end = time.perf_counter()
         logger.debug(f"Total Verification time: {end-start:.2f} seconds")
