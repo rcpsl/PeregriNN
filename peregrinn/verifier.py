@@ -4,7 +4,8 @@ Haitham Khedr
 File containing the main code for the NN verifier 
 '''
 from ctypes import c_bool
-import multiprocessing as mp 
+import multiprocessing as mp
+import threading 
 import torch.nn as nn
 import torch
 from intervals.symbolic_interval import SymbolicInterval
@@ -14,7 +15,8 @@ from intervals.interval_network import IntervalNetwork
 from operators import registered_ops as OPS
 from utils.sample_network import sample_network
 from utils.specification import Specification
-
+import logging
+import logging.handlers
 import time
 from enum import Enum
 
@@ -27,13 +29,31 @@ class VerificationResult(Enum):
     TIMEOUT = 2
     UNKNOWN = 3
 
+def monitor_thread(log_Q):
+    while True:
+        record = log_Q.get()
+        if record is None:
+            break
+        root_logger = logging.getLogger()
+        root_logger.handle(record)
+
 class Worker(mp.Process):
     def __init__(self, name, shared, private):
+        super().__init__(name = name)
         self.name       = name
         self._shared    = shared
         self._private   = private
+        self._logger = self._createLogger(self._shared.log_Q)
+        self._logger.info(f"Initilaized {name}")
+
+    def _createLogger(self, log_Q):
+        qh = logging.handlers.QueueHandler(log_Q)
+        logger = get_logger(self.name, propagate = False, handlers = [qh])
+        logger.setLevel(Setting.LOG_LEVEL)
+        return logger
 
     def run(self):
+        self._logger.info(f"{self.name} Started...")
         pass
 
 class Branch:
@@ -61,9 +81,11 @@ class SharedData():
         self.spec       = spec
 
         self.task_Q = mp.Queue()
+        self.log_Q = mp.Queue()
         self.poison_pill = mp.Value(c_bool, False)
         self.n_branches = mp.Value('I', 0)
-        
+        self.mutex = mp.Lock()
+
 
 class WorkerData():
     def __init__(self):
@@ -121,7 +143,7 @@ class Verifier:
 
         return (VerificationResult.UNKNOWN, torch.tensor([]))
 
-    def verify(self, timeout : float) -> VerificationResult:
+    def verify(self, timeout : float = Setting.TIMEOUT) -> VerificationResult:
         #TODO: Set SIGALARM handler
         start = time.perf_counter()
         if Setting.TRY_SAMPLING:
@@ -152,8 +174,23 @@ class Verifier:
         
         #Init workers
         num_workers = 1 if Setting.N_VERIF_CORES <= 1 else Setting.N_VERIF_CORES
+        workers = []
+        shared_state = SharedData(self.model, self.int_net, self.spec)
+        private_state = WorkerData()
 
-
+        for i in range(num_workers):
+            workers.append(Worker(f"Worker_{i}", shared_state, private_state))
+            workers[-1].start()
+        
+        #Start Monitor thread
+        lp = threading.Thread(target=monitor_thread, args=(shared_state.log_Q,))
+        lp.start()
+        for worker in workers:
+            worker.join()
+        #Terminate monitor thread
+        shared_state.log_Q.put(None)
+        lp.join()
+        
         end = time.perf_counter()
         logger.debug(f"Total Verification time: {end-start:.2f} seconds")
 
