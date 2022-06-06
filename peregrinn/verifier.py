@@ -3,7 +3,8 @@ Haitham Khedr
 
 File containing the main code for the NN verifier 
 '''
-from torch import zero_
+from ctypes import c_bool
+import multiprocessing as mp 
 import torch.nn as nn
 import torch
 from intervals.symbolic_interval import SymbolicInterval
@@ -26,6 +27,15 @@ class VerificationResult(Enum):
     TIMEOUT = 2
     UNKNOWN = 3
 
+class Worker(mp.Process):
+    def __init__(self, name, shared, private):
+        self.name       = name
+        self._shared    = shared
+        self._private   = private
+
+    def run(self):
+        pass
+
 class Branch:
     '''
     Defines a computational branch used in verification
@@ -43,6 +53,21 @@ class Branch:
         new_branch = Branch(self.input_bounds, self.spec)
         new_branch.fixed_neurons = self.fixed_neurons.copy()
         return new_branch   
+
+class SharedData():
+    def __init__(self, model, interval_net, spec):
+        self.model      = model
+        self.int_net    = interval_net
+        self.spec       = spec
+
+        self.task_Q = mp.Queue()
+        self.poison_pill = mp.Value(c_bool, False)
+        self.n_branches = mp.Value('I', 0)
+        
+
+class WorkerData():
+    def __init__(self):
+        pass
 
 class Verifier:
     
@@ -63,7 +88,7 @@ class Verifier:
     -------
     '''
 
-    def __init__(self, model: nn.Module, vnnlib_spec: Specification, timeout = Setting.TIMEOUT):
+    def __init__(self, model: nn.Module, vnnlib_spec: Specification):
 
         self.model = model
         self.input_bounds = vnnlib_spec.input_bounds
@@ -73,7 +98,6 @@ class Verifier:
         
         self.init_branch = Branch(self.spec)
         self.verification_result = VerificationResult.UNKNOWN
-        self.timeout = timeout
 
     def _check_violated_bounds(self, objectives : list, bounds : torch.tensor) -> tuple[VerificationResult,torch.tensor]:
         for A,b in objectives:
@@ -97,7 +121,7 @@ class Verifier:
 
         return (VerificationResult.UNKNOWN, torch.tensor([]))
 
-    def verify(self) -> VerificationResult:
+    def verify(self, timeout : float) -> VerificationResult:
         #TODO: Set SIGALARM handler
         start = time.perf_counter()
         if Setting.TRY_SAMPLING:
@@ -125,9 +149,11 @@ class Verifier:
             logger.debug(f"Try overapproximation Verification time: {time.perf_counter()-overapprox_timer:.2f} seconds")
             if(status == VerificationResult.NO_SOL):
                 return status
-            
-            
-            pass
+        
+        #Init workers
+        num_workers = 1 if Setting.N_VERIF_CORES <= 1 else Setting.N_VERIF_CORES
+
+
         end = time.perf_counter()
         logger.debug(f"Total Verification time: {end-start:.2f} seconds")
 
