@@ -73,3 +73,27 @@ class ReLU(nn.Module):
         self.post_symbolic = post_interval
         return post_interval
 
+    @property
+    def pre_conc_bounds(self):
+        return self.pre_symbolic.conc_bounds
+    
+    @property 
+    def post_conc_bounds(self):
+        return self.post_symbolic.conc_bounds
+
+    @property 
+    def post_conc_lb(self):
+        lb = torch.max(torch.zeros_like(self.post_symbolic.conc_lb), self.post_symbolic.conc_lb)
+        return lb
+
+    @property 
+    def post_conc_ub(self):
+        return self.post_symbolic.conc_ub
+
+    @property 
+    def pre_conc_lb(self):
+        return self.pre_symbolic.conc_lb
+
+    @property 
+    def pre_conc_ub(self):
+        return self.pre_symbolic.conc_ub
