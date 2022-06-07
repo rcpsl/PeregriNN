@@ -4,9 +4,11 @@ Haitham Khedr
 File containing the main code for the NN verifier 
 '''
 from __future__ import annotations
+from collections import defaultdict, deque
 from ctypes import c_bool
 
 import multiprocessing as mp
+from operator import ne
 import queue
 import threading
 from typing import Tuple 
@@ -24,6 +26,11 @@ import logging.handlers
 import time
 from enum import Enum
 
+import gurobipy as grb
+
+from operators.linear import * 
+from operators.flatten import *
+from operators.activations import *
 
 from utils.Logger import get_logger
 logger = get_logger(__name__)
@@ -54,20 +61,21 @@ class SharedData():
         self.task_Q         : mp.Queue[Branch] = mp.Queue()
         self.log_Q          : mp.Queue[logging.LogRecord] = mp.Queue()
         self.poison_pill    : mp.Value = mp.Value(c_bool, False)
-        self.n_active_branches     : mp.Value = mp.Value('i', 1)
+        self.n_queued_branches     : mp.Value = mp.Value('i', 1)
         self.verified_branches     : mp.Value = mp.Value('I', 0)
+        # self.active_workers        : mp.Value = mp.Value('i', 0)
         self.mutex          : mp.Lock = mp.Lock()
         #Make sure only one process writes to this.
         self.verification_result :VerificationResult = VerificationResult()
         
 
 class WorkerData():
-    def __init__(self, idx, model : nn.Module, interval_net : IntervalNetwork):
+    def __init__(self, idx, verifier : Verifier):
         self.worker_idx = idx
         self.num_verified_branches = 0
 
-        self.model      = model
-        self.int_net    = interval_net
+        self.verifier      = verifier
+        self._dfs_branches = deque([])
 
 class Worker(mp.Process):
     def __init__(self,shared : SharedData, private : WorkerData):
@@ -101,16 +109,16 @@ class Worker(mp.Process):
                     branch_1, branch_2 = branch.split_neuron()
                     self._shared.task_Q.put(branch_1)
                     self._shared.task_Q.put(branch_2)
-                    with self._shared.n_active_branches.get_lock():
-                        self._shared.n_active_branches.value += 2
+                    with self._shared.n_queued_branches.get_lock():
+                        self._shared.n_queued_branches.value += 2
                 else:
                     with self._shared.verified_branches.get_lock():
                         self._shared.verified_branches.value += 1
 
-                with self._shared.n_active_branches.get_lock():
-                    self._shared.n_active_branches.value -= 1 #The original branch is removed
+                with self._shared.n_queued_branches.get_lock():
+                    self._shared.n_queued_branches.value -= 1 #The original branch is removed
 
-                if(self._shared.n_active_branches.value <= 0 or res.status == ResultType.SOL_FOUND):
+                if(self._shared.n_queued_branches.value <= 0 or res.status == ResultType.SOL_FOUND):
                     #Last Branch or unsafe one
                     self._shared.poison_pill.value = True
                     self._shared.mutex.acquire()
@@ -133,7 +141,7 @@ class Branch:
         self.spec = spec
         self.fixed_neurons = [] #list of tuples (layer_idx, neuron_idx, phase)
         self.verification_result = VerificationResult(result=ResultType.UNKNOWN)
-
+    
     def fix_neuron(self, layer_idx, neuron_idx, phase):
         self.fixed_neurons.append((layer_idx, neuron_idx, phase))
 
@@ -181,9 +189,100 @@ class Verifier:
         self.spec = vnnlib_spec
         self.int_net = IntervalNetwork(self.model, self.input_bounds, 
                             operators_dict=OPS.op_dict, in_shape = self.spec.input_shape).to(Setting.DEVICE)
-        
+        self._compute_init_bounds(method = 'symbolic')
+
+        #Initial computational Branch
         self.init_branch = Branch(self.spec)
         self.verification_result = VerificationResult(ResultType.UNKNOWN)
+
+        #Initialize gurobi model
+        self.gmodel, self.gvars = self._init_grb_model()
+        
+    def _compute_init_bounds(self, method = 'symbolic'):
+        bounds_timer = time.perf_counter()
+        if(method == 'symbolic'):
+            I = torch.zeros((self.input_bounds.shape[0], 
+                            self.input_bounds.shape[0]+ 1), dtype = Setting.TORCH_PRECISION)
+            I = I.fill_diagonal_(1).unsqueeze(0)
+            input_bounds = self.input_bounds.unsqueeze(0).unsqueeze(1)
+            layer_sym = SymbolicInterval(input_bounds.to(Setting.DEVICE),I,I, device = Setting.DEVICE)
+            layer_sym.concretize()
+            self.int_net(layer_sym)
+        else:
+            raise NotImplementedError("Other Interval propagation methods not implemented.")
+        logger.debug(f"Initial bounds computation took {time.perf_counter() - bounds_timer:.2f} seconds")
+        return
+    def _init_grb_model(self):
+
+        def __grb_init_layer(l_idx, layer):
+            lb = layer.post_conc_lb.squeeze()
+            ub = layer.post_conc_ub.squeeze()
+            input_dims = lb.shape[0]
+            layer_vars = {}
+            if type(layer) == Linear:
+                l_vars = gmodel.addVars(input_dims, name = f"lay[{l_idx}]", lb  = lb, ub = ub).values()
+                W = layer.torch_layer.weight
+                b = layer.torch_layer.bias
+                for neuron_idx in range(W.shape[0]):
+                    lin_expr =  grb.LinExpr(W[neuron_idx], vars[-1]['net'])
+                    gmodel.addConstr(l_vars[neuron_idx] == (lin_expr + b[neuron_idx]))
+                layer_vars['net'] = l_vars
+                
+            elif type(layer) == ReLU:
+                #Assumes a linear layer before a ReLU
+                pre_lb = layer.pre_conc_lb.squeeze()
+                pre_ub = layer.pre_conc_ub.squeeze()
+                l_var = defaultdict(list)
+                for neuron_idx in range(lb.shape[0]): 
+                    #two vars per relu
+                    in_var = vars[-1]['net'][neuron_idx]
+                    rvar = gmodel.addVar(name = f"relu[{l_idx}]", lb  = lb[neuron_idx], ub = ub[neuron_idx])
+                    svar = gmodel.addVar(name = f"slack[{l_idx}]", lb  = 0)
+
+                    l_var['net'].append(rvar)
+                    l_var['slack'].append(svar)
+                    gmodel.addConstr(svar == rvar - in_var)
+
+                    #Active relus
+                    if(pre_lb[neuron_idx] > 0):
+                        gmodel.addConstr(svar == 0, name= f"{neuron_idx}_active")
+                    elif(pre_ub[neuron_idx] <= 0):
+                        gmodel.addConstr(rvar == 0, name= f"{neuron_idx}_inactive")
+                    else:
+                        factor = (pre_ub[neuron_idx] / (pre_ub[neuron_idx]-pre_lb[neuron_idx])).item()
+                        gmodel.addConstr(rvar <= factor * (in_var- pre_lb[neuron_idx]),name=f"{neuron_idx}_relaxed")
+                        A_up = layer.post_symbolic.u.squeeze()[neuron_idx]
+                        gmodel.addConstr(grb.LinExpr(A_up[:-1],vars[0]['net'])  + A_up[-1]  >= rvar,name= f"{neuron_idx}_sym_UB")
+                        # gmodel.addConstr(rvar >= in_var) #Not needed since svar = rvar - in_var >=0
+                layer_vars = l_var
+            elif type(layer) == Flatten:
+                return
+
+            elif type(layer) == Conv2d:
+                pass
+
+            vars.append(layer_vars)
+            gmodel.update()
+
+        gmodel = grb.Model()
+        gmodel.setParam('OutputFlag', False)
+        gmodel.setParam('Threads', 1)
+        self.int_net
+        vars = []
+
+        #Create variables
+        input_dims = self.input_bounds.shape[0]
+        lb = self.input_bounds[:,0]
+        ub = self.input_bounds[:,1]
+        in_vars = gmodel.addVars(input_dims, name = "inp", lb  = lb, ub = ub)
+        vars.append({'net' : in_vars.values()})
+        for l_idx, layer in enumerate(self.int_net.layers):
+            __grb_init_layer(l_idx, layer)
+        
+        
+
+
+        return gmodel, vars
 
     def _check_violated_bounds(self, objectives : list, bounds : torch.tensor) -> tuple[ResultType,torch.tensor]:
         for A,b in objectives:
@@ -223,14 +322,13 @@ class Verifier:
 
         if Setting.TRY_OVERAPPROX:
             overapprox_timer = time.perf_counter()
-            I = torch.zeros((self.input_bounds.shape[0], 
-                    self.input_bounds.shape[0]+ 1), dtype = Setting.TORCH_PRECISION)
-            I = I.fill_diagonal_(1).unsqueeze(0)
-            input_bounds = self.input_bounds.unsqueeze(0).unsqueeze(1)
-            layer_sym = SymbolicInterval(input_bounds.to(Setting.DEVICE),I,I, device = Setting.DEVICE)
-            layer_sym.concretize()
-            output_sym = self.int_net(layer_sym)
-            output_bounds = output_sym.concrete_bounds.squeeze().to('cpu')
+            # I = torch.zeros((self.input_bounds.shape[0], 
+            #         self.input_bounds.shape[0]+ 1), dtype = Setting.TORCH_PRECISION)
+            # I = I.fill_diagonal_(1).unsqueeze(0)
+            # input_bounds = self.input_bounds.unsqueeze(0).unsqueeze(1)
+            # layer_sym = SymbolicInterval(input_bounds.to(Setting.DEVICE),I,I, device = Setting.DEVICE)
+            # layer_sym.concretize()
+            output_bounds = self.int_net.layers[-1].post_symbolic.concrete_bounds.squeeze().to('cpu')
             status, _ = self._check_violated_bounds(self.spec.objectives, output_bounds)
             logger.debug(f"Try overapproximation Verification time: {time.perf_counter()-overapprox_timer:.2f} seconds")
             if(status == ResultType.NO_SOL):
@@ -238,7 +336,6 @@ class Verifier:
         
         #Init workers
         num_workers = 1 if Setting.N_VERIF_CORES <= 1 else Setting.N_VERIF_CORES
-        num_workers = 1
         shared_state = SharedData()
 
         #Start Monitor thread
@@ -252,7 +349,7 @@ class Verifier:
         workers_timer = time.perf_counter()
         workers = []
         for i in range(num_workers):
-            private_state = WorkerData(i, self.model, self.int_net)
+            private_state = WorkerData(i, self)
             workers.append(Worker(shared_state, private_state))
             workers[-1].start()
         logger.debug(f"Creating and starting workers took {time.perf_counter() - workers_timer:.2f} seconds")

@@ -33,13 +33,23 @@ class Flatten(nn.Module):
     @property
     def pre_conc_bounds(self):
         return self.pre_symbolic.conc_bounds
-
+    
     @property 
     def post_conc_bounds(self):
         return self.post_symbolic.conc_bounds
 
+    @property 
+    def post_conc_lb(self):
+        return self.post_symbolic.conc_lb
 
+    @property 
+    def post_conc_ub(self):
+        return self.post_symbolic.conc_ub
+    
+    @property 
+    def pre_conc_lb(self):
+        return self.pre_symbolic.conc_lb
 
-
-        
-
+    @property 
+    def pre_conc_ub(self):
+        return self.pre_symbolic.conc_ub
