@@ -74,7 +74,7 @@ class WorkerData():
         self.worker_idx = idx
         self.num_verified_branches = 0
 
-        self.verifier      = verifier
+        # self.solver      = verifier
         self._dfs_branches = deque([])
 
 class Worker(mp.Process):
@@ -136,11 +136,19 @@ class Branch:
     '''
     Defines a computational branch used in verification
     '''
-    def __init__(self, spec: Specification) -> None:
+    def __init__(self, spec: Specification, fixed_neurons = [], gmodel = None, gvars = None) -> None:
         self.input_bounds = spec.input_bounds
         self.spec = spec
         self.fixed_neurons = [] #list of tuples (layer_idx, neuron_idx, phase)
         self.verification_result = VerificationResult(result=ResultType.UNKNOWN)
+        self.gmodel = None
+        self.gvars = None
+        if fixed_neurons:
+            self.fixed_neurons = fixed_neurons
+        if gmodel:
+            self.gmodel = gmodel
+        if gvars:
+            self.gvars = gvars
     
     def fix_neuron(self, layer_idx, neuron_idx, phase):
         self.fixed_neurons.append((layer_idx, neuron_idx, phase))
@@ -151,15 +159,16 @@ class Branch:
         return VerificationResult()
 
     def split_neuron(self) -> Tuple[Branch, Branch]:
-        b1 = Branch(self.spec)
-        b1.verification_result = VerificationResult(result= ResultType.NO_SOL)
-        b2 = b1.clone()
-        b2.verification_result = VerificationResult(result= ResultType.NO_SOL)
+        b1 = self.clone()
+        b2 = self.clone()
+        b1.verification_result.status = ResultType.NO_SOL
+        b2.verification_result.status = ResultType.NO_SOL
         return (b1,b2)
 
     def clone(self):
-        new_branch = Branch(self.spec)
-        new_branch.fixed_neurons = self.fixed_neurons.copy()
+        gmodel_cp = self.gmodel.copy()
+        fixed_neurons_cp = self.fixed_neurons.copy()
+        new_branch = Branch(self.spec, fixed_neurons_cp, gmodel_cp, self.gvars)
         return new_branch   
 
 
@@ -180,6 +189,8 @@ class Verifier:
 
     Methods
     -------
+    verify(timeout= Setting.TIMEOUT)
+        verifies the NN against spec
     '''
 
     def __init__(self, model: nn.Module, vnnlib_spec: Specification):
@@ -189,15 +200,16 @@ class Verifier:
         self.spec = vnnlib_spec
         self.int_net = IntervalNetwork(self.model, self.input_bounds, 
                             operators_dict=OPS.op_dict, in_shape = self.spec.input_shape).to(Setting.DEVICE)
-        self._compute_init_bounds(method = 'symbolic')
+        self.stable_relus, self.unstable_relus = self._compute_init_bounds(method = 'symbolic')
 
-        #Initial computational Branch
-        self.init_branch = Branch(self.spec)
-        self.verification_result = VerificationResult(ResultType.UNKNOWN)
 
         #Initialize gurobi model
         self.gmodel, self.gvars = self._init_grb_model()
         
+        #Initial computational Branch
+        self.init_branch = Branch(self.spec, self.gmodel, self.gvars)
+        self.verification_result = VerificationResult(ResultType.UNKNOWN)
+
     def _compute_init_bounds(self, method = 'symbolic'):
         bounds_timer = time.perf_counter()
         if(method == 'symbolic'):
@@ -209,11 +221,36 @@ class Verifier:
             layer_sym.concretize()
             self.int_net(layer_sym)
         else:
-            raise NotImplementedError("Other Interval propagation methods not implemented.")
+            raise NotImplementedError()
+        
+        stable_relus = {}
+        unstable_relus= {}
+        for l_idx, layer in enumerate(self.int_net.layers):
+            if type(layer) == ReLU:
+                stable_relus[l_idx] = []
+                unstable_relus[l_idx] = []
+                lb = layer.pre_conc_lb.squeeze()
+                ub = layer.pre_conc_ub.squeeze()
+                active_relu_idx = torch.where(lb > 0)[0]
+                inactive_relu_idx = torch.where(ub <= 0)[0]
+                unstable_relu_idx = torch.where((ub > 0) * (lb <0))[0]
+                try:
+                    assert active_relu_idx.shape[0] + inactive_relu_idx.shape[0] \
+                            + unstable_relu_idx.shape[0] == lb.shape[0]
+                except AssertionError as e:
+                    logger.error("Assertion failed(Shape mismatch): Some Relus are neither stable nor unstable")
+
+                stable_relus[l_idx].extend([(relu_idx, 1) for relu_idx in active_relu_idx])
+                stable_relus[l_idx].extend([(relu_idx, 0) for relu_idx in inactive_relu_idx])
+                unstable_relus[l_idx].extend([relu_idx for relu_idx in unstable_relu_idx])
+        
         logger.debug(f"Initial bounds computation took {time.perf_counter() - bounds_timer:.2f} seconds")
-        return
+        return stable_relus, unstable_relu_idx
+
+
     def _init_grb_model(self):
 
+        model_init_counter = time.perf_counter()
         def __grb_init_layer(l_idx, layer):
             lb = layer.post_conc_lb.squeeze()
             ub = layer.post_conc_ub.squeeze()
@@ -259,7 +296,7 @@ class Verifier:
                 return
 
             elif type(layer) == Conv2d:
-                pass
+                raise NotImplementedError()
 
             vars.append(layer_vars)
             gmodel.update()
@@ -281,7 +318,7 @@ class Verifier:
         
         
 
-
+        logger.debug(f"Gurobi model init time: {time.perf_counter() - model_init_counter:.2f} seconds")
         return gmodel, vars
 
     def _check_violated_bounds(self, objectives : list, bounds : torch.tensor) -> tuple[ResultType,torch.tensor]:
@@ -306,7 +343,8 @@ class Verifier:
 
         return (ResultType.UNKNOWN, torch.tensor([]))
 
-    def verify(self, timeout : float = Setting.TIMEOUT) -> ResultType:
+
+    def verify(self, timeout : float = Setting.TIMEOUT) -> VerificationResult:
         #TODO: Set SIGALARM handler
         start = time.perf_counter()
         if Setting.TRY_SAMPLING:
@@ -318,21 +356,18 @@ class Verifier:
             logger.debug(f"Sampling verification time: {time.perf_counter()-sampling_timer:.2f} seconds")
             if(status == ResultType.SOL_FOUND):
                 #TODO: print counterexample somwhere?
-                return status
+                self.verification_result.status = status
+                self.verification_result.ce = ce
+                return self.verification_result
 
         if Setting.TRY_OVERAPPROX:
             overapprox_timer = time.perf_counter()
-            # I = torch.zeros((self.input_bounds.shape[0], 
-            #         self.input_bounds.shape[0]+ 1), dtype = Setting.TORCH_PRECISION)
-            # I = I.fill_diagonal_(1).unsqueeze(0)
-            # input_bounds = self.input_bounds.unsqueeze(0).unsqueeze(1)
-            # layer_sym = SymbolicInterval(input_bounds.to(Setting.DEVICE),I,I, device = Setting.DEVICE)
-            # layer_sym.concretize()
             output_bounds = self.int_net.layers[-1].post_symbolic.concrete_bounds.squeeze().to('cpu')
             status, _ = self._check_violated_bounds(self.spec.objectives, output_bounds)
             logger.debug(f"Try overapproximation Verification time: {time.perf_counter()-overapprox_timer:.2f} seconds")
             if(status == ResultType.NO_SOL):
-                return status
+                self.verification_result.status = status
+                return self.verification_result
         
         #Init workers
         num_workers = 1 if Setting.N_VERIF_CORES <= 1 else Setting.N_VERIF_CORES
@@ -364,5 +399,17 @@ class Verifier:
         logger.debug(f"Total Verification time: {end-start:.2f} seconds")
 
 
-
+    @property
+    def num_stable_relus(self):
+        num_stable_relus = 0
+        for layer_stable_relus in self.stable_relus.values():
+            num_stable_relus += len(layer_stable_relus)
+        return num_stable_relus
+    
+    @property
+    def num_unstable_relus(self):
+        num_unstable_relus = 0
+        for layer_unstable_relus in self.unstable_relus.values():
+            num_unstable_relus += len(layer_unstable_relus)
+        return num_unstable_relus
 
