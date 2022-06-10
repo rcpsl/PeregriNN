@@ -5,6 +5,7 @@ Propagating an interval through this network computes bounds on all neurons usin
 import torch.nn as nn
 import torch
 from intervals.symbolic_interval import SymbolicInterval
+from operators.activations import ReLU
 from utils.Logger import get_logger
 logger = get_logger(__name__)
 
@@ -29,9 +30,23 @@ class IntervalNetwork(nn.Module):
         self.interval_net = nn.Sequential(*self.layers)
 
     
-    def forward(self, interval : SymbolicInterval) -> SymbolicInterval:
-        return self.interval_net(interval)
-
-
-
+    def forward(self, interval : SymbolicInterval, layers_mask : dict = None) -> SymbolicInterval:
+        if layers_mask is None:
+            return self.interval_net(interval)
+        else:
+            prev = interval
+            for idx, layer in enumerate(self.layers):
+                layer_mask = layers_mask[idx]
+                if(type(layer) == ReLU):
+                    prev = layer(prev, layer_mask)
+                else:
+                    prev = layer(prev)
+            return prev
+    
+    def evaluate(self, input : torch.tensor) -> torch.tensor:
+        prev = input.reshape((-1,self.layers[0].input_shape))
+        for layer in self.layers:
+            prev = layer.torch_layer(prev)
+        
+        return prev
 

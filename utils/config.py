@@ -17,6 +17,7 @@ class Setting:
     TRY_SAMPLING = True
     TRY_OVERAPPROX = True
     N_SAMPLES = 15000
+    ONLY_FIRST_INFEASIBLE_LAYER = True
 
     #Symbolic analysis
     USE_GPU = False

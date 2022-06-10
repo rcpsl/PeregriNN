@@ -12,6 +12,7 @@ import re
 from utils.sample_network import *
 #from volestipy import *
 from functools import cmp_to_key
+from time import time
 eps = 1E-5
 np.seterr(all='raise')
 

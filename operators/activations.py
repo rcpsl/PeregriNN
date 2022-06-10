@@ -14,7 +14,7 @@ class ReLU(nn.Module):
         self.input_shape = input_shape
         self.output_shape = input_shape
 
-    def forward(self, x: SymbolicInterval) ->SymbolicInterval:
+    def forward(self, x: SymbolicInterval, layer_mask = None) ->SymbolicInterval:
         """
         Parameters
         ----------
@@ -68,6 +68,15 @@ class ReLU(nn.Module):
             post_interval.u[zero_crossing] = a *  x.u[zero_crossing]
             post_interval.u[...,-1][zero_crossing] -= a.squeeze() * x.min_ub[zero_crossing]
 
+        #Handle fixed relus
+        if(layer_mask):
+            for relu_idx, phase in layer_mask:
+                if(phase == 0):
+                    post_interval.l[:,relu_idx] = 0
+                    post_interval.u[:,relu_idx] = 0
+                elif(phase == 1):
+                    post_interval.l[:,relu_idx] = self.pre_symbolic.l[:,relu_idx]
+                    post_interval.u[:,relu_idx] = self.pre_symbolic.u[:,relu_idx]
 
         post_interval.concretize()
         self.post_symbolic = post_interval

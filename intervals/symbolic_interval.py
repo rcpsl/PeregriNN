@@ -12,12 +12,12 @@ class SymbolicInterval():
         if(len(l) > 0 and len(u) > 0):
             self.l = l
             self.u = u
-            if(self.l.requires_grad == False):
-                self.l = l.requires_grad_()
-            if(self.u.requires_grad == False):
-                self.u = u.requires_grad_()
+            # if(self.l.requires_grad == False):
+            #     self.l = l.requires_grad_()
+            # if(self.u.requires_grad == False):
+            #     self.u = u.requires_grad_()
         elif(n > 0):
-            self.l = torch.zeros(batch_size, n, self.input_interval.shape[2]+1, requires_grad= True)
+            self.l = torch.zeros(batch_size, n, self.input_interval.shape[2]+1, requires_grad= False)
             self.u = torch.zeros_like(self.l)
         else:
             logger.error("Not enough info to construct a Symbolic interval.")

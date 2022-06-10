@@ -1,6 +1,6 @@
 import sys,os
 
-from peregrinn.verifier import Verifier
+from peregrinn.verifier import ResultType, Verifier
 from utils.config import Setting
 # os.environ['MKL_NUM_THREADS']="1"
 # os.environ['NUMEXPR_NUM_THREADS']="1"
@@ -9,13 +9,15 @@ os.environ['OMP_NUM_THREADS']="1"
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 from parsers.onnx_parser import ONNX_Parser
 from solver import *
-from time import time,sleep
+import time
 from random import random, seed
 import numpy as np
 import signal
 import glob
+from multiprocessing import Value
 from NeuralNetwork import *
-from multiprocessing import Process, Value
+# import multiprocessing as mp
+# from multiprocessing import Process, Value
 import argparse
 from os import path
 import logging
@@ -32,6 +34,7 @@ from operators.activations import *
 
 import warnings
 from utils.Logger import get_logger
+logger = get_logger('main')
 eps = 1E-10
 
 class TimeOutException(Exception):
@@ -100,85 +103,84 @@ def main(args):
 
     onnx_parser = ONNX_Parser(model_path)
     vnnlib_parser = VNNLib_parser(dataset = 'cifar20')
-    in_shape = Dataset_MetaData.input_size[dataset]
-    vnnlib_spec = vnnlib_parser.read_vnnlib_simple(vnnlib_filename, 3072, 10)
+    in_shape = Dataset_MetaData.inout_shapes[dataset]['input']
+    vnnlib_spec = vnnlib_parser.read_vnnlib_simple(vnnlib_filename, in_shape.prod(), 10)
     device = torch.device('cuda')
     input_bounds = vnnlib_spec.input_bounds
     in_shape = vnnlib_spec.input_shape
     torch_model = onnx_parser.to_pytorch()
-    torch_model.eval()
-    for name, param in torch_model.named_parameters():
-        param.requires_grad  = False
-    s = time()
-    torch_model = torch_model.to(device)
-    print(f"Time to move the model to {device}", time()-s)
-    int_net = IntervalNetwork(torch_model, input_bounds, operators_dict=op_dict, in_shape = in_shape)
-    n= input_bounds.shape[0]
-    I = np.zeros((n, n+ 1), dtype = np.float32)
-    np.fill_diagonal(I,1)
-    I = torch.tensor(I).unsqueeze(0)
+    # torch_model.eval()
+    # for name, param in torch_model.named_parameters():
+    #     param.requires_grad  = False
+    s = time.time()
+    # torch_model = torch_model.to(device)
+    # print(f"Time to move the model to {device}", time.time()-s)
+    # int_net = IntervalNetwork(torch_model, input_bounds, operators_dict=op_dict, in_shape = in_shape)
+    # n= input_bounds.shape[0]
+    # I = np.zeros((n, n+ 1), dtype = np.float32)
+    # np.fill_diagonal(I,1)
+    # I = torch.tensor(I).unsqueeze(0)
     # I = I.repeat(50,1,1)
-    input_bounds = input_bounds.unsqueeze(0).unsqueeze(1)
-    layer_sym = SymbolicInterval(input_bounds.to(device),I,I, device = device)
-    layer_sym.concretize()
-    steps = 1
-    s = time()
-    for iter in range(steps):
-        int_net(layer_sym)
-    e = time()
-    print("Sym analysis with torch:", (e-s)/ steps)
-    sys.exit()
-    nnet = PytorchNN()
-    nnet.parse_network(torch_model, 784)
-    s = time()
-    for iter in range(steps):
-        nnet.set_bounds(input_bounds)
-    e = time()
-    print("Old Sym analysis with np:", (e-s)/ steps)
+    # input_bounds = input_bounds.unsqueeze(0).unsqueeze(1)
+    # layer_sym = SymbolicInterval(input_bounds.to(device),I,I, device = device)
+    # layer_sym.concretize()
+    # steps = 1
+    # s = time.time()
+    # for iter in range(steps):
+    #     int_net(layer_sym)
+    # e = time.time()
+    # print("Sym analysis with torch:", (e-s)/ steps)
+    # sys.exit()
+    nn = PytorchNN()
+    nn.parse_network(torch_model, 784)
+    s = time.time()
+    # for iter in range(steps):
+    #     nnet.set_bounds(input_bounds)
+    # e = time.time()
+    # print("Old Sym analysis with np:", (e-s)/ steps)
 
     # print(nnet.layers[-1]['conc_lb'])
     # print(int_net.layers[-1].post_symbolic.conc_lb)
     
-    pass    
+    # pass    
     
-    image_file = args.image
-    img_name = image_file.split('/')[-1]
-    delta = float(args.eps)
+    # image_file = args.image
+    # img_name = image_file.split('/')[-1]
+    delta = 0.03
     TIMEOUT = int(args.timeout)
     MAX_DEPTH = int(args.timeout)
     #Init NN structure
-    nn = NeuralNetworkStruct()
-    nn.parse_network(nnet,type = 'mnist')
+    # nn = NeuralNetworkStruct()
+    # nn.parse_network(nnet,type = 'mnist')
     # print('Loaded network:',nnet)
-    
-    with open(image_file,'r') as f:
-        image = f.readline().split(',')
-        image = np.array([float(num) for num in image[:-1]]).reshape((-1,1))/255.0
-        output = nn.evaluate(image)
-        target = np.argmax(output)
-        nn.set_target(target)
-        other_ouputs = [i for i in range(nn.output_size) if i != target]
+    # with open(image_file,'r') as f:
+    image = input_bounds.mean(dim = 1).reshape((-1,1))
+    img_name = '0'
+    output = nn.evaluate(image)
+    target = np.argmax(output)
+    nn.set_target(target)
+    other_ouputs = [i for i in range(nn.output_size) if i != target]
         # print('Testing',image_file)
         # print('Output:',output,'\nTarget-->',target)
     signal.signal(signal.SIGALRM, alarm_handler)
     signal.alarm(TIMEOUT)
     try:
-        start_time = time()
+        start_time = time.time()
         # print('Norm:',delta)
         #Solve the problem for each other output
         lb = np.maximum(image-delta,0.0)
         ub = np.minimum(image+delta,1.0)
         input_bounds = np.concatenate((lb,ub),axis = 1)
-        samples = sample_network(nn,input_bounds,15000)
-        SAT = check_prop_samples(nn,samples,target)
-        if(SAT):
-        #    adv +=1
-           print_summary(nnet,img_name,'unsafe',time()-start_time)
-           return
+        # samples = sample_network(nn,input_bounds,15000)
+        # SAT = check_prop_samples(nn,samples,target)
+        # if(SAT):
+        # #    adv +=1
+        #    print_summary(nnet,img_name,'unsafe',time.time()-start_time)
+        #    return
         nn.set_bounds(input_bounds)
-        out_list_ub = copy(nn.layers[nn.num_layers-1]['conc_ub'])
-        other_ouputs = np.flip(np.argsort(out_list_ub,axis = 0)).flatten().tolist()
-        other_ouputs = [idx for idx in other_ouputs if idx!= target and out_list_ub[idx] > 0]
+        # out_list_ub = copy(nn.layers[nn.num_layers-1]['conc_ub'])
+        # other_ouputs = np.flip(np.argsort(out_list_ub,axis = 0)).flatten().tolist()
+        # other_ouputs = [idx for idx in other_ouputs if idx!= target and out_list_ub[idx] > 0]
         adv_found = Value('i',0)
         result = ''
         for out_idx in other_ouputs:
@@ -191,12 +193,14 @@ def main(args):
                 break
         #signal.alarm(0)
         if(result == 'SolFound'):
-            print_summary(nnet,img_name,'unsafe',time() - start_time)
+            print(result, time.time() - start_time)
+            # print_summary(nnet,img_name,'unsafe',time.time() - start_time)
         else:
-            print_summary(nnet,img_name,'safe',time()-start_time)
+            print(result,'safe',time.time()-start_time)
 
     except TimeOutException:
-        print_summary(nnet,img_name,'timeout',TIMEOUT)
+        print('Timeout')
+        # print_summary(nnet,img_name,'timeout',TIMEOUT)
     
 
 def test_verifier(args):
@@ -215,8 +219,13 @@ def test_verifier(args):
     for name, param in torch_model.named_parameters():
         param.requires_grad  = False
 
-    verifier = Verifier(torch_model, vnnlib_spec)
-    verifier.verify()
+    tic = time.perf_counter()
+    for i in range(len(vnnlib_spec.objectives)):
+        verifier = Verifier(torch_model, vnnlib_spec, i)
+        verifier.verify()
+        if verifier.verification_result.status == ResultType.SOL_FOUND:
+            break
+    logger.info(f"Total program time: {time.perf_counter() - tic:.2f}")
 
 if __name__ == "__main__":
     
@@ -239,5 +248,8 @@ if __name__ == "__main__":
     )
     logging.captureWarnings(True)
 
+    
+
+    # torch.multiprocessing.set_start_method("spawn")
     test_verifier(args)
     # main(args)
