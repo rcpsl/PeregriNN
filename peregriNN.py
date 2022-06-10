@@ -2,11 +2,11 @@ import sys,os
 
 from peregrinn.verifier import ResultType, Verifier
 from utils.config import Setting
-# os.environ['MKL_NUM_THREADS']="1"
-# os.environ['NUMEXPR_NUM_THREADS']="1"
+os.environ['MKL_NUM_THREADS']="1"
+os.environ['NUMEXPR_NUM_THREADS']="1"
 os.environ['OMP_NUM_THREADS']="1"
 # os.environ['OPENBLAS_NUM_THREADS']="1"
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 from parsers.onnx_parser import ONNX_Parser
 from solver import *
 import time
@@ -238,7 +238,10 @@ if __name__ == "__main__":
     parser.add_argument('--max_depth',default=30,help="Maximum exploration depth")
     args = parser.parse_args()
     #Root logger config
-    log_file = '/home/hkhedr/Haitham/projects/dev/PeregriNN/logs/logs.log'
+    log_dir = os.path.join(os.getcwd(),'logs')
+    if(not os.path.exists(log_dir)):
+        os.makedirs(log_dir)
+    log_file = os.path.join(log_dir,'logs.log')
     logging.basicConfig(
         format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
         level = Setting.LOG_LEVEL,
@@ -250,6 +253,6 @@ if __name__ == "__main__":
 
     
 
-    # torch.multiprocessing.set_start_method("spawn")
-    test_verifier(args)
-    # main(args)
+    torch.multiprocessing.set_start_method("fork")
+    # test_verifier(args)
+    main(args)

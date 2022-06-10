@@ -2,7 +2,7 @@ import numpy as np
 import pickle
 import sys
 from copy import copy
-from keras.models import load_model
+# from keras.models import load_model
 np.random.seed(50)
 eps = 1E-5
 class NeuralNetworkStruct(object):
@@ -465,21 +465,21 @@ class SymbolicInterval(object):
 
 
 
-class KerasNN(NeuralNetworkStruct):
-    #Expect .h5 model
-    def parse_network(self, model_file,type = 'Keras'):
-        model = load_model(model_file)
-        layers_sizes = [model.layers[0].input_shape[1]]
-        Weights = []
-        biases = []
-        for layer in model.layers:
-            layers_sizes.append(layer.output_shape[1])
-            Weights.append(layer.get_weights()[0].T)
-            biases.append(layer.get_weights()[1])
+# class KerasNN(NeuralNetworkStruct):
+#     #Expect .h5 model
+#     def parse_network(self, model_file,type = 'Keras'):
+#         model = load_model(model_file)
+#         layers_sizes = [model.layers[0].input_shape[1]]
+#         Weights = []
+#         biases = []
+#         for layer in model.layers:
+#             layers_sizes.append(layer.output_shape[1])
+#             Weights.append(layer.get_weights()[0].T)
+#             biases.append(layer.get_weights()[1])
 
-        #Read min and max for inputs
-        self.__init__(layers_sizes)
-        self.set_weights(Weights,biases)
+#         #Read min and max for inputs
+#         self.__init__(layers_sizes)
+#         self.set_weights(Weights,biases)
 
 class PytorchNN(NeuralNetworkStruct):
     def parse_network(self, model, input_size):
@@ -502,8 +502,8 @@ class PytorchNN(NeuralNetworkStruct):
         
 if __name__ == "__main__":
 
-    nn = KerasNN()
-    nn.parse_network('models/mnist-net.h5')
+    # nn = KerasNN()
+    # nn.parse_network('models/mnist-net.h5')
 
     # layers_sizes = [1,2,1,1]
     # input_bounds = np.array([[0,1],[1,1]])

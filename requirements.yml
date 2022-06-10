@@ -1,4 +1,4 @@
-name: myenv
+name: peregrinn
 channels:
   - gurobi
   - http://conda.anaconda.org/gurobi

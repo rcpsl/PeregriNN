@@ -520,7 +520,7 @@ class Solver():
             #return choice([-1,1])
             
         layer_slacks = sorted(layer_slacks,key = cmp_to_key(compare))
-        if(len(layer_slacks) is not 0):
+        if(len(layer_slacks) != 0):
             infeas_relus = [(idx,phase) for _,_,idx,phase in layer_slacks]
             return False, infeas_relus
         return True, None
@@ -533,7 +533,7 @@ class Solver():
         infeas_relus = [(n_idx,0) for n_idx in inactive]
         infeas_relus +=  [(n_idx,1) for n_idx in active]
         infeas_relus = sorted(infeas_relus)
-        if(len(infeas_relus) is not 0):
+        if(len(infeas_relus) != 0):
             infeas_relus = [(idx,phase) for idx,phase in infeas_relus]
             return False, infeas_relus
         return True, None
