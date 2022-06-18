@@ -3,6 +3,7 @@ import torch
 
 
 from utils.Logger import get_logger
+from utils.config import Setting
 logger = get_logger(__name__)
 
 class SymbolicInterval():
@@ -17,8 +18,8 @@ class SymbolicInterval():
             # if(self.u.requires_grad == False):
             #     self.u = u.requires_grad_()
         elif(n > 0):
-            self.l = torch.zeros(batch_size, n, self.input_interval.shape[2]+1, requires_grad= False)
-            self.u = torch.zeros_like(self.l)
+            self.l = torch.zeros(batch_size, n, self.input_interval.shape[2]+1, requires_grad= False, dtype = Setting.TORCH_PRECISION)
+            self.u = torch.zeros_like(self.l, dtype = Setting.TORCH_PRECISION)
         else:
             logger.error("Not enough info to construct a Symbolic interval.")
             raise Exception("Not enough info to construct a Symbolic interval.")
@@ -29,7 +30,7 @@ class SymbolicInterval():
         self.l = self.l.to(device)
         self.u = self.u.to(device)
         self.input_interval = self.input_interval.to(device)
-        self.conc_bounds = torch.zeros(batch_size,2,*self.l.shape[1:-1], 2, device = device)
+        self.conc_bounds = torch.zeros(batch_size,2,*self.l.shape[1:-1], 2, device = device, dtype = Setting.TORCH_PRECISION)
 
     
     def zeros_like(self):

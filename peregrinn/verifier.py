@@ -6,6 +6,7 @@ File containing the main code for the NN verifier
 from __future__ import annotations
 from collections import OrderedDict, defaultdict, deque
 from ctypes import c_bool
+import pickle
 
 import torch
 import torch.nn as nn
@@ -67,7 +68,7 @@ class SharedData():
         self.verified_branches     : mp.Value = mp.Value('I', 0)
         # self.active_workers        : mp.Value = mp.Value('i', 0)
         #Make sure only one process writes to this.
-        self.status = mp.Value('i',3)
+        self.status = mp.Value('i',ResultType.NO_SOL.value)
         self.in_tensor = torch.zeros((in_shape))
         self.in_tensor = self.in_tensor.share_memory_()
         self.out_tensor = torch.zeros((out_shape))
@@ -105,6 +106,7 @@ class Worker(mp.Process):
 
     def run(self):
         torch.set_num_threads(1)
+        tic = time.perf_counter()
         self._logger.info(f"{self.name} Started...")
         while True:
             #Should terminate?
@@ -114,10 +116,9 @@ class Worker(mp.Process):
 
             try:
                 if(self._private._dfs_branches):
-                    branch = self._private._dfs_branches.popleft()
+                    branch = self._private._dfs_branches.pop()
                 else:
                     branch  = self._shared.task_Q.get(block = False)
-                    
                 sol = branch.verify(self.verifier)
                 res = branch.verification_result
                 if res.status == ResultType.UNKNOWN:
@@ -125,8 +126,8 @@ class Worker(mp.Process):
                     branch_1, branch_2 = branch.split_neuron(sol)
                     # self._shared.task_Q.put(branch_1)
                     # self._shared.task_Q.put(branch_2)
-                    self._private._dfs_branches.append(branch_1)
                     self._private._dfs_branches.append(branch_2)
+                    self._private._dfs_branches.append(branch_1)
                     with self._shared.n_queued_branches.get_lock():
                         self._shared.n_queued_branches.value += 2
                 else:
@@ -138,16 +139,19 @@ class Worker(mp.Process):
 
                 if(self._shared.n_queued_branches.value <= 0 or res.status == ResultType.SOL_FOUND):
                     #Last Branch or unsafe one
+                    self._logger.info(f"{self.name} Exiting...")
                     self._shared.poison_pill.value = True
-                    # self._shared.mutex.acquire()
                     self._shared.status.value = res.status.value
-                    self._shared.in_tensor[:]  = res.ce['x']
-                    self._shared.out_tensor[:] = res.ce['y']
-                    # self._shared.mutex.release()
                     if(res.status == ResultType.SOL_FOUND):
-                        logger.debug(f"{self.name} found a counterexample")
+                        self._shared.in_tensor[:]  = res.ce['x']
+                        self._shared.out_tensor[:] = res.ce['y']
+                        self._logger.debug(f"{self.name} found a counterexample")
                     else:
-                        logger.debug(f"{self.name} verified branch")
+                        self._logger.debug(f"{self.name} verified branch")
+
+                if(time.perf_counter() - tic > 5):
+                    self._logger.debug(f"{self.name} -> Number of Queued branches {self._shared.n_queued_branches.value}")
+                    tic = time.perf_counter()
             except queue.Empty as e:
                 #That's ok, try again.
                 pass
@@ -155,7 +159,7 @@ class Worker(mp.Process):
                 self._logger.exception(e)
                 raise e
         self._logger.info(f"{self.name} Terminated.")
-
+        self._logger.debug(f"{self.name} Log_q size {self._shared.log_Q.qsize()}.")
 class Branch:
     '''
     Defines a computational branch used in verification
@@ -175,19 +179,14 @@ class Branch:
             self.curr_layer = curr_layer
         if unstable_relus:
             self.unstable_relus = unstable_relus
+            self.curr_layer = list(self.unstable_relus.keys())[0]
         
 
     def _fix_neuron(self, layer_idx, neuron_idx, phase):
-        #Check if there is unconditioned neurons in current layer
-        if((layer_idx > self.curr_layer) and (len(self.unstable_relus[self.curr_layer]) > 0)):
-            #condition on any neuron in the curr_layer
-            neuron_idx = self.unstable_relus[self.curr_layer].pop()
-            layer_idx = self.curr_layer
-        else:
-            self.curr_layer = layer_idx
-            self.unstable_relus[self.curr_layer].remove(neuron_idx)
-
+        
+        self.curr_layer = layer_idx
         self.fixed_neurons[layer_idx].append((neuron_idx, phase))
+
     def _update_grb_model(self, gmodel, gvars, int_net : IntervalNetwork, unstable_relus, fixed_neurons):
 
         def _update_grb_layer(l_idx, layer , unstable_relus_idx):
@@ -195,12 +194,19 @@ class Branch:
             lb = layer.post_conc_lb.squeeze()
             ub = layer.post_conc_ub.squeeze()
             layer_vars = gvars[l_idx]
+
             if type(layer) == Linear:
+                in_vars = [gmodel.getVarByName(var.varName) for var in gvars[0]['net']]
                 for idx, v in enumerate(layer_vars['net']):
                     var = gmodel.getVarByName(v.VarName)
                     var.lb = lb[idx].item()
                     var.ub = ub[idx].item()
-                
+                    if(l_idx == (len(gvars)-1)):
+                        A_up = layer.post_symbolic.u.squeeze()[idx]
+                        A_low = layer.post_symbolic.l.squeeze()[idx]
+                        gmodel.addConstr(grb.LinExpr(A_up[:-1],in_vars)  + A_up[-1]  >= var, name = f"out_{idx}_sym_UB")
+                        gmodel.addConstr(grb.LinExpr(A_low[:-1],in_vars)  + A_low[-1]  <= var,name = f"out_{idx}_sym_LB")
+
             elif type(layer) == ReLU:
                 #Assumes a linear layer before a ReLU
                 pre_lb = layer.pre_conc_lb.squeeze()
@@ -222,19 +228,19 @@ class Branch:
                     else:
                         rvar.ub = pre_ub[neuron_idx]
                         factor = (pre_ub[neuron_idx] / (pre_ub[neuron_idx]-pre_lb[neuron_idx])).item()
-                        gmodel.addConstr(rvar <= factor * (in_var- pre_lb[neuron_idx]),name=f"{neuron_idx}_relaxed")
+                        gmodel.addConstr(rvar <= factor * (in_var- pre_lb[neuron_idx]),name=f"relu[{l_idx}][{neuron_idx}]_relaxed")
                         A_up = layer.post_symbolic.u.squeeze()[neuron_idx]
                         input_vars = [gmodel.getVarByName(v.varName) for v in gvars[0]['net']]
-                        gmodel.addConstr(grb.LinExpr(A_up[:-1],input_vars)  + A_up[-1]  >= rvar,name= f"{neuron_idx}_sym_UB")
+                        gmodel.addConstr(grb.LinExpr(A_up[:-1],input_vars)  + A_up[-1]  >= rvar,name= f"relu[{l_idx}][{neuron_idx}]_sym_UB")
                         # gmodel.addConstr(rvar >= in_var) #Not needed since svar = rvar - in_var >=0
                 for neuron_idx, phase in fixed_neurons[l_idx]:
                     rvar = gmodel.getVarByName(layer_vars['net'][neuron_idx].varName)
                     svar = gmodel.getVarByName(layer_vars['slack'][neuron_idx].varName)
                     if (phase == 1):
-                        if(gmodel.getConstrByName(f"{neuron_idx}_active") is None):
-                            rvar.lb = 0
-                            rvar.ub = pre_ub[neuron_idx]
-                            gmodel.addConstr(svar == 0, name= f"{neuron_idx}_active")
+                        # if(gmodel.getConstrByName(f"{neuron_idx}_active") is None):
+                        rvar.lb = 0
+                        rvar.ub = pre_ub[neuron_idx]
+                        gmodel.addConstr(svar == 0, name= f"{neuron_idx}_active")
                     else:
                         rvar.lb = 0
                         rvar.ub = 0
@@ -250,7 +256,7 @@ class Branch:
 
         for l_idx, layer in enumerate(int_net.layers):
             _update_grb_layer(l_idx, layer, unstable_relus)
-
+    
     def verify(self, verifier : Verifier) -> VerificationResult:
         
         if(self.verification_result.status != ResultType.UNKNOWN):
@@ -261,14 +267,13 @@ class Branch:
         gmodel  = verifier.gmodel
         gvars   = verifier.gvars
         int_net = verifier.int_net
-        if(self.curr_layer != torch.inf): 
+        if(len(self.fixed_neurons[self.curr_layer])): 
             
             gmodel  = verifier.gmodel.copy()
             #Propagate bounds
             int_net(self.input_interval, self.fixed_neurons)
             #update solver
             self._update_grb_model(gmodel, gvars, int_net, self.unstable_relus, self.fixed_neurons)
-        
         try:
             gmodel.optimize()
             if gmodel.status == grb.GRB.INFEASIBLE:
@@ -289,8 +294,20 @@ class Branch:
             logger.exception(e)
             raise e
 
+    def _check_valid(self,  layer_idx, neuron_idx, phase, sol):
+
+        if((layer_idx > self.curr_layer) and (len(self.unstable_relus[self.curr_layer]) > 0)):
+            #condition on any neuron in the curr_layer
+            layer_idx = self.curr_layer
+            neuron_idx = sorted(self.unstable_relus[layer_idx])[0]
+            gmodel, gvars = sol
+            phase = int(gmodel.getVarByName(gvars[layer_idx]['net'][neuron_idx].varName).X > 0)
+        
+        self.unstable_relus[layer_idx].remove(neuron_idx)
+        return layer_idx, neuron_idx, phase
     def split_neuron(self, sol: Tuple) -> Tuple[Branch, Branch]:
         l_idx, n_idx, phase = self._pick_neuron(sol)
+        l_idx, n_idx, phase = self._check_valid(l_idx,n_idx, phase, sol)
         b1 = self.clone()
         b2 = self.clone()
         b1._fix_neuron(l_idx, n_idx, phase)
@@ -370,20 +387,15 @@ class Verifier:
         verifies the NN against spec
     '''
 
-    def __init__(self, model: nn.Module, vnnlib_spec: Specification, objective_idx = 0):
+    def __init__(self, model: nn.Module, vnnlib_spec: Specification):
 
         self.model = model
-        self.model.share_memory()
         self.input_bounds = vnnlib_spec.input_bounds
         self.spec = vnnlib_spec
-        self.objective_idx = objective_idx
+        self.objective_idx = 0
         self.int_net = IntervalNetwork(self.model, self.input_bounds, 
                             operators_dict=OPS.op_dict, in_shape = self.spec.input_shape).to(Setting.DEVICE)
-        self.int_net.share_memory()
         self.stable_relus, self.unstable_relus, self.input_interval = self._compute_init_bounds(method = 'symbolic')
-
-
-        self.gmodel, self.gvars = self._init_grb_model()
         #Initial computational Branch
         self.verification_result = VerificationResult(ResultType.UNKNOWN)
 
@@ -404,7 +416,7 @@ class Verifier:
                     lin_expr =  grb.LinExpr(W[neuron_idx], vars[-1]['net'])
                     gmodel.addConstr(l_vars[neuron_idx] == (lin_expr + b[neuron_idx]))
                 layer_vars['net'] = l_vars
-                
+        
             elif type(layer) == ReLU:
                 #Assumes a linear layer before a ReLU
                 pre_lb = layer.pre_conc_lb.squeeze()
@@ -479,13 +491,19 @@ class Verifier:
         #Add NN constraints
         for l_idx, layer in enumerate(self.int_net.layers):
             __grb_init_layer(l_idx, layer)
-
+        #Output additional constraints
+        for idx, ovar in enumerate(vars[-1]['net']):
+            A_up = self.int_net.layers[-1].post_symbolic.u.squeeze()[idx]
+            A_low = self.int_net.layers[-1].post_symbolic.l.squeeze()[idx]
+            gmodel.addConstr(grb.LinExpr(A_up[:-1],vars[0]['net'])  + A_up[-1]  >= ovar, name = f"out_{idx}_sym_UB")
+            gmodel.addConstr(grb.LinExpr(A_low[:-1],vars[0]['net'])  + A_low[-1]  <= ovar,name = f"out_{idx}_sym_LB")
+        
         _grb_init_objective(gmodel, vars, self.stable_relus)
 
         # Add output constraints
         A,b = self.spec.objectives[self.objective_idx]
         for row, rhs in zip(A,b):
-            gmodel.addConstr(row @ vars[-1]['net'] <= rhs) 
+            gmodel.addConstr(row @ vars[-1]['net'] <= (rhs - Setting.EPS)) 
         logger.debug(f"Gurobi model init time: {time.perf_counter() - model_init_counter:.2f} seconds")
         return gmodel, vars
 
@@ -505,10 +523,14 @@ class Verifier:
         
         stable_relus = {}
         unstable_relus= {}
+        # bounds = {}
         for l_idx, layer in enumerate(self.int_net.layers):
+            #Save the original bounds
+            # if type(layer) in [ReLU, Linear]:
+            #     bounds[l_idx] = {'lb': layer.post_conc_lb.squeeze(), 'ub': layer.post_conc_ub}
             if type(layer) == ReLU:
                 stable_relus[l_idx] = []
-                unstable_relus[l_idx] = set()
+                unstable_relus[l_idx] = set([])
                 lb = layer.pre_conc_lb.squeeze()
                 ub = layer.pre_conc_ub.squeeze()
                 active_relu_idx = torch.where(lb > 0)[0]
@@ -523,13 +545,14 @@ class Verifier:
                 stable_relus[l_idx].extend([(relu_idx.item(), 1) for relu_idx in active_relu_idx])
                 stable_relus[l_idx].extend([(relu_idx.item(), 0) for relu_idx in inactive_relu_idx])
                 unstable_relus[l_idx].update([relu_idx.item() for relu_idx in unstable_relu_idx])
-        
+                # unstable_relus[l_idx] = unstable_relus[l_idx][::-1]
         logger.debug(f"Initial bounds computation took {time.perf_counter() - bounds_timer:.2f} seconds")
         return stable_relus, unstable_relus, layer_sym
 
 
     def _check_violated_bounds(self, objectives : list, bounds : torch.tensor) -> tuple[ResultType,torch.tensor]:
-        for A,b in objectives:
+        safe_objectives_idx = []
+        for obj_idx, (A,b) in enumerate(objectives):
             A = torch.from_numpy(A).type(Setting.TORCH_PRECISION)
             b = torch.from_numpy(b).type(Setting.TORCH_PRECISION)
             zeros = torch.zeros_like(A)
@@ -537,15 +560,14 @@ class Verifier:
             A_neg = torch.minimum(zeros, A)
             lower_bound = A_pos @ bounds[:,0] + A_neg @ bounds[:,1]
             if(lower_bound > b):
-                return (ResultType.NO_SOL, torch.tensor([]))
-            else:
-                return (ResultType.UNKNOWN, torch.tensor([]))
-
+                safe_objectives_idx.append(obj_idx)
+        return safe_objectives_idx
 
     def _check_violated_samples(self, objectives : list, outputs : torch.tensor) -> VerificationResult:
         result = VerificationResult()
         for A,b in objectives:
-            counterexamples = torch.where(outputs @ A.T < torch.from_numpy(b))[0]
+            violation = torch.prod(outputs @ A.T < torch.from_numpy(b), dim = 1)
+            counterexamples = torch.where(violation)[0]
             if(len(counterexamples) > 0):
                 result.status = ResultType.SOL_FOUND
                 result.ce = counterexamples[0]
@@ -553,63 +575,86 @@ class Verifier:
 
         return result
 
+    def quick_check_bounds(self) -> Tuple[ResultType, list]:
+        overapprox_timer = time.perf_counter()
+        output_bounds = self.int_net.layers[-1].post_symbolic.concrete_bounds.squeeze().to('cpu')
+        safe_objective_idx = self._check_violated_bounds(self.spec.objectives, output_bounds)
+        logger.debug(f"Try overapproximation Verification time: {time.perf_counter()-overapprox_timer:.2f} seconds")
+        if(len(safe_objective_idx) == len(self.spec.objectives)):
+            logger.info("Property holds with overapproximation")
+            self.verification_result.status = ResultType.NO_SOL
+            return (ResultType.NO_SOL, [])
+        else:
+            unsafe_objective_idx = [i for i in range(len(self.spec.objectives)) if i not in safe_objective_idx]
+            return (ResultType.UNKNOWN, unsafe_objective_idx)
 
-    def verify(self, timeout : float = Setting.TIMEOUT) -> VerificationResult:
+    def check_by_sampling(self) -> VerificationResult:
+        sampling_timer = time.perf_counter() 
+        in_bounds_reshaped = self.input_bounds.reshape(*self.spec.input_shape ,2)
+        samples = sample_network(in_bounds_reshaped, Setting.N_SAMPLES).to(Setting.DEVICE)
+        outputs = self.model(samples).to('cpu')
+        result = self._check_violated_samples(self.spec.objectives, outputs)
+        logger.debug(f"Sampling verification time: {time.perf_counter()-sampling_timer:.2f} seconds")
+        if(result.status == ResultType.SOL_FOUND):
+            logger.info("Found counterexample by sampling")
+            self.verification_result.status = result.status
+            self.verification_result.ce = {'input': samples[result.ce],'output': outputs[result.ce]}
+            return self.verification_result
+        else:
+            return VerificationResult(ResultType.UNKNOWN)
+    def cleanup(self):
+        self.shared_state.poison_pill.value = True
+        self.shared_state.log_Q.put(None)
+    def verify(self, timeout : float = Setting.TIMEOUT, objective_idx = 0) -> VerificationResult:
         #TODO: Set SIGALARM handler
         start = time.perf_counter()
-        if Setting.TRY_SAMPLING:
-            sampling_timer = time.perf_counter() 
-            in_bounds_reshaped = self.input_bounds.reshape(*self.spec.input_shape ,2)
-            samples = sample_network(in_bounds_reshaped, Setting.N_SAMPLES).to(Setting.DEVICE)
-            outputs = self.model(samples).to('cpu')
-            result = self._check_violated_samples(self.spec.objectives, outputs)
-            logger.debug(f"Sampling verification time: {time.perf_counter()-sampling_timer:.2f} seconds")
-            if(result.status == ResultType.SOL_FOUND):
-                logger.info("Found counterexample by sampling")
-                #TODO: print counterexample somwhere?
-                self.verification_result.status = result.status
-                self.verification_result.ce = {'x': samples[result.ce],'y': outputs[result.ce]}
-                return self.verification_result
 
-        if Setting.TRY_OVERAPPROX:
-            overapprox_timer = time.perf_counter()
-            output_bounds = self.int_net.layers[-1].post_symbolic.concrete_bounds.squeeze().to('cpu')
-            status, _ = self._check_violated_bounds(self.spec.objectives, output_bounds)
-            logger.debug(f"Try overapproximation Verification time: {time.perf_counter()-overapprox_timer:.2f} seconds")
-            if(status == ResultType.NO_SOL):
-                logger.info("Property holds with overapproximation")
-                self.verification_result.status = status
-                return self.verification_result
-
+        #Formally verify
+        #Init gurobi model
+        self.objective_idx = objective_idx
+        self._compute_init_bounds()
+        self.gmodel, self.gvars = self._init_grb_model()
+        # with open('x','rb') as f:
+        #     x = pickle.load(f)
+        #     for i, var in enumerate(self.gvars[0]['net']):
+        #         self.gmodel.addConstr(var == x[i])
+        self.verification_result = VerificationResult()
         #Init Branch
         init_branch = Branch(self.spec, self.input_interval, unstable_relus = self.unstable_relus)
 
         num_workers = 1 if Setting.N_VERIF_CORES <= 1 else Setting.N_VERIF_CORES
-        shared_state = SharedData(self.spec.input_shape, self.spec.output_shape)
+        self.shared_state = SharedData(self.spec.input_shape, self.spec.output_shape)
 
         #Start Monitor thread
-        mthread = threading.Thread(target=monitor_thread, args=(shared_state.log_Q,))
+        mthread = threading.Thread(target=monitor_thread, args=(self.shared_state.log_Q,))
         mthread.start()
         
+        
         #Init task
-        shared_state.task_Q.put(init_branch)
+        self.shared_state.task_Q.put(init_branch)
         
         #Start all the workers
         workers_timer = time.perf_counter()
         workers = []
         for i in range(num_workers):
             private_state = WorkerData(i, self)
-            workers.append(Worker(shared_state, private_state))
-            workers[-1].start()
+            workers.append(Worker(self.shared_state, private_state))
+            if(num_workers <= 1):
+                workers[-1].run()
+            else:
+                workers[-1].start()
         logger.debug(f"Creating and starting workers took {time.perf_counter() - workers_timer:.2f} seconds")
         
-        for worker in workers:
-            worker.join()
+        if(num_workers > 1):
+            for worker in workers:
+                worker.join()
+            logger.debug("Workers joined")
+        
         #Terminate monitor thread
-        shared_state.log_Q.put(None)
+        self.shared_state.log_Q.put(None)
         mthread.join()
 
-        result = shared_state.verification_result
+        result = self.shared_state.verification_result
         self.verification_result = result
 
         end = time.perf_counter()
