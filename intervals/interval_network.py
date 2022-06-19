@@ -44,7 +44,7 @@ class IntervalNetwork(nn.Module):
             return prev
     
     def evaluate(self, input : torch.tensor) -> torch.tensor:
-        prev = input.reshape((-1,self.layers[0].input_shape))
+        prev = input.reshape((-1,*self.layers[0].input_shape))
         for layer in self.layers:
             prev = layer.torch_layer(prev)
         

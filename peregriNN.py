@@ -1,8 +1,8 @@
 import sys,os
 
 # os.environ['MKL_NUM_THREADS']="1"
-os.environ['NUMEXPR_NUM_THREADS']="1"
-os.environ['OMP_NUM_THREADS']="1"
+# os.environ['NUMEXPR_NUM_THREADS']="1"
+# os.environ['OMP_NUM_THREADS']="2"
 # os.environ['OPENBLAS_NUM_THREADS']="1"
 # os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 from peregrinn.verifier import ResultType, Verifier
@@ -159,76 +159,70 @@ def old(args):
 def main(args):
 
 
-    #Parse args
-    model_path = args.model
-    # vnnlib_filename = args.spec
-    dataset = args.dataset
-
-    onnx_parser = ONNX_Parser(model_path)
-    torch_model = onnx_parser.to_pytorch()
-    s = time.time()
-    nn = PytorchNN()
-    nn.parse_network(torch_model, 784)
-    image_file = args.image
-    img_name = image_file.split('/')[-1]
-    delta = args.eps
-    TIMEOUT = int(args.timeout)
-    MAX_DEPTH = int(args.timeout)
-    #Init NN structure
-    # nn = NeuralNetworkStruct()
-    # nn.parse_network(nnet,type = 'mnist')
-    # print('Loaded network:',nnet)
-    with open(image_file,'r') as f:
-        image = f.readline().split(',')
-        image = torch.tensor([float(num) for num in image[:-1]], dtype = Setting.TORCH_PRECISION)/255.0
-        image = image.reshape((-1,1))
-    img_name = '0'
-    output = nn.evaluate(image)
-    target = np.argmax(output)
-    nn.set_target(target)
-    other_ouputs = [i for i in range(nn.output_size) if i != target]
-        # print('Testing',image_file)
-        # print('Output:',output,'\nTarget-->',target)
-    signal.signal(signal.SIGALRM, alarm_handler)
-    signal.alarm(TIMEOUT)
+    tic = time.perf_counter()
     try:
-        start_time = time.time()
-        # print('Norm:',delta)
-        #Solve the problem for each other output
-        lb = np.maximum(image-delta,0.0)
-        ub = np.minimum(image+delta,1.0)
-        input_bounds = np.concatenate((lb,ub),axis = 1)
-        # samples = sample_network(nn,input_bounds,15000)
-        # SAT = check_prop_samples(nn,samples,target)
-        # if(SAT):
-        # #    adv +=1
-        #    print_summary(nnet,img_name,'unsafe',time.time()-start_time)
-        #    return
-        nn.set_bounds(input_bounds)
-        # out_list_ub = copy(nn.layers[nn.num_layers-1]['conc_ub'])
-        # other_ouputs = np.flip(np.argsort(out_list_ub,axis = 0)).flatten().tolist()
-        # other_ouputs = [idx for idx in other_ouputs if idx!= target and out_list_ub[idx] > 0]
-        adv_found = Value('i',0)
-        result = ''
-        for out_idx in other_ouputs:
-            if 0 > nn.layers[len(nn.layers)-1]['conc_ub'][out_idx]:
-                continue
-            #print('Testing Adversarial with label', out_idx)
-            network = deepcopy(nn)
-            result = run_instance(network, input_bounds, check_property, target, out_idx,adv_found,max_depth = MAX_DEPTH)
-            if(result == 'SolFound'):
-                break
-        #signal.alarm(0)
-        if(result == 'SolFound'):
-            print(result, time.time() - start_time)
-            # print_summary(nnet,img_name,'unsafe',time.time() - start_time)
-        else:
-            print(result,'safe',time.time()-start_time)
+        model_path = args.model
+        vnnlib_filename = args.spec
+        dataset = args.dataset
+        onnx_parser = ONNX_Parser(model_path)
+        vnnlib_parser = VNNLib_parser(dataset = dataset)
+        in_shape = Dataset_MetaData.inout_shapes[dataset]['input']
+        out_shape = Dataset_MetaData.inout_shapes[dataset]['output']
+        vnnlib_spec = vnnlib_parser.read_vnnlib_simple(vnnlib_filename, in_shape.prod().item(),
+                                                        out_shape.prod().item())
+        # device = torch.device('cpu')
+        torch_model = onnx_parser.to_pytorch()
+        if(Setting.TORCH_PRECISION == torch.float64):
+            torch_model = torch_model.double()
+        torch_model.eval()
+        for name, param in torch_model.named_parameters():
+            param.requires_grad  = False
 
-    except TimeOutException:
-        print('Timeout')
-        # print_summary(nnet,img_name,'timeout',TIMEOUT)
-    
+
+        unsafe_objectives = [i for i in range(len(vnnlib_spec.objectives))]
+        verifier = Verifier(torch_model, vnnlib_spec)
+        if(Setting.TRY_SAMPLING):
+            result = verifier.check_by_sampling()
+            if(result.status == ResultType.SOL_FOUND):
+                #TODO: write result to file
+                logger.info('Solution found by sampling')
+
+        if(Setting.TRY_OVERAPPROX and verifier.verification_result.status != ResultType.SOL_FOUND):
+            status, unsafe_objectives = verifier.quick_check_bounds()
+            if(status == ResultType.NO_SOL):
+                #TODO: write result to file
+                logger.debug('Property Safe by overapproximation')
+
+        if(verifier.verification_result.status == ResultType.UNKNOWN):
+            logger.info("Formally verify property")
+            for i in unsafe_objectives:
+                logger.debug(f"Verifying property {i}")
+                verifier.verify(objective_idx= i )
+                if verifier.verification_result.status == ResultType.SOL_FOUND:
+                    logger.debug(f"Verifier found a Counterexample : Objective {i}")
+                    break
+
+        #TODO: write result to file
+        total_time = time.perf_counter() - tic
+        if(verifier.verification_result.status != ResultType.SOL_FOUND):
+            logger.info(f"Property proved safe")
+            # with open('test.txt','a') as f:
+            #     f.write(f'{delta},{img_name},safe,{total_time:.3f}\n')
+
+        else:
+            # with open('test.txt','a') as f:
+            #     f.write(f'{delta},{img_name},unsafe,{total_time:.3f}\n')
+            logger.info(f"Property violated !")
+    except TimeOutException as e:
+        #Cleanup
+        verifier.cleanup()
+        # with open('test.txt','a') as f:
+        #     f.write(f'{delta},{img_name},timeout,{time.perf_counter() - tic:.3f}\n')
+        logger.info("Timoeut")
+    except Exception as e:
+        logger.exception(str(e))
+        raise e
+    logger.info(f"Total program time: {time.perf_counter() - tic:.2f}")
 
 def test_verifier(args):
     tic = time.perf_counter()
@@ -243,12 +237,14 @@ def test_verifier(args):
                                                     out_shape.prod().item())
     # device = torch.device('cpu')
     torch_model = onnx_parser.to_pytorch()
+    if(Setting.TORCH_PRECISION == torch.float64):
+        torch_model = torch_model.double()
     torch_model.eval()
-    for name, param in torch_model.named_parameters():
+    for _, param in torch_model.named_parameters():
         param.requires_grad  = False
 
+    verifier = Verifier(torch_model, vnnlib_spec, i)
     for i in range(len(vnnlib_spec.objectives)):
-        verifier = Verifier(torch_model, vnnlib_spec, i)
         verifier.verify()
         if verifier.verification_result.status == ResultType.SOL_FOUND:
             break
@@ -293,7 +289,9 @@ def mnist_verify(args):
                 A[0,i] = -1
                 b = np.array([0])
                 objectives.append((A,b))
-
+        out_layer = list(torch_model.modules())[-1]
+        out_layer.weight -= out_layer.weight[target].clone()
+        out_layer.bias -= out_layer.bias[target].clone()
         spec = [(input_bounds, objectives)]
         vnnlib_spec = Specification(spec,dataset = 'mnistfc')
         
@@ -346,8 +344,8 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="PeregriNN model checker")
     parser.add_argument('model',help="path to neural network ONNX file")
-    # parser.add_argument('spec',help="path to vnnlib specification file")
-    parser.add_argument('image',type = str,help="Maximum perturbation")
+    parser.add_argument('spec',help="path to vnnlib specification file")
+    # parser.add_argument('image',type = str,help="Maximum perturbation")
     parser.add_argument('--dataset', type = str, default = 'mnistfc')
     parser.add_argument('--timeout',type = int, default=300,help="timeout value")
     parser.add_argument('--max_depth',default=30,help="Maximum exploration depth")
@@ -358,7 +356,7 @@ if __name__ == "__main__":
     if(not os.path.exists(log_dir)):
         os.makedirs(log_dir)
     # log_file = os.path.join(log_dir,'logs.log')
-    img_name = args.image.split('/')[-1]
+    # img_name = args.image.split('/')[-1]
     model_name = args.model.split('/')[-1].split('.')[0]
 
     # log_file = os.path.join(log_dir,f"{model_name}_{img_name}_{args.eps}.log")
@@ -376,5 +374,6 @@ if __name__ == "__main__":
     
     torch.multiprocessing.set_start_method("fork")
     # test_verifier(args)
-    old(args)
+    # old(args)
     # mnist_verify(args)
+    main(args)

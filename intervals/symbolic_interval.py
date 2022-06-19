@@ -45,8 +45,7 @@ class SymbolicInterval():
 
         self._concretize_lower()
         self._concretize_upper()
-
-        return self.conc_bounds.clone()
+        return
 
     def _concretize_lower(self):
         pos_l = torch.maximum(torch.zeros_like(self.l), self.l)

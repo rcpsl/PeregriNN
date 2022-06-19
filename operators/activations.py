@@ -75,10 +75,11 @@ class ReLU(nn.Module):
                     post_interval.l[:,relu_idx] = 0
                     post_interval.u[:,relu_idx] = 0
                 elif(phase == 1):
-                    post_interval.l[:,relu_idx] = self.pre_symbolic.l[:,relu_idx]
+                    post_interval.l[:,relu_idx] = self.pre_symbolic.u[:,relu_idx]
                     post_interval.u[:,relu_idx] = self.pre_symbolic.u[:,relu_idx]
 
         post_interval.concretize()
+        torch.nn.functional.relu(post_interval.conc_bounds, inplace=True)
         self.post_symbolic = post_interval
         return post_interval
 
@@ -92,8 +93,8 @@ class ReLU(nn.Module):
 
     @property 
     def post_conc_lb(self):
-        lb = torch.max(torch.zeros_like(self.post_symbolic.conc_lb), self.post_symbolic.conc_lb)
-        return lb
+        # lb = torch.max(torch.zeros_like(self.post_symbolic.conc_lb), self.post_symbolic.conc_lb)
+        return self.post_symbolic.conc_lb
 
     @property 
     def post_conc_ub(self):

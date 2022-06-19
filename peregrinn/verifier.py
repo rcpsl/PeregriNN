@@ -25,6 +25,7 @@ from utils.specification import Specification
 import logging
 import logging.handlers
 import time
+import numpy as np
 from enum import Enum
 from copy import deepcopy
 
@@ -69,9 +70,9 @@ class SharedData():
         # self.active_workers        : mp.Value = mp.Value('i', 0)
         #Make sure only one process writes to this.
         self.status = mp.Value('i',ResultType.NO_SOL.value)
-        self.in_tensor = torch.zeros((in_shape))
+        self.in_tensor = torch.zeros(*in_shape)
         self.in_tensor = self.in_tensor.share_memory_()
-        self.out_tensor = torch.zeros((out_shape))
+        self.out_tensor = torch.zeros(*out_shape)
         self.out_tensor = self.out_tensor.share_memory_()
         
     @property
@@ -193,9 +194,9 @@ class Branch:
 
             lb = layer.post_conc_lb.squeeze()
             ub = layer.post_conc_ub.squeeze()
-            layer_vars = gvars[l_idx]
+            layer_vars = gvars[l_idx+1] #Skip input layer
 
-            if type(layer) == Linear:
+            if type(layer) == Linear or type(layer) == Conv2d:
                 in_vars = [gmodel.getVarByName(var.varName) for var in gvars[0]['net']]
                 for idx, v in enumerate(layer_vars['net']):
                     var = gmodel.getVarByName(v.VarName)
@@ -248,8 +249,8 @@ class Branch:
             elif type(layer) == Flatten:
                 return
 
-            elif type(layer) == Conv2d:
-                raise NotImplementedError()
+            # elif type(layer) == Conv2d:
+            #     raise NotImplementedError()
 
             gmodel.update()
 
@@ -271,7 +272,7 @@ class Branch:
             
             gmodel  = verifier.gmodel.copy()
             #Propagate bounds
-            int_net(self.input_interval, self.fixed_neurons)
+            int_net(self.input_interval, layers_mask = self.fixed_neurons)
             #update solver
             self._update_grb_model(gmodel, gvars, int_net, self.unstable_relus, self.fixed_neurons)
         try:
@@ -445,10 +446,35 @@ class Verifier:
                         # gmodel.addConstr(rvar >= in_var) #Not needed since svar = rvar - in_var >=0
                 layer_vars = l_var
             elif type(layer) == Flatten:
-                return
+                layer_vars = vars[-1]
+                
 
             elif type(layer) == Conv2d:
-                raise NotImplementedError()
+                l_vars = gmodel.addVars(input_dims, name = f"lay[{l_idx}]", lb  = lb, ub = ub).values()
+                layer_vars['net'] = l_vars
+                
+                input_shape = layer.input_shape
+                output_shape = layer.output_shape
+                in_vars = np.array(vars[-1]['net']).reshape(*input_shape)
+                out_vars = np.array(l_vars).reshape(*output_shape)
+                for out_channel in range(output_shape[0]):
+                    for out_row in range(output_shape[1]):
+                        for out_col in range(output_shape[2]):
+
+                            #For each output pixel
+                            lin_expr = layer.torch_layer.bias[out_channel].item()
+
+                            #Filter multiplication with the corresponding input
+                            for in_channel in range(input_shape[0]):
+                                for f_row in range(layer.torch_layer.weight.shape[2]):
+                                    in_row = out_row * layer.torch_layer.stride[0] + f_row - layer.torch_layer.padding[0]
+                                    if(in_row < 0 or in_row == input_shape[1]):continue
+                                    for f_col in range(layer.torch_layer.weight.shape[3]):
+                                        in_col = out_col * layer.torch_layer.stride[1] + f_col - layer.torch_layer.padding[1]
+                                        if(in_col < 0 or in_col == input_shape[2]):continue
+                                        lin_expr += layer.torch_layer.weight[out_channel, in_channel, f_row, f_col] * in_vars[in_channel, in_row, in_col]
+                                
+                            gmodel.addConstr(lin_expr == out_vars[out_channel, out_row, out_col])
 
             vars.append(layer_vars)
             gmodel.update()
@@ -479,6 +505,7 @@ class Verifier:
         
         gmodel = grb.Model()
         gmodel.setParam('OutputFlag', False)
+        gmodel.setParam('DualReductions', False)
         gmodel.setParam('Threads', 1)
         vars = []
 
@@ -517,7 +544,9 @@ class Verifier:
             input_bounds = self.input_bounds.unsqueeze(0).unsqueeze(1)#.detach()
             layer_sym = SymbolicInterval(input_bounds.to(Setting.DEVICE),I,I, device = Setting.DEVICE)
             layer_sym.concretize()
+            # tic = time.perf_counter()
             self.int_net(layer_sym)
+            # logger.debug(f"Initial bound propagation took {time.perf_counter() - tic:.2f} sec")
         else:
             raise NotImplementedError()
         
