@@ -1,0 +1,4 @@
+[submodule "dnnv"]
+	path = dnnv
+	url = https://github.com/dlshriver/dnnv.git
+	branch = develop
