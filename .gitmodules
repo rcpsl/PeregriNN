@@ -2,3 +2,6 @@
 	path = dnnv
 	url = https://github.com/dlshriver/dnnv.git
 	branch = develop
+[submodule "vnncomp2022_benchmarks"]
+	path = vnncomp2022_benchmarks
+	url = https://github.com/ChristopherBrix/vnncomp2022_benchmarks.git
