@@ -164,7 +164,7 @@ def main(args):
         model_path = args.model
         vnnlib_filename = args.spec
         dataset = args.dataset
-        onnx_parser = ONNX_Parser(model_path)
+        onnx_parser = ONNX_Parser(model_path, simplify = False)
         vnnlib_parser = VNNLib_parser(dataset = dataset)
         in_shape = Dataset_MetaData.inout_shapes[dataset]['input']
         out_shape = Dataset_MetaData.inout_shapes[dataset]['output']

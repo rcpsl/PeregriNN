@@ -11,6 +11,7 @@ import pickle
 import torch
 import torch.nn as nn
 import torch.multiprocessing as mp
+torch.set_num_threads(1)
 from operator import ne
 import queue
 import threading
@@ -106,7 +107,6 @@ class Worker(mp.Process):
         return logger
 
     def run(self):
-        torch.set_num_threads(1)
         tic = time.perf_counter()
         self._logger.info(f"{self.name} Started...")
         while True:
@@ -543,7 +543,9 @@ class Verifier:
             I = I.fill_diagonal_(1).unsqueeze(0)#.detach()
             input_bounds = self.input_bounds.unsqueeze(0).unsqueeze(1)#.detach()
             layer_sym = SymbolicInterval(input_bounds.to(Setting.DEVICE),I,I, device = Setting.DEVICE)
-            layer_sym.concretize()
+            layer_sym.conc_bounds[:,0,:,0] = input_bounds[...,0]
+            layer_sym.conc_bounds[:,0,:,1] = input_bounds[...,1]
+            # layer_sym.concretize()
             # tic = time.perf_counter()
             self.int_net(layer_sym)
             # logger.debug(f"Initial bound propagation took {time.perf_counter() - tic:.2f} sec")

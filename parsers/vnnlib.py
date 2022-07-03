@@ -14,7 +14,8 @@ import os
 import torch
 from utils.config import Setting
 from utils.specification import Specification
-
+import onnx
+import onnxruntime as ort
 
 class VNNLib_parser():
     def __init__(self, dataset = 'mnistfc'):
@@ -132,6 +133,49 @@ class VNNLib_parser():
 
         return rv
 
+    def get_io_nodes(self, onnx_model):
+        'returns 3 -tuple: input node, output nodes, input dtype'
+
+        sess = ort.InferenceSession(onnx_model.SerializeToString())
+        inputs = [i.name for i in sess.get_inputs()]
+        assert len(inputs) == 1, f"expected single onnx network input, got: {inputs}"
+        input_name = inputs[0]
+
+        outputs = [o.name for o in sess.get_outputs()]
+        assert len(outputs) == 1, f"expected single onnx network output, got: {outputs}"
+        output_name = outputs[0]
+
+        g = onnx_model.graph
+        inp = [n for n in g.input if n.name == input_name][0]
+        out = [n for n in g.output if n.name == output_name][0]
+
+        input_type = g.input[0].type.tensor_type.elem_type
+
+        assert input_type in [onnx.TensorProto.FLOAT, onnx.TensorProto.DOUBLE]
+
+        dtype = np.float32 if input_type == onnx.TensorProto.FLOAT else np.float64
+
+        return inp, out, dtype
+
+    def get_num_inputs_outputs(self, onnx_filename):
+        'get num inputs, num outputs, and input dtype of an onnx file'
+
+        onnx_model = onnx.load(onnx_filename)
+        inp, out, inp_dtype = self.get_io_nodes(onnx_model)
+        
+        inp_shape = tuple(d.dim_value if d.dim_value != 0 else 1 for d in inp.type.tensor_type.shape.dim)
+        out_shape = tuple(d.dim_value if d.dim_value != 0 else 1 for d in out.type.tensor_type.shape.dim)
+
+        num_inputs = 1
+        num_outputs = 1
+
+        for n in inp_shape:
+            num_inputs *= n
+
+        for n in out_shape:
+            num_outputs *= n
+
+        return num_inputs, num_outputs
 
     def read_vnnlib_simple(self,vnnlib_filename, num_inputs, num_outputs) -> Specification:
         '''process in a vnnlib file. You can get num_inputs and num_outputs using get_num_inputs_outputs().
