@@ -171,7 +171,7 @@ class Branch:
         self.input_interval = input_interval
         self.fixed_neurons = defaultdict(list) #dict of list tuples layer_idx -> list[(neuron_idx, phase)]
         self.verification_result = VerificationResult(result=ResultType.UNKNOWN)
-        self.curr_layer = torch.inf #Current layer where splitting occurs
+        self.curr_layer = curr_layer #Current layer where splitting occurs
         self.unstable_relus = None
         
         if fixed_neurons:
@@ -194,7 +194,7 @@ class Branch:
 
             lb = layer.post_conc_lb.squeeze()
             ub = layer.post_conc_ub.squeeze()
-            layer_vars = gvars[l_idx+1] #Skip input layer
+            layer_vars = gvars[l_idx] #Skip input layer
 
             if type(layer) == Linear or type(layer) == Conv2d:
                 in_vars = [gmodel.getVarByName(var.varName) for var in gvars[0]['net']]
@@ -212,7 +212,7 @@ class Branch:
                 #Assumes a linear layer before a ReLU
                 pre_lb = layer.pre_conc_lb.squeeze()
                 pre_ub = layer.pre_conc_ub.squeeze()
-                for neuron_idx in unstable_relus_idx[l_idx]: 
+                for neuron_idx in unstable_relus_idx[l_idx-1]: 
                     #two vars per relu
                     rvar = gmodel.getVarByName(layer_vars['net'][neuron_idx].varName)
                     svar = gmodel.getVarByName(layer_vars['slack'][neuron_idx].varName)
@@ -229,12 +229,12 @@ class Branch:
                     else:
                         rvar.ub = pre_ub[neuron_idx]
                         factor = (pre_ub[neuron_idx] / (pre_ub[neuron_idx]-pre_lb[neuron_idx])).item()
-                        gmodel.addConstr(rvar <= factor * (in_var- pre_lb[neuron_idx]),name=f"relu[{l_idx}][{neuron_idx}]_relaxed")
+                        gmodel.addConstr(rvar <= factor * (in_var- pre_lb[neuron_idx]),name=f"relu[{l_idx-1}][{neuron_idx}]_relaxed")
                         A_up = layer.post_symbolic.u.squeeze()[neuron_idx]
                         input_vars = [gmodel.getVarByName(v.varName) for v in gvars[0]['net']]
-                        gmodel.addConstr(grb.LinExpr(A_up[:-1],input_vars)  + A_up[-1]  >= rvar,name= f"relu[{l_idx}][{neuron_idx}]_sym_UB")
+                        gmodel.addConstr(grb.LinExpr(A_up[:-1],input_vars)  + A_up[-1]  >= rvar,name= f"relu[{l_idx-1}][{neuron_idx}]_sym_UB")
                         # gmodel.addConstr(rvar >= in_var) #Not needed since svar = rvar - in_var >=0
-                for neuron_idx, phase in fixed_neurons[l_idx]:
+                for neuron_idx, phase in fixed_neurons[l_idx-1]:
                     rvar = gmodel.getVarByName(layer_vars['net'][neuron_idx].varName)
                     svar = gmodel.getVarByName(layer_vars['slack'][neuron_idx].varName)
                     if (phase == 1):
@@ -256,7 +256,7 @@ class Branch:
 
 
         for l_idx, layer in enumerate(int_net.layers):
-            _update_grb_layer(l_idx, layer, unstable_relus)
+            _update_grb_layer(l_idx + 1, layer, unstable_relus)
     
     def verify(self, verifier : Verifier) -> VerificationResult:
         
@@ -356,7 +356,7 @@ class Branch:
                 s_neg_idx = torch.where (net < 0)[0] 
                 s[s_neg_idx] = -y[s_neg_idx]
                 infeasible_layer = (torch.sum(s) != 0).item()
-                layers_infeas[l_idx] = s if infeasible_layer else torch.tensor([])
+                layers_infeas[l_idx-1] = s if infeasible_layer else torch.tensor([])
                 if(infeasible_layer and Setting.ONLY_FIRST_INFEASIBLE_LAYER):
                     break
         return layers_infeas
@@ -447,7 +447,7 @@ class Verifier:
                 layer_vars = l_var
             elif type(layer) == Flatten:
                 layer_vars = vars[-1]
-                
+                # return
 
             elif type(layer) == Conv2d:
                 l_vars = gmodel.addVars(input_dims, name = f"lay[{l_idx}]", lb  = lb, ub = ub).values()

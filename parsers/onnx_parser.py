@@ -10,7 +10,7 @@ class ONNX_Parser():
     A class for loading ONNX model and convert it to Pytorch.
     """
 
-    def __init__(self, onnx_path: str, simplify = True) -> None:
+    def __init__(self, onnx_path: str, simplify = False) -> None:
 
         try:
             self.onnx_model = onnx.load(onnx_path)   

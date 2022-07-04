@@ -298,6 +298,7 @@ def mnist_verify(args):
 
         verifier = Verifier(torch_model, vnnlib_spec)
         unsafe_objectives = [i for i in range(len(vnnlib_spec.objectives))]
+
         if(Setting.TRY_SAMPLING):
             result = verifier.check_by_sampling()
             if(result.status == ResultType.SOL_FOUND):
@@ -306,6 +307,7 @@ def mnist_verify(args):
 
         if(Setting.TRY_OVERAPPROX and verifier.verification_result.status != ResultType.SOL_FOUND):
             status, unsafe_objectives = verifier.quick_check_bounds()
+
             if(status == ResultType.NO_SOL):
                 #TODO: write result to file
                 logger.debug('Property Safe by overapproximation')
@@ -345,7 +347,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="PeregriNN model checker")
     parser.add_argument('model',help="path to neural network ONNX file")
     parser.add_argument('spec',help="path to vnnlib specification file")
-    # parser.add_argument('image',type = str,help="Maximum perturbation")
+    parser.add_argument('--image',type = str,help="Maximum perturbation")
     parser.add_argument('--dataset', type = str, default = 'mnistfc')
     parser.add_argument('--timeout',type = int, default=300,help="timeout value")
     parser.add_argument('--max_depth',default=30,help="Maximum exploration depth")
@@ -375,5 +377,5 @@ if __name__ == "__main__":
     torch.multiprocessing.set_start_method("fork")
     # test_verifier(args)
     # old(args)
-    # mnist_verify(args)
-    main(args)
+    mnist_verify(args)
+    # main(args)
