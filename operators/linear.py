@@ -11,6 +11,7 @@ class Linear(nn.Module):
         self.torch_layer = torch_layer
         self.pre_symbolic = None
         self.post_symbolic = None
+        self.input_shape = input_shape
         self.output_shape = torch.tensor([self.torch_layer.weight.shape[0]])
 
     def forward(self, x : SymbolicInterval) -> SymbolicInterval:

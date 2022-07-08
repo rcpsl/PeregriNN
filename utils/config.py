@@ -6,7 +6,7 @@ class Setting:
     
     #Global
     OMP_NUM_THREADS = 1
-    TORCH_PRECISION = torch.float32
+    TORCH_PRECISION = torch.float64
     NP_PRECISION = np.float32
     DEVICE = torch.device('cpu')
     EPS = 1E-10

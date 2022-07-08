@@ -23,8 +23,6 @@ import argparse
 from os import path
 import logging
 from parsers.vnnlib import VNNLib_parser
-from intervals.symbolic_interval import SymbolicInterval
-from intervals.interval_network import IntervalNetwork
 import torch
 from utils.datasets_info import Dataset_MetaData
 
@@ -158,13 +156,15 @@ def old(args):
 
 def main(args):
 
-
+    
     tic = time.perf_counter()
+    signal.signal(signal.SIGALRM, alarm_handler)
+    signal.alarm(args.timeout)
     try:
         model_path = args.model
         vnnlib_filename = args.spec
         dataset = args.dataset
-        onnx_parser = ONNX_Parser(model_path, simplify = False)
+        onnx_parser = ONNX_Parser(model_path, simplify = args.simplify)
         vnnlib_parser = VNNLib_parser(dataset = dataset)
         in_shape = Dataset_MetaData.inout_shapes[dataset]['input']
         out_shape = Dataset_MetaData.inout_shapes[dataset]['output']
@@ -178,7 +178,13 @@ def main(args):
         for name, param in torch_model.named_parameters():
             param.requires_grad  = False
 
-
+        if(args.subtract_target):
+            nom_input = vnnlib_spec.input_bounds.mean(dim = 1)
+            target = torch_model(nom_input.reshape(*in_shape).unsqueeze(0)).argmax()
+            out_layer = list(torch_model.modules())[-1]
+            out_layer.weight -= out_layer.weight[target].clone()
+            out_layer.bias -= out_layer.bias[target].clone()
+            
         unsafe_objectives = [i for i in range(len(vnnlib_spec.objectives))]
         verifier = Verifier(torch_model, vnnlib_spec)
         if(Setting.TRY_SAMPLING):
@@ -352,6 +358,9 @@ if __name__ == "__main__":
     parser.add_argument('--timeout',type = int, default=300,help="timeout value")
     parser.add_argument('--max_depth',default=30,help="Maximum exploration depth")
     parser.add_argument('--eps',default=0.02,help="Maximum perturbation")
+    parser.add_argument('--simplify', default = False, action=argparse.BooleanOptionalAction)
+    parser.add_argument('--subtract_target', default = False, action=argparse.BooleanOptionalAction)
+
     args = parser.parse_args()
     #Root logger config
     log_dir = os.path.join(os.getcwd(),'logs')
@@ -377,5 +386,5 @@ if __name__ == "__main__":
     torch.multiprocessing.set_start_method("fork")
     # test_verifier(args)
     # old(args)
-    mnist_verify(args)
-    # main(args)
+    # mnist_verify(args)
+    main(args)

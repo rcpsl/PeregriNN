@@ -190,7 +190,7 @@ class Branch:
     '''
     Defines a computational branch used in verification
     '''
-    def __init__(self, spec: Specification, input_interval : SymbolicInterval, fixed_neurons = {}, curr_layer = 0, unstable_relus = None) -> None:
+    def __init__(self, spec: Specification, input_interval : SymbolicInterval, fixed_neurons = {}, curr_layer = 0, unstable_relus = None, is_init_branch = False) -> None:
         self.input_bounds = spec.input_bounds
         self.spec = spec
         self.input_interval = input_interval
@@ -198,7 +198,7 @@ class Branch:
         self.verification_result = VerificationResult(result=ResultType.UNKNOWN)
         self.curr_layer = curr_layer #Current layer where splitting occurs
         self.unstable_relus = None
-        
+        self.init_branch = is_init_branch
         if fixed_neurons:
             self.fixed_neurons = fixed_neurons
         if curr_layer:
@@ -271,7 +271,7 @@ class Branch:
                         rvar.lb = 0
                         rvar.ub = 0
 
-            elif type(layer) == Flatten:
+            elif type(layer) == Flatten or type(layer) == Reshape:
                 return
 
             # elif type(layer) == Conv2d:
@@ -293,7 +293,7 @@ class Branch:
         gmodel  = verifier.gmodel
         gvars   = verifier.gvars
         int_net = verifier.int_net
-        if(len(self.fixed_neurons[self.curr_layer])): 
+        if(not self.init_branch): 
             
             gmodel  = verifier.gmodel.copy()
             #Propagate bounds
@@ -331,15 +331,39 @@ class Branch:
         
         self.unstable_relus[layer_idx].remove(neuron_idx)
         return layer_idx, neuron_idx, phase
+
+    def _do_split_neuron(self):
+        return (self.input_bounds.shape[0] > 5)
+
+    def _split_interval(self) ->Tuple[torch.tensor, torch.tensor]:
+        #Split on largest dim
+        width = self.input_bounds[:,1] - self.input_bounds[:,0]
+        widest_dim = width.argmax()
+        int1 = self.input_bounds.clone()
+        int2 = self.input_bounds.clone()
+        int1[widest_dim, 1] -= width[widest_dim] / 2 
+        int2[widest_dim, 0] += width[widest_dim] / 2
+        return (int1, int2)
+    
+    def _set_bounds(self, bounds):
+        self.input_bounds[:] = bounds
+        self.input_interval.input_interval[:] = bounds
+
     def split_branch(self, sol: Tuple) -> Tuple[Branch, Branch]:
-        l_idx, n_idx, phase = self._pick_neuron(sol)
-        if(l_idx is None):
-            return (None, None)
-        l_idx, n_idx, phase = self._check_valid(l_idx,n_idx, phase, sol)
+        do_split_neuron = self._do_split_neuron()
         b1 = self.clone()
         b2 = self.clone()
-        b1._fix_neuron(l_idx, n_idx, phase)
-        b2._fix_neuron(l_idx, n_idx, 1 - phase)
+        if(do_split_neuron):
+            l_idx, n_idx, phase = self._pick_neuron(sol)
+            if(l_idx is None):
+                return (None, None)
+            l_idx, n_idx, phase = self._check_valid(l_idx,n_idx, phase, sol)
+            b1._fix_neuron(l_idx, n_idx, phase)
+            b2._fix_neuron(l_idx, n_idx, 1 - phase)
+        else:
+            int1, int2 = self._split_interval()
+            b1._set_bounds(int1)
+            b2._set_bounds(int2)
 
         return (b1,b2)
 
@@ -347,7 +371,9 @@ class Branch:
         # gmodel_cp = self.gmodel.copy()
         fixed_neurons_cp = deepcopy(self.fixed_neurons)
         unstable_relus = deepcopy(self.unstable_relus)
-        new_branch = Branch(self.spec, self.input_interval, fixed_neurons = fixed_neurons_cp
+        spec = deepcopy(self.spec)
+        input_interval = deepcopy(self.input_interval)
+        new_branch = Branch(spec, input_interval, fixed_neurons = fixed_neurons_cp
                             , curr_layer= self.curr_layer, unstable_relus = unstable_relus)
         return new_branch   
 
@@ -441,8 +467,8 @@ class Verifier:
 
         model_init_counter = time.perf_counter()
         def __grb_init_layer(l_idx, layer):
-            lb = layer.post_conc_lb.squeeze()
-            ub = layer.post_conc_ub.squeeze()
+            lb = layer.post_conc_lb.flatten()
+            ub = layer.post_conc_ub.flatten()
             input_dims = lb.shape[0]
             layer_vars = {}
             if type(layer) == Linear:
@@ -481,7 +507,7 @@ class Verifier:
                         gmodel.addConstr(grb.LinExpr(A_up[:-1],vars[0]['net'])  + A_up[-1]  >= rvar,name= f"{neuron_idx}_sym_UB")
                         # gmodel.addConstr(rvar >= in_var) #Not needed since svar = rvar - in_var >=0
                 layer_vars = l_var
-            elif type(layer) == Flatten:
+            elif type(layer) == Flatten or type(layer) == Reshape:
                 layer_vars = vars[-1]
                 # return
 
@@ -556,8 +582,8 @@ class Verifier:
             __grb_init_layer(l_idx, layer)
         #Output additional constraints
         for idx, ovar in enumerate(vars[-1]['net']):
-            A_up = self.int_net.layers[-1].post_symbolic.u.squeeze()[idx]
-            A_low = self.int_net.layers[-1].post_symbolic.l.squeeze()[idx]
+            A_up = torch.atleast_2d(self.int_net.layers[-1].post_symbolic.u.squeeze())[idx]
+            A_low = torch.atleast_2d(self.int_net.layers[-1].post_symbolic.l.squeeze())[idx]
             gmodel.addConstr(grb.LinExpr(A_up[:-1],vars[0]['net'])  + A_up[-1]  >= ovar, name = f"out_{idx}_sym_UB")
             gmodel.addConstr(grb.LinExpr(A_low[:-1],vars[0]['net'])  + A_low[-1]  <= ovar,name = f"out_{idx}_sym_LB")
         
@@ -628,7 +654,7 @@ class Verifier:
             A_pos = torch.maximum(zeros, A)
             A_neg = torch.minimum(zeros, A)
             lower_bound = A_pos @ bounds[:,0] + A_neg @ bounds[:,1]
-            if(lower_bound > b):
+            if(torch.all(lower_bound > b)):
                 safe_objectives_idx.append(obj_idx)
         return safe_objectives_idx
 
@@ -646,7 +672,7 @@ class Verifier:
 
     def quick_check_bounds(self) -> Tuple[ResultType, list]:
         overapprox_timer = time.perf_counter()
-        output_bounds = self.int_net.layers[-1].post_symbolic.concrete_bounds.squeeze().to('cpu')
+        output_bounds = self.int_net.layers[-1].post_symbolic.concrete_bounds.reshape((-1,2)).to('cpu')
         safe_objective_idx = self._check_violated_bounds(self.spec.objectives, output_bounds)
         logger.debug(f"Try overapproximation Verification time: {time.perf_counter()-overapprox_timer:.2f} seconds")
         if(len(safe_objective_idx) == len(self.spec.objectives)):
@@ -694,7 +720,7 @@ class Verifier:
         #         self.gmodel.addConstr(var == x[i])
         self.verification_result = VerificationResult()
         #Init Branch
-        init_branch = Branch(self.spec, self.input_interval, unstable_relus = self.unstable_relus)
+        init_branch = Branch(self.spec, self.input_interval, unstable_relus = self.unstable_relus, is_init_branch= True)
 
         num_workers = 1 if Setting.N_VERIF_CORES <= 1 else Setting.N_VERIF_CORES
         self.shared_state = SharedData(self.spec.input_shape, self.spec.output_shape, num_workers)
