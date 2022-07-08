@@ -61,14 +61,15 @@ def monitor_thread(log_Q):
 
 
 class SharedData():
-    def __init__(self, in_shape, out_shape):
+    def __init__(self, in_shape, out_shape, num_workers):
 
         self.task_Q         : mp.Queue[Branch] = mp.Queue()
         self.log_Q          : mp.Queue[logging.LogRecord] = mp.Queue()
         self.poison_pill    : mp.Value = mp.Value(c_bool, False)
-        self.n_queued_branches     : mp.Value = mp.Value('i', 1)
+        self.n_queued_branches     : mp.Value = mp.Value('I', 1)
         self.verified_branches     : mp.Value = mp.Value('I', 0)
-        # self.active_workers        : mp.Value = mp.Value('i', 0)
+        self.num_workers = num_workers
+        self.active_workers        : mp.Value = mp.Value('I', 0)
         #Make sure only one process writes to this.
         self.status = mp.Value('i',ResultType.NO_SOL.value)
         self.in_tensor = torch.zeros(*in_shape)
@@ -124,7 +125,7 @@ class Worker(mp.Process):
                 res = branch.verification_result
                 if res.status == ResultType.UNKNOWN:
                     #TODO: Split and add to the task Q
-                    branch_1, branch_2 = branch.split_neuron(sol)
+                    branch_1, branch_2 = branch.split_branch(sol)
                     # self._shared.task_Q.put(branch_1)
                     # self._shared.task_Q.put(branch_2)
                     self._private._dfs_branches.append(branch_2)
@@ -286,8 +287,8 @@ class Branch:
                 result = verifier._check_violated_samples(verifier.spec.objectives, y)
                 if result.status == ResultType.SOL_FOUND:
                     self.verification_result.status = result.status
-                    self.verification_result.ce = {'x':x.reshape(verifier.spec.input_shape),
-                                                    'y':y.reshape(verifier.spec.output_shape)}
+                    self.verification_result.ce = {'x':x.reshape(*verifier.spec.input_shape),
+                                                    'y':y.reshape(*verifier.spec.output_shape)}
             else:
                 logger.exception(f"Numerical Error solving gurobi model - status: {gmodel.status}")
             return (gmodel, gvars)
@@ -306,8 +307,10 @@ class Branch:
         
         self.unstable_relus[layer_idx].remove(neuron_idx)
         return layer_idx, neuron_idx, phase
-    def split_neuron(self, sol: Tuple) -> Tuple[Branch, Branch]:
+    def split_branch(self, sol: Tuple) -> Tuple[Branch, Branch]:
         l_idx, n_idx, phase = self._pick_neuron(sol)
+        if(l_idx is None):
+            return (None, None)
         l_idx, n_idx, phase = self._check_valid(l_idx,n_idx, phase, sol)
         b1 = self.clone()
         b2 = self.clone()
@@ -330,12 +333,21 @@ class Branch:
             if(len(v) > 0):
                 l_idx, shallowest_layer_slacks = k,v
                 break
-        infeasible_relus_idx = shallowest_layer_slacks.nonzero()
-        slacks = shallowest_layer_slacks[infeasible_relus_idx]
-        #Some logic to pick one neuron
-        n_idx = infeasible_relus_idx[0].item()
-        phase = int((shallowest_layer_slacks[n_idx] > 0).item())
-        
+        try:
+            infeasible_relus_idx = shallowest_layer_slacks.nonzero()
+            slacks = shallowest_layer_slacks[infeasible_relus_idx]
+            #Some logic to pick one neuron
+            n_idx = infeasible_relus_idx[0].item()
+            phase = int((shallowest_layer_slacks[n_idx] > 0).item())
+        except:
+            #Computational issue, Problem is SAT
+            gmodel, gvars = sol
+            x = torch.tensor([gmodel.getVarByName(v.varName).X for v in gvars[0]['net']],dtype = Setting.TORCH_PRECISION)
+            y = torch.tensor([gmodel.getVarByName(v.varName).X for v in gvars[-1]['net']],dtype = Setting.TORCH_PRECISION)
+            self.verification_result.status = ResultType.SOL_FOUND
+            self.verification_result.ce = {'x':x.reshape(*self.spec.input_shape),
+                                                'y':y.reshape(*self.spec.output_shape)}
+            return (None, None, None)
 
         return (l_idx, n_idx, phase)
    
@@ -399,7 +411,7 @@ class Verifier:
         self.stable_relus, self.unstable_relus, self.input_interval = self._compute_init_bounds(method = 'symbolic')
         #Initial computational Branch
         self.verification_result = VerificationResult(ResultType.UNKNOWN)
-
+        self.workers = []
 
     def _init_grb_model(self):
 
@@ -635,6 +647,8 @@ class Verifier:
             return VerificationResult(ResultType.UNKNOWN)
     def cleanup(self):
         self.shared_state.poison_pill.value = True
+        for w in self.workers:
+            w.join()
         self.shared_state.log_Q.put(None)
     def verify(self, timeout : float = Setting.TIMEOUT, objective_idx = 0) -> VerificationResult:
         #TODO: Set SIGALARM handler
@@ -654,7 +668,7 @@ class Verifier:
         init_branch = Branch(self.spec, self.input_interval, unstable_relus = self.unstable_relus)
 
         num_workers = 1 if Setting.N_VERIF_CORES <= 1 else Setting.N_VERIF_CORES
-        self.shared_state = SharedData(self.spec.input_shape, self.spec.output_shape)
+        self.shared_state = SharedData(self.spec.input_shape, self.spec.output_shape, num_workers)
 
         #Start Monitor thread
         mthread = threading.Thread(target=monitor_thread, args=(self.shared_state.log_Q,))
@@ -674,6 +688,7 @@ class Verifier:
                 workers[-1].run()
             else:
                 workers[-1].start()
+        self.workers = workers
         logger.debug(f"Creating and starting workers took {time.perf_counter() - workers_timer:.2f} seconds")
         
         if(num_workers > 1):
