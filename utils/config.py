@@ -12,7 +12,7 @@ class Setting:
     EPS = 1E-10
 
     #Verifier
-    N_VERIF_CORES = 1
+    N_VERIF_CORES = 16
     TIMEOUT = 300
     MAX_DEPTH = 300
     TRY_SAMPLING = True

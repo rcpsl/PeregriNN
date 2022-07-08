@@ -63,8 +63,9 @@ def monitor_thread(log_Q):
 class SharedData():
     def __init__(self, in_shape, out_shape, num_workers):
 
-        self.task_Q         : mp.Queue[Branch] = mp.Queue()
-        self.log_Q          : mp.Queue[logging.LogRecord] = mp.Queue()
+        monitor = mp.Manager()
+        self.task_Q         : mp.Queue[Branch] = monitor.Queue()
+        self.log_Q          : mp.Queue[logging.LogRecord] = monitor.Queue()
         self.poison_pill    : mp.Value = mp.Value(c_bool, False)
         self.n_queued_branches     : mp.Value = mp.Value('I', 1)
         self.verified_branches     : mp.Value = mp.Value('I', 0)
@@ -100,12 +101,32 @@ class Worker(mp.Process):
         self._logger = self._createLogger(self._shared.log_Q)
         self._logger.info(f"Initilaized {self.name}")
         self.verifier = self._private.verifier
+        self.active = False
 
     def _createLogger(self, log_Q):
         qh = logging.handlers.QueueHandler(log_Q)
         logger = get_logger(self.name, propagate = False, handlers = [qh])
         logger.setLevel(Setting.LOG_LEVEL)
         return logger
+    
+    def _activate(self):
+        if(self.active == False):
+            self.active = True
+            with self._shared.active_workers.get_lock():
+                self._shared.active_workers.value += 1
+    
+    def _deactivate(self):
+        if(self.active == True):
+            self.active = False
+            with self._shared.active_workers.get_lock():
+                self._shared.active_workers.value -= 1
+    def _put_in_relevant_Q(self, branch):
+        if(branch is None):
+            return
+        if(self._shared.active_workers.value < self._shared.num_workers):
+            self._shared.task_Q.put(branch)
+        else:
+            self._private._dfs_branches.append(branch)
 
     def run(self):
         tic = time.perf_counter()
@@ -121,15 +142,16 @@ class Worker(mp.Process):
                     branch = self._private._dfs_branches.pop()
                 else:
                     branch  = self._shared.task_Q.get(block = False)
+                self._activate()
                 sol = branch.verify(self.verifier)
                 res = branch.verification_result
                 if res.status == ResultType.UNKNOWN:
                     #TODO: Split and add to the task Q
                     branch_1, branch_2 = branch.split_branch(sol)
-                    # self._shared.task_Q.put(branch_1)
-                    # self._shared.task_Q.put(branch_2)
-                    self._private._dfs_branches.append(branch_2)
-                    self._private._dfs_branches.append(branch_1)
+                    self._put_in_relevant_Q(branch_2)
+                    self._put_in_relevant_Q(branch_1)
+                    # self._private._dfs_branches.append(branch_2)
+                    # self._private._dfs_branches.append(branch_1)
                     with self._shared.n_queued_branches.get_lock():
                         self._shared.n_queued_branches.value += 2
                 else:
@@ -141,7 +163,7 @@ class Worker(mp.Process):
 
                 if(self._shared.n_queued_branches.value <= 0 or res.status == ResultType.SOL_FOUND):
                     #Last Branch or unsafe one
-                    self._logger.info(f"{self.name} Exiting...")
+                    self._logger.info(f"{self.name} Terminating...")
                     self._shared.poison_pill.value = True
                     self._shared.status.value = res.status.value
                     if(res.status == ResultType.SOL_FOUND):
@@ -156,10 +178,12 @@ class Worker(mp.Process):
                     tic = time.perf_counter()
             except queue.Empty as e:
                 #That's ok, try again.
+                self._deactivate()
                 pass
             except Exception as e:
                 self._logger.exception(e)
                 raise e
+        self._deactivate()
         self._logger.info(f"{self.name} Terminated.")
         self._logger.debug(f"{self.name} Log_q size {self._shared.log_Q.qsize()}.")
 class Branch:
@@ -542,7 +566,9 @@ class Verifier:
         # Add output constraints
         A,b = self.spec.objectives[self.objective_idx]
         for row, rhs in zip(A,b):
-            gmodel.addConstr(row @ vars[-1]['net'] <= (rhs - Setting.EPS)) 
+            gmodel.addConstr(row @ vars[-1]['net'] <= (rhs - Setting.EPS), name = 'Output_constraint')
+
+        gmodel.update() 
         logger.debug(f"Gurobi model init time: {time.perf_counter() - model_init_counter:.2f} seconds")
         return gmodel, vars
 
@@ -646,10 +672,13 @@ class Verifier:
         else:
             return VerificationResult(ResultType.UNKNOWN)
     def cleanup(self):
+        logger.info('Cleaning up...')
         self.shared_state.poison_pill.value = True
-        for w in self.workers:
-            w.join()
+        if(len(self.workers) > 1):
+            for w in self.workers:
+                w.join()
         self.shared_state.log_Q.put(None)
+        logger.info('All processes terminated')
     def verify(self, timeout : float = Setting.TIMEOUT, objective_idx = 0) -> VerificationResult:
         #TODO: Set SIGALARM handler
         start = time.perf_counter()

@@ -9,7 +9,7 @@ class Specification:
         self.spec = spec
         self.dataset = dataset
         try:
-            self.input_bounds = torch.tensor(self.spec[0][0],dtype = Setting.TORCH_PRECISION)
+            self.input_bounds = self.spec[0][0].clone().to(Setting.TORCH_PRECISION)
             self.objectives = self.spec[0][1]
         except Exception as e:
             logger.exception("Failed to read VNNLIB specification. Error message:" + e)
