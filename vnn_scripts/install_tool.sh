@@ -17,7 +17,7 @@ chmod a+x ~/miniconda3/miniconda.sh
 rm ~/miniconda3/miniconda.sh
 ~/miniconda3/bin/conda init bash zsh
 source ~/.bashrc
-eval "$(conda shell.bash hook)"
+source ~/miniconda3/etc/profile.d/conda.sh
 #Install environment
 echo "Installing $TOOL_NAME"
 TOOL_DIR=$(dirname $(dirname $(realpath $0)))
