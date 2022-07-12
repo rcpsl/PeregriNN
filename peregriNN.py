@@ -1,4 +1,5 @@
 import sys,os
+from turtle import update
 
 # os.environ['MKL_NUM_THREADS']="1"
 # os.environ['NUMEXPR_NUM_THREADS']="1"
@@ -6,7 +7,7 @@ import sys,os
 # os.environ['OPENBLAS_NUM_THREADS']="1"
 # os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 from peregrinn.verifier import ResultType, Verifier
-from utils.config import Setting
+from utils.config import Setting, update_cfg
 from utils.specification import Specification
 from parsers.onnx_parser import ONNX_Parser
 from solver import *
@@ -166,8 +167,14 @@ def main(args):
         dataset = args.dataset
         onnx_parser = ONNX_Parser(model_path, simplify = args.simplify)
         vnnlib_parser = VNNLib_parser(dataset = dataset)
-        in_shape = Dataset_MetaData.inout_shapes[dataset]['input']
-        out_shape = Dataset_MetaData.inout_shapes[dataset]['output']
+        try:
+            in_shape = Dataset_MetaData.inout_shapes[dataset]['input']
+            out_shape = Dataset_MetaData.inout_shapes[dataset]['output']
+        except Exception as e:
+            in_shape, out_shape = vnnlib_parser.get_num_inputs_outputs(model_path)
+            in_shape = torch.atleast_1d(torch.tensor(in_shape,dtype = torch.int))
+            out_shape = torch.atleast_1d(torch.tensor(out_shape, dtype = torch.int))
+            Dataset_MetaData.inout_shapes[dataset] = {'input': in_shape, 'output': out_shape}
         vnnlib_spec = vnnlib_parser.read_vnnlib_simple(vnnlib_filename, in_shape.prod().item(),
                                                         out_shape.prod().item())
         # device = torch.device('cpu')
@@ -205,25 +212,28 @@ def main(args):
                 logger.debug(f"Verifying property {i}")
                 verifier.verify(objective_idx= i )
                 if verifier.verification_result.status == ResultType.SOL_FOUND:
-                    logger.debug(f"Verifier found a Counterexample : Objective {i}")
+                    logger.info(f"Verifier found a Counterexample : Objective {i}")
                     break
 
         #TODO: write result to file
         total_time = time.perf_counter() - tic
         if(verifier.verification_result.status != ResultType.SOL_FOUND):
             logger.info(f"Property proved safe")
-            # with open('test.txt','a') as f:
-            #     f.write(f'{delta},{img_name},safe,{total_time:.3f}\n')
+            with open(args.result_file,'w') as f:
+                f.write('unsat\n')
 
         else:
-            # with open('test.txt','a') as f:
-            #     f.write(f'{delta},{img_name},unsafe,{total_time:.3f}\n')
             logger.info(f"Property violated !")
+            vnnlib_result = vnnlib_parser.result_str(*verifier.verification_result.ce.values())
+            with open(args.result_file,'w') as f:
+                f.write('sat\n')
+                f.write(vnnlib_result)
+            logger.info('Counter example:\n' + vnnlib_result)
     except TimeOutException as e:
         #Cleanup
         verifier.cleanup()
-        # with open('test.txt','a') as f:
-        #     f.write(f'{delta},{img_name},timeout,{time.perf_counter() - tic:.3f}\n')
+        with open(args.result_file,'w') as f:
+            f.write('timeout\n')
         logger.info("Timoeut")
     except Exception as e:
         logger.exception(str(e))
@@ -324,7 +334,7 @@ def mnist_verify(args):
                 logger.debug(f"Verifying property {i}")
                 verifier.verify(objective_idx= i )
                 if verifier.verification_result.status == ResultType.SOL_FOUND:
-                    logger.debug(f"Verifier found a Counterexample : Objective {i}")
+                    logger.info(f"Verifier found a Counterexample : Objective {i}")
                     break
 
         #TODO: write result to file
@@ -360,19 +370,20 @@ if __name__ == "__main__":
     parser.add_argument('--eps',default=0.02,help="Maximum perturbation")
     parser.add_argument('--simplify', default = False, action=argparse.BooleanOptionalAction)
     parser.add_argument('--subtract_target', default = False, action=argparse.BooleanOptionalAction)
-
+    parser.add_argument('--category', type = str, default='mnisft_fc')
+    parser.add_argument('--result_file', type =str, default='out.txt')
     args = parser.parse_args()
     #Root logger config
-    log_dir = os.path.join(os.getcwd(),'logs')
+    update_cfg(args)
+    log_dir = os.path.dirname(__file__)
+    log_dir = os.path.join(log_dir,'logs')
     if(not os.path.exists(log_dir)):
         os.makedirs(log_dir)
-    # log_file = os.path.join(log_dir,'logs.log')
-    # img_name = args.image.split('/')[-1]
     model_name = args.model.split('/')[-1].split('.')[0]
-
-    # log_file = os.path.join(log_dir,f"{model_name}_{img_name}_{args.eps}.log")
-    log_file = os.path.join(log_dir,f"logs.log")
-
+    spec_name  = args.spec.split('/')[-1].split('.')[0]
+    log_fname = f"log_{model_name}_{spec_name}.log"
+    log_file = os.path.join(log_dir,log_fname)
+    print(f'Logging to {log_file}...')
     logging.basicConfig(
         format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
         level = Setting.LOG_LEVEL,

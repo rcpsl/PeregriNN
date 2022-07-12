@@ -174,7 +174,7 @@ class Worker(mp.Process):
                         self._logger.debug(f"{self.name} verified branch")
 
                 if(time.perf_counter() - tic > 5):
-                    self._logger.debug(f"{self.name} -> Number of Queued branches {self._shared.n_queued_branches.value}")
+                    self._logger.info(f"{self.name} -> Number of Queued branches {self._shared.n_queued_branches.value}")
                     tic = time.perf_counter()
             except queue.Empty as e:
                 #That's ok, try again.
@@ -217,8 +217,8 @@ class Branch:
 
         def _update_grb_layer(l_idx, layer , unstable_relus_idx):
 
-            lb = layer.post_conc_lb.squeeze()
-            ub = layer.post_conc_ub.squeeze()
+            lb = layer.post_conc_lb.flatten()
+            ub = layer.post_conc_ub.flatten()
             layer_vars = gvars[l_idx] #Skip input layer
 
             if type(layer) == Linear or type(layer) == Conv2d:
@@ -228,8 +228,8 @@ class Branch:
                     var.lb = lb[idx].item()
                     var.ub = ub[idx].item()
                     if(l_idx == (len(gvars)-1)):
-                        A_up = layer.post_symbolic.u.squeeze()[idx]
-                        A_low = layer.post_symbolic.l.squeeze()[idx]
+                        A_up = torch.atleast_2d(layer.post_symbolic.u.squeeze())[idx]
+                        A_low = torch.atleast_2d(layer.post_symbolic.l.squeeze())[idx]
                         gmodel.addConstr(grb.LinExpr(A_up[:-1],in_vars)  + A_up[-1]  >= var, name = f"out_{idx}_sym_UB")
                         gmodel.addConstr(grb.LinExpr(A_low[:-1],in_vars)  + A_low[-1]  <= var,name = f"out_{idx}_sym_LB")
 
@@ -298,6 +298,10 @@ class Branch:
             gmodel  = verifier.gmodel.copy()
             #Propagate bounds
             int_net(self.input_interval, layers_mask = self.fixed_neurons)
+            status, _ = verifier.quick_check_bounds(verifier.objective_idx)
+            if(status == ResultType.NO_SOL):
+                self.verification_result.status = ResultType.NO_SOL
+                return
             #update solver
             self._update_grb_model(gmodel, gvars, int_net, self.unstable_relus, self.fixed_neurons)
         try:
@@ -333,7 +337,7 @@ class Branch:
         return layer_idx, neuron_idx, phase
 
     def _do_split_neuron(self):
-        return (self.input_bounds.shape[0] > 5)
+        return (self.input_bounds.shape[0] > 15)
 
     def _split_interval(self) ->Tuple[torch.tensor, torch.tensor]:
         #Split on largest dim
@@ -670,17 +674,20 @@ class Verifier:
 
         return result
 
-    def quick_check_bounds(self) -> Tuple[ResultType, list]:
+    def quick_check_bounds(self, obj_idx = None) -> Tuple[ResultType, list]:
+        objectives = self.spec.objectives
+        if(obj_idx is not None):
+            objectives = self.spec.objectives[obj_idx:obj_idx+1]
         overapprox_timer = time.perf_counter()
         output_bounds = self.int_net.layers[-1].post_symbolic.concrete_bounds.reshape((-1,2)).to('cpu')
-        safe_objective_idx = self._check_violated_bounds(self.spec.objectives, output_bounds)
+        safe_objective_idx = self._check_violated_bounds(objectives, output_bounds)
         logger.debug(f"Try overapproximation Verification time: {time.perf_counter()-overapprox_timer:.2f} seconds")
-        if(len(safe_objective_idx) == len(self.spec.objectives)):
-            logger.info("Property holds with overapproximation")
+        if(len(safe_objective_idx) == len(objectives)):
+            logger.debug("Property holds with overapproximation")
             self.verification_result.status = ResultType.NO_SOL
             return (ResultType.NO_SOL, [])
         else:
-            unsafe_objective_idx = [i for i in range(len(self.spec.objectives)) if i not in safe_objective_idx]
+            unsafe_objective_idx = [i for i in range(len(objectives)) if i not in safe_objective_idx]
             return (ResultType.UNKNOWN, unsafe_objective_idx)
 
     def check_by_sampling(self) -> VerificationResult:

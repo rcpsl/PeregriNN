@@ -296,3 +296,15 @@ class VNNLib_parser():
             
         return Specification(final_rv, self.dataset)
 
+    def result_str(self, input, output) ->str:
+        result = '(\n'
+        for idx, val in enumerate(input):
+            var_val = f'(X_{idx} {val})\n'
+            result += var_val
+
+        for idx, val in enumerate(output):
+            var_val = f'(Y_{idx} {val})\n'
+            result += var_val
+
+        result += ')\n'
+        return result

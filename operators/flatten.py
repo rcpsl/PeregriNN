@@ -62,7 +62,7 @@ class Reshape(nn.Module):
         self.pre_symbolic = None
         self.post_symbolic = None
         self.input_shape = input_shape
-        self.output_shape = self.torch_layer.shape
+        self.output_shape = self.torch_layer.shape[1:]
   
         
         
