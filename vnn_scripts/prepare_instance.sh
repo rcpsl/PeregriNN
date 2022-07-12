@@ -15,7 +15,7 @@ VNNLIB_FILE=$4
 TOOL_DIR=$(dirname $(dirname $(realpath $0)))
 VNN_SCRIPTS_DIR=$(realpath $0)
 cd $TOOL_DIR
-eval "$(conda shell.bash hook)"
+source ~/miniconda3/etc/profile.d/conda.sh
 conda activate peregrinn
 echo "Running network simplification script"
 python vnn_scripts/simplify_network.py $CATEGORY $ONNX_FILE

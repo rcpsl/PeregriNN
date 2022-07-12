@@ -20,7 +20,7 @@ TOOL_DIR=$(dirname $(dirname $(realpath $0)))
 export OPENBLAS_NUM_THREADS=1
 export OMP_NUM_THREADS=1
 
-eval "$(conda shell.bash hook)"
+source ~/miniconda3/etc/profile.d/conda.sh
 conda activate peregrinn
 
 # run the tool to produce the results file
