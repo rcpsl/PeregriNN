@@ -27,5 +27,5 @@ echo Y | conda env create -n peregrinn -f "$TOOL_DIR/environment.yml"
 # conda activate peregrinn
 # echo "Installing Gurobi License"
 # printf "y\n\n" | grbgetkey 86561fd4-018a-11ed-9256-0242ac120005
-
+grbprobe
 exec bash
