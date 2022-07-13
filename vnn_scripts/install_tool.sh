@@ -21,7 +21,11 @@ source ~/miniconda3/etc/profile.d/conda.sh
 #Install environment
 echo "Installing $TOOL_NAME"
 TOOL_DIR=$(dirname $(dirname $(realpath $0)))
-
+echo "Init Submodules"
+cd $TOOL_DIR
+git submodule init
+git submodule update
+cd -
 echo "Installing Conda environment"
 echo Y | conda env create -n peregrinn -f "$TOOL_DIR/environment.yml"
 conda activate peregrinn
