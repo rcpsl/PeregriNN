@@ -246,7 +246,6 @@ dependencies:
     - tifffile==2022.3.25
     - toml==0.10.2
     - torch-tb-profiler==0.4.0
-    - torchvision==0.9.1
     - tqdm==4.63.1
     - urllib3==1.26.9
     - werkzeug==2.0.3
