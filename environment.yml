@@ -160,7 +160,6 @@ dependencies:
     - charset-normalizer==2.0.12
     - cloudpickle==2.0.0
     - data==0.4
-    - dnnv==0.5.1
     - docutils==0.17.1
     - ecos==2.0.10
     - fairlearn==0.4.6
@@ -246,7 +245,6 @@ dependencies:
     - threadpoolctl==3.0.0
     - tifffile==2022.3.25
     - toml==0.10.2
-    - torch==1.8.1
     - torch-tb-profiler==0.4.0
     - torchvision==0.9.1
     - tqdm==4.63.1
