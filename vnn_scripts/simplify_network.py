@@ -1,8 +1,8 @@
 import time
 import os
 import sys
-from dnnv.nn import parse
-from dnnv.nn.transformers.simplifiers import (simplify, ReluifyMaxPool)
+from dnnv.dnnv.nn import parse
+from dnnv.ddnv.nn.transformers.simplifiers import (simplify, ReluifyMaxPool)
 from pathlib import Path
 
 def main():
