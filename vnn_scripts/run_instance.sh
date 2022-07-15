@@ -22,6 +22,5 @@ export OMP_NUM_THREADS=1
 
 source ~/miniconda3/etc/profile.d/conda.sh
 conda activate peregrinn
-su ubuntu
 # run the tool to produce the results file
 python $TOOL_DIR/peregriNN.py "$ONNX_FILE" "$VNNLIB_FILE" --timeout "$TIMEOUT" --result_file "$RESULTS_FILE" --category $CATEGORY
