@@ -630,8 +630,8 @@ class Verifier:
             if type(layer) == ReLU:
                 stable_relus[l_idx] = []
                 unstable_relus[l_idx] = set([])
-                lb = layer.pre_conc_lb.squeeze()
-                ub = layer.pre_conc_ub.squeeze()
+                lb = layer.pre_conc_lb.flatten()
+                ub = layer.pre_conc_ub.flatten()
                 active_relu_idx = torch.where(lb > 0)[0]
                 inactive_relu_idx = torch.where(ub <= 0)[0]
                 unstable_relu_idx = torch.where((ub > 0) * (lb <0))[0]

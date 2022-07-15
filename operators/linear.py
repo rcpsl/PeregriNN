@@ -32,8 +32,9 @@ class Linear(nn.Module):
         post_interval.l  = W_pos @ x.l + W_neg @ x.u
         post_interval.u  = W_pos @ x.u + W_neg @ x.l
 
-        post_interval.l[...,-1] += b
-        post_interval.u[...,-1] += b
+        if b is not None:
+            post_interval.l[...,-1] += b
+            post_interval.u[...,-1] += b
 
         post_interval.concretize()
         self.post_symbolic = post_interval
@@ -127,8 +128,9 @@ class Conv2d(nn.Module):
         W_neg = torch.minimum(zeros_W,W)
         post_l = F.conv2d(l_t, W_pos, **params) + F.conv2d(u_t, W_neg, **params)
         post_u = F.conv2d(l_t, W_neg, **params) + F.conv2d(u_t, W_pos, **params)
-        post_l[-1,...] += b.reshape((-1,1,1))
-        post_u[-1,...] += b.reshape((-1,1,1))
+        if b is not None:
+            post_l[-1,...] += b.reshape((-1,1,1))
+            post_u[-1,...] += b.reshape((-1,1,1))
         post_interval.l = post_l.reshape(post_l.shape[0],-1,batch_size).T
         post_interval.u = post_u.reshape(post_u.shape[0],-1,batch_size).T
 

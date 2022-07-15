@@ -3,6 +3,8 @@ import torch
 import numpy as np
 import logging
 
+from utils.datasets_info import Dataset_MetaData
+
 class Setting:
     
     #Global
@@ -50,6 +52,9 @@ def update_cfg(args):
         Setting.TRY_SAMPLING = False
     if(category == 'collins_rul_cnn'):
         Setting.EPS  = 0.0
+        fname = args.model
+        if 'full_window_40' in fname:
+            Dataset_MetaData.inout_shapes[args.dataset]['input'] = torch.tensor([1,40,20], dtype = torch.int)
     if(category == 'reach_prob_density'):
         Setting.EPS  = 0.0
         Setting.N_VERIF_CORES = 24
@@ -72,3 +77,7 @@ def update_cfg(args):
 
     if(category =='tllverifybench'):
         Setting.N_VERIF_CORES = 24
+
+    if 'test/test_' in args.model:
+        args.dataset = 'test'
+        
