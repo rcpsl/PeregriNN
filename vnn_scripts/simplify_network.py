@@ -1,6 +1,7 @@
 import time
 import os
 import sys
+sys.path.append(os.getcwd())
 from dnnv.dnnv.nn import parse
 from dnnv.ddnv.nn.transformers.simplifiers import (simplify, ReluifyMaxPool)
 from pathlib import Path
