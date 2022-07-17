@@ -36,13 +36,13 @@ def update_cfg(args):
     if(category == 'rl_benchmarks'):
         Setting.EPS = 0.0
         Setting.N_VERIF_CORES = 24
-    if(category == 'mnistfc'):
+    elif(category == 'mnistfc'):
         args.subtract_target = True
-    if(category == 'oval21'):
+    elif(category == 'oval21'):
         args.subtract_target = True
         args.dataset = 'cifar20'
         Setting.N_VERIF_CORES = 24
-    if(category == 'cifar_biasfield'):
+    elif(category == 'cifar_biasfield'):
         model_name = args.model.split('/')[-1].split('.')[0]
         model_name_simplified = model_name + '_simplified.onnx'
         simplified_path = os.path.dirname(os.path.dirname(__file__)) 
@@ -50,12 +50,12 @@ def update_cfg(args):
         args.model = simplified_path
         Setting.N_VERIF_CORES = 24
         Setting.TRY_SAMPLING = False
-    if(category == 'collins_rul_cnn'):
+    elif(category == 'collins_rul_cnn'):
         Setting.EPS  = 0.0
         fname = args.model
         if 'full_window_40' in fname:
             Dataset_MetaData.inout_shapes[args.dataset]['input'] = torch.tensor([1,40,20], dtype = torch.int)
-    if(category == 'reach_prob_density'):
+    elif(category == 'reach_prob_density'):
         Setting.EPS  = 0.0
         Setting.N_VERIF_CORES = 24
         model_name = args.model
@@ -66,7 +66,7 @@ def update_cfg(args):
         else:
             args.dataset = 'reach_prob_density_gcas'
     
-    if(category == 'rl_benchmarks'):
+    elif(category == 'rl_benchmarks'):
         model_name = args.model
         if('dubins' in model_name):
             args.dataset = 'rl_benchmarks_dubinsrejoin'
@@ -75,9 +75,9 @@ def update_cfg(args):
         else:
             args.dataset = 'rl_benchmarks_lunarlander'
 
-    if(category =='tllverifybench'):
+    elif(category =='tllverifybench'):
         Setting.N_VERIF_CORES = 24
 
-    if 'test/test_' in args.model:
+    elif 'test/test_' in args.model:
         args.dataset = 'test'
         
