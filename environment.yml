@@ -1,4 +1,4 @@
-name: hero
+name: peregrinn
 channels:
   - gurobi
   - pytorch
@@ -251,4 +251,3 @@ dependencies:
     - werkzeug==2.0.3
     - widgetsnbextension==3.6.0
     - wrapt==1.14.0
-prefix: /home/hkhedr/anaconda3/envs/hero
