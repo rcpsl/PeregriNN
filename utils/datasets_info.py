@@ -23,5 +23,7 @@ class Dataset_MetaData:
         'rl_benchmarks_dubinsrejoin': {'input':torch.tensor([8], dtype = torch.int), 
                     'output':torch.tensor([8], dtype = torch.int)},
         'rl_benchmarks_lunarlander': {'input':torch.tensor([8], dtype = torch.int), 
-                    'output':torch.tensor([4], dtype = torch.int)}
+                    'output':torch.tensor([4], dtype = torch.int)},
+        'tllverifybench': {'input':torch.tensor([3], dtype = torch.int), 
+                    'output':torch.tensor([1], dtype = torch.int)}
         }
